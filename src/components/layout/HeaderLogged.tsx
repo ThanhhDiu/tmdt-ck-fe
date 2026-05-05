@@ -1,6 +1,7 @@
 import React from 'react';
 import './HeaderLogged.css';
-import { SearchIcon, BellIcon, FileTextIcon } from '../common/Icons';
+import { SearchIcon, FileTextIcon } from '../common/Icons';
+import NotificationMenu from '../common/NotificationMenu';
 
 interface HeaderNavItem {
   key: string;
@@ -61,9 +62,7 @@ export const HeaderLogged: React.FC<HeaderLoggedProps> = ({
           </div>
 
           <div className="hl-actions">
-            <button className="hl-icon-btn" type="button" aria-label="Thông báo">
-              <BellIcon size={20} />
-            </button>
+            <NotificationMenu badgeStyle="dot" />
             <button className="hl-icon-btn" type="button" aria-label="Tài liệu">
               <FileTextIcon size={20} />
             </button>

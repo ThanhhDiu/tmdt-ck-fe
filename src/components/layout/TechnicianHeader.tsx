@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './technicianHeader.css';
-import { FaLocationDot, FaEye, FaEyeSlash, FaBell } from 'react-icons/fa6';
+import { FaLocationDot, FaEye, FaEyeSlash } from 'react-icons/fa6';
+import NotificationMenu from '../common/NotificationMenu';
 
 export const TechnicianHeader: React.FC = () => {
     const [isOnline, setIsOnline] = useState(true);
@@ -45,10 +46,7 @@ export const TechnicianHeader: React.FC = () => {
                 </div>
 
                 {/* Thông báo */}
-                <button className="btn-icon notification">
-                    <FaBell />
-                    <span className="badge">3</span>
-                </button>
+                <NotificationMenu variant="dark" badgeStyle="count" />
             </div>
         </header>
     );

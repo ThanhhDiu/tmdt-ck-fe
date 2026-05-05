@@ -2,7 +2,8 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import './Header.css';
-import { SearchIcon, BellIcon } from '../common/Icons';
+import { SearchIcon } from '../common/Icons';
+import NotificationMenu from '../common/NotificationMenu';
 
 interface HeaderProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,10 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
             <SearchIcon className="search-icon" size={16} />
             <input type="text" placeholder={searchPlaceholder} className="search-input" />
           </div>
-          <div className="action-icon">
-            <BellIcon size={20} />
-            <span className="notification-dot"></span>
-          </div>
+          <NotificationMenu badgeStyle="dot" />
           <div className="profile-dropdown">
             <button className="profile-btn" type="button" aria-haspopup="menu" aria-label="Tài khoản của tôi">
               <img src="https://i.pravatar.cc/150?img=32" alt="Avatar" className="avatar-img" />

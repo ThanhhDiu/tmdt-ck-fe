@@ -46,18 +46,6 @@
   box-shadow: 0 0 0 3px var(--blue-bg); width: 260px;
 }
 
-.action-icon {
-  position: relative; cursor: pointer; color: var(--text-secondary);
-  padding: 8px; border-radius: var(--radius-full); transition: background-color 0.2s;
-  display: flex; align-items: center; justify-content: center;
-}
-.action-icon:hover { background-color: var(--bg-muted); }
-
-.notification-dot {
-  position: absolute; top: 6px; right: 8px; width: 8px; height: 8px;
-  background-color: var(--danger); border-radius: var(--radius-full); border: 2px solid var(--bg);
-}
-
 .profile-btn {
   cursor: pointer; border-radius: var(--radius-full); overflow: hidden;
   width: 40px; height: 40px; border: 2px solid transparent; transition: border-color 0.2s;

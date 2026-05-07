@@ -13,7 +13,7 @@ export const FindProvider: React.FC = () => {
   const [totalPages, setTotalPages] = React.useState(1);
 
   return (
-    <div style={{ backgroundColor: '#f4f3ec', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: 'var(--bg-page)', minHeight: '100vh' }}>
       <main className="fp-main-container">
         <div className="fp-layout">
           <FilterSidebar

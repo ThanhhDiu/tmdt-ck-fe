@@ -1,5 +1,5 @@
 .premium-provider-card {
-  background-color: #000C33;
+  background-color: var(--accent-bg);
   border-radius: 16px;
   overflow: hidden;
   position: relative;
@@ -14,7 +14,7 @@
   right: 0;
   bottom: 0;
   width: 40%;
-  background: radial-gradient(circle at right, rgba(226, 175, 116, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle at right, var(--blue-light) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -54,8 +54,8 @@
 }
 
 .ppc-badge {
-  background-color: #DEC38D;
-  color: #000C33;
+  background-color: var(--accent);
+  color: #fff;
   font-size: 11px;
   font-weight: 800;
   padding: 6px 12px;
@@ -81,7 +81,7 @@
 
 .ppc-btn {
   background-color: #ffffff;
-  color: #000C33;
+  color: var(--primary);
   border: none;
   padding: 12px 24px;
   border-radius: 8px;

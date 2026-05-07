@@ -75,3 +75,45 @@ export const ChevronDownIcon = ({ size = 16, className = "" }: { size?: number, 
 export const ArrowLeftIcon = ({ size = 20, className = "" }: { size?: number, className?: string }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
 );
+
+export const MicrowaveIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><rect x="6" y="8" width="8" height="8" rx="1" ry="1"></rect><circle cx="18" cy="10" r="1"></circle><circle cx="18" cy="14" r="1"></circle></svg>
+);
+export const FacebookIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#fff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2" y="2" width="20" height="20" rx="5" />
+    <path d="M16 8h-2a2 2 0 0 0-2 2v2h4" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="12" x2="14" y2="12" />
+  </svg>
+);
+
+export const InstagramIcon = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#fff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="2" y="2" width="20" height="20" rx="5" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="17" cy="7" r="1" />
+  </svg>
+);

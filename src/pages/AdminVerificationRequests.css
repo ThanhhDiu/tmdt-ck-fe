@@ -1,11 +1,8 @@
 .avr-layout {
-  display: block;
+  display: flex;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
-    linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%);
+  background-color: var(--bg-page);
   text-align: left;
-  margin-left: 240px;
 }
 
 .avr-main {
@@ -39,7 +36,7 @@
 .avr-title {
   margin: 0;
   font-size: 32px;
-  color: #0f172a;
+  color: var(--primary);
   font-weight: 800;
 }
 
@@ -112,8 +109,8 @@
 }
 
 .avr-filter.active {
-  background: #0f1f53;
-  border-color: #0f1f53;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -198,12 +195,12 @@
 
 .avr-btn-outline {
   background: #fff;
-  color: #0f1f53;
+  color: var(--accent);
 }
 
 .avr-btn-primary {
-  background: #0f1f53;
-  border-color: #0f1f53;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -226,10 +223,6 @@
 }
 
 @media (max-width: 900px) {
-  .avr-layout {
-    margin-left: 72px;
-  }
-
   .avr-main {
     width: calc(100% - var(--admin-sidebar-collapsed-width));
     max-width: calc(100% - var(--admin-sidebar-collapsed-width));

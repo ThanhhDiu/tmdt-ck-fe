@@ -25,6 +25,7 @@
 .social-icon {
   width: 32px; height: 32px; border-radius: var(--radius-full);
   background-color: var(--border-dark); cursor: pointer; transition: background-color 0.2s;
+  display: flex; align-items: center; justify-content: center;
 }
 .social-icon:hover { background-color: var(--primary); }
 

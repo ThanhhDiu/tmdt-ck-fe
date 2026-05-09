@@ -1,8 +1,8 @@
-import React, {useState, useMemo, useEffect} from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './ProviderList.css';
-import {ProviderCard} from './ProviderCard';
-import {PremiumProviderCard} from './PremiumProviderCard';
-import {ChevronDownIcon} from '../common/Icons';
+import { ProviderCard } from './ProviderCard';
+import { PremiumProviderCard } from './PremiumProviderCard';
+import { ChevronDownIcon } from '../common/Icons';
 import RepairRequestModal from "../modal/RepairRequestModal.tsx";
 
 /** Bảng mapping: tên dịch vụ (PopularServices) → các skill tương ứng của thợ */
@@ -13,7 +13,7 @@ const SERVICE_SKILL_MAP: Record<string, string[]> = {
     'Dọn dẹp': ['Dọn dẹp nhà cửa', 'Vệ sinh công nghiệp', 'Dọn dẹp theo giờ', 'Tổng vệ sinh'],
     'Điện nước': ['Sửa điện dân dụng', 'Sửa ống nước', 'Thông tắc ống nước', 'Lắp đặt thiết bị vệ sinh', 'Lắp đặt điện'],
     'Côn trùng': ['Phun diệt côn trùng', 'Diệt mối', 'Xử lý mối mọt'],
-    'Làm đẹp': ['Spa tại nhà', 'Chăm sóc da', 'Massage thư giãn', 'Nail tại nhà'],
+    'Lò vi sóng': ['Sửa lò vi sóng', 'Thay linh kiện lò vi sóng', 'Vệ sinh lò vi sóng'],
     'Xe hơi': ['Rửa xe tận nơi', 'Chăm sóc nội thất ô tô', 'Đánh bóng sơn xe'],
 };
 
@@ -125,20 +125,20 @@ const allProviders = [
         price: '300.000đ', isAvailable: true
     },
 
-    // === Làm đẹp ===
+    // === Lò vi sóng ===
     {
-        type: 'normal', id: '8', name: 'Lý Thị Ngọc Anh',
-        avatar: 'https://i.pravatar.cc/150?img=44', rating: 5.0, reviewCount: 312,
+        type: 'normal', id: '8', name: 'Trần Trọng Trí',
+        avatar: 'https://i.pravatar.cc/150?img=17', rating: 5.0, reviewCount: 312,
         location: '55 Nguyễn Đình Chiểu, Quận 3, TP.HCM',
-        skills: ['Spa tại nhà', 'Chăm sóc da', 'Massage thư giãn'],
-        price: '350.000đ', isAvailable: true
+        skills: ['Sửa lò vi sóng', 'Thay linh kiện lò vi sóng', 'Vệ sinh lò vi sóng'],
+        price: '200.000đ', isAvailable: true
     },
     {
-        type: 'normal', id: '13', name: 'Hoàng Thị Mai',
-        avatar: 'https://i.pravatar.cc/150?img=9', rating: 4.8, reviewCount: 145,
+        type: 'normal', id: '13', name: 'Hoàng Văn Tuấn',
+        avatar: 'https://i.pravatar.cc/150?img=57', rating: 4.8, reviewCount: 145,
         location: '12 Lê Lai, Quận 1, TP.HCM',
-        skills: ['Nail tại nhà', 'Chăm sóc da', 'Spa tại nhà'],
-        price: '280.000đ', isAvailable: true
+        skills: ['Sửa lò vi sóng', 'Vệ sinh lò vi sóng'],
+        price: '180.000đ', isAvailable: true
     },
 
     // === Xe hơi ===
@@ -160,12 +160,12 @@ interface Props {
 }
 
 export const ProviderList: React.FC<Props> = ({
-                                                  onNavigate,
-                                                  selectedService,
-                                                  currentPage = 1,
-                                                  setCurrentPage,
-                                                  setTotalPages
-                                              }) => {
+    onNavigate,
+    selectedService,
+    currentPage = 1,
+    setCurrentPage,
+    setTotalPages
+}) => {
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [selectedSort, setSelectedSort] = useState('PHỔ BIẾN NHẤT');
     const ITEMS_PER_PAGE = 7;
@@ -241,10 +241,10 @@ export const ProviderList: React.FC<Props> = ({
                         {' '}tại khu vực TP.HCM
                     </p>
                 </div>
-                <div className="pl-sort" style={{position: 'relative'}}>
+                <div className="pl-sort" style={{ position: 'relative' }}>
                     <span className="sort-label">SẮP XẾP:</span>
                     <button className="sort-btn" onClick={() => setIsSortOpen(!isSortOpen)}>
-                        {selectedSort} <ChevronDownIcon size={14} className="sort-icon"/>
+                        {selectedSort} <ChevronDownIcon size={14} className="sort-icon" />
                     </button>
 
                     {isSortOpen && (
@@ -269,7 +269,7 @@ export const ProviderList: React.FC<Props> = ({
             <div className="pl-cards">
                 {paginatedProviders.map((p) => {
                     if (p.type === 'premium') {
-                        return <PremiumProviderCard key={p.id} provider={p as any} onNavigate={onNavigate}/>;
+                        return <PremiumProviderCard key={p.id} provider={p as any} onNavigate={onNavigate} />;
                     }
                     return <ProviderCard key={p.id} provider={p as any} onNavigate={handleNavigate} />;
                 })}

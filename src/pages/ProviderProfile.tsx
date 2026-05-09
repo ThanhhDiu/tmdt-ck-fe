@@ -42,7 +42,7 @@ export const ProviderProfile: React.FC = () => {
   } : defaultProfile;
 
   return (
-    <div style={{ backgroundColor: '#f4f3ec', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: 'var(--bg-page)', minHeight: '100vh' }}>
       <main className="pp-main-container">
         <ProfileHeader profile={profileData} onBack={() => onNavigate('find-provider')} onReviewsClick={() => setActiveTab('reviews')} />
         

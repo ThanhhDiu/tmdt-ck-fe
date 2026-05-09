@@ -1,11 +1,9 @@
 .afp-layout {
   display: flex;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
-    linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%);
+  background-color: var(--bg-page);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #1a1e3b;
+  color: var(--text-primary);
   text-align: left;
 }
 
@@ -32,6 +30,7 @@
   margin: 0 0 6px;
   font-size: 32px;
   font-weight: 800;
+  color: var(--primary);
   letter-spacing: -0.5px;
 }
 
@@ -62,7 +61,7 @@
 .afp-total-chip strong {
   font-size: 30px;
   line-height: 1;
-  color: #1a1e3b;
+  color: var(--primary);
 }
 
 .afp-card-grid {
@@ -179,7 +178,7 @@
 }
 
 .afp-primary-btn {
-  background: #1a1e3b;
+  background: var(--accent);
   color: #fff;
 }
 
@@ -269,7 +268,7 @@
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1a1e3b, #3b82f6);
+  background: var(--primary);
   color: #fff;
   display: grid;
   place-items: center;
@@ -288,7 +287,7 @@
 
 .afp-request-top b {
   font-size: 14px;
-  color: #1a1e3b;
+  color: var(--primary);
 }
 
 .afp-bank-row {
@@ -314,7 +313,7 @@
   border: none;
   border-radius: 10px;
   padding: 10px;
-  background: #1a1e3b;
+  background: var(--accent);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
@@ -408,7 +407,7 @@
 }
 
 .afp-amount-in {
-  color: #1d4ed8;
+  color: var(--success);
   font-weight: 700;
 }
 
@@ -465,8 +464,8 @@
 }
 
 .afp-table-footer button.active {
-  background: #1a1e3b;
-  border-color: #1a1e3b;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 

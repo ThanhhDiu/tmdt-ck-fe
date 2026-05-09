@@ -34,7 +34,7 @@
 
 .wallet-online-pill {
   align-self: center;
-  background: #1a2b63;
+  background: var(--primary);
   color: var(--white);
   border-radius: 999px;
   padding: 8px 14px;
@@ -47,7 +47,7 @@
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 18px;
-  background: linear-gradient(135deg, #1f2d65 0%, #152350 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: var(--white);
   border-radius: 18px;
   padding: 28px;
@@ -163,7 +163,7 @@
 }
 
 .wallet-history-card {
-  background: #f3efe7;
+  background: var(--bg-page);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 22px;
@@ -253,7 +253,7 @@
 
 .wallet-history-row {
   background: var(--white);
-  border: 1px solid #e5e1d8;
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 16px;
   color: var(--blueberry-skin);

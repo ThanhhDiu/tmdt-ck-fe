@@ -36,9 +36,8 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  background-color: #DEC38D;
-  /* Matching the yellow verify dot from image */
-  color: #000C33;
+  background-color: var(--accent);
+  color: #fff;
   width: 20px;
   height: 20px;
   border-radius: 50%;
@@ -62,7 +61,7 @@
 .pc-name {
   font-size: 18px;
   font-weight: 700;
-  color: #000C33;
+  color: var(--primary);
   margin: 0;
 }
 
@@ -73,12 +72,12 @@
 .pc-price {
   font-size: 18px;
   font-weight: 700;
-  color: #000C33;
+  color: var(--primary);
 }
 
 .pc-price-unit {
   font-size: 13px;
-  color: #4A5E8B;
+  color: var(--text-secondary);
   margin-left: 2px;
 }
 
@@ -87,7 +86,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #4A5E8B;
+  color: var(--text-secondary);
   margin-bottom: 12px;
   flex-wrap: wrap;
   position: relative;
@@ -105,7 +104,7 @@
 
 .pc-rating-val {
   font-weight: 700;
-  color: #000C33;
+  color: var(--primary);
 }
 
 .pc-dot {
@@ -124,7 +123,7 @@
 }
 
 .pc-avail-later {
-  color: #4A5E8B;
+  color: var(--text-secondary);
 }
 
 .pc-skills {
@@ -136,7 +135,7 @@
 
 .pc-skill-tag {
   background-color: #f1f5f9;
-  color: #4A5E8B;
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
   padding: 6px 12px;
@@ -150,7 +149,7 @@
 
 .pc-btn-outline {
   background: transparent;
-  color: #000C33;
+  color: var(--primary);
   border: 1px solid #e2e8f0;
   padding: 10px 24px;
   border-radius: 8px;
@@ -166,7 +165,7 @@
 }
 
 .pc-btn-solid {
-  background: #000C33;
+  background: var(--primary);
   color: #ffffff;
   border: none;
   padding: 10px 24px;
@@ -178,5 +177,5 @@
 }
 
 .pc-btn-solid:hover {
-  background: #1a2350;
+  background: var(--primary-light);
 }

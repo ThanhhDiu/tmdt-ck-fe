@@ -28,7 +28,7 @@ export const ServicesPage: React.FC = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#f4f3ec', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ backgroundColor: 'var(--bg-page)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header onNavigate={onNavigate} />
 
       <main style={{ flexGrow: 1, padding: '40px 0' }}>

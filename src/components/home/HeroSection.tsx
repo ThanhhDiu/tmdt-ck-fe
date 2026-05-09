@@ -12,7 +12,7 @@ export const HeroSection: React.FC = () => {
             Chăm sóc<br />ngôi nhà của bạn
           </h1>
           <p className="hero-description">
-            Chuyên nghiệp & Tin cậy. Mang đẳng cấp khách sạn 5 sao vào không gian sống của bạn với đội ngũ kỹ thuật viên được đào tạo bài bản.
+            Chuyên nghiệp & Tin cậy. Mang đẳng cấp dịch vụ hàng đầu bước không gian sống của bạn với đội ngũ kỹ thuật viên giàu kinh nghiệm.
           </p>
           <div className="hero-actions">
             <button className="btn-primary">Đặt lịch ngay</button>

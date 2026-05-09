@@ -1,10 +1,11 @@
 .aum-layout {
-  display: flex; min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
-    linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif; text-align: left;
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  text-align: left;
 }
+
 .aum-main {
   flex: 1 1 auto;
   width: calc(100% - var(--admin-sidebar-width));
@@ -25,14 +26,27 @@
 }
 
 .aum-page-header {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 20px; gap: 24px; flex-wrap: wrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 24px;
+  flex-wrap: wrap;
 }
+
 .aum-page-title {
-  font-size: 36px; font-weight: 800; color: var(--text-primary); margin: 0 0 6px;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0 0 6px;
   letter-spacing: -0.5px;
 }
-.aum-page-subtitle { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+.aum-page-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
 
 .aum-add-btn {
   display: inline-flex;
@@ -42,18 +56,19 @@
   padding: 0 18px;
   border: none;
   border-radius: 14px;
-  background: #0f1f53;
+  background: var(--accent);
   color: #fff;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(15, 31, 83, 0.25);
+  box-shadow: 0 8px 20px rgba(229, 115, 58, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .aum-add-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(15, 31, 83, 0.3);
+  background: var(--accent-hover);
+  box-shadow: 0 10px 24px rgba(229, 115, 58, 0.35);
 }
 
 .aum-footer-wrap {
@@ -83,7 +98,17 @@
     margin-left: var(--admin-sidebar-collapsed-width);
     padding: 20px 16px 28px;
   }
-  .aum-page-header { flex-direction: column; }
-  .aum-page-title { font-size: 30px; }
-  .aum-add-btn { width: 100%; justify-content: center; }
+
+  .aum-page-header {
+    flex-direction: column;
+  }
+
+  .aum-page-title {
+    font-size: 30px;
+  }
+
+  .aum-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

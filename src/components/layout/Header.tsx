@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { SearchIcon } from '../common/Icons';
 import NotificationMenu from '../common/NotificationMenu';
-import { logoutUser } from '../../services/auth';
-
+import { logoutUser, isAuthenticated  } from '../../services/auth';
 interface HeaderProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onNavigate?: (page: string, data?: any) => void;
@@ -13,6 +12,42 @@ interface HeaderProps {
   searchPlaceholder?: string;
 }
 
+const profileDropdown = (): ReactNode => {
+  const navigate = useNavigate()
+    const goToProfile = () => navigate && navigate('customer-settings');
+  const goToLogout = () => {
+    logoutUser()
+    navigate && navigate('/');
+  }
+  return (<div className="profile-dropdown">
+            <button className="profile-btn" type="button" aria-haspopup="menu" aria-label="Tài khoản của tôi">
+              <img src="https://i.pravatar.cc/150?img=32" alt="Avatar" className="avatar-img" />
+            </button>
+
+            <div className="profile-menu" role="menu" aria-label="Tùy chọn tài khoản">
+              <div className="profile-menu__header">
+                <img src="https://i.pravatar.cc/150?img=32" alt="Avatar" className="profile-menu__avatar" />
+                <div>
+                  <p className="profile-menu__name">Hồ sơ của tôi</p>
+                  <p className="profile-menu__sub">Quản lý thông tin cá nhân</p>
+                </div>
+              </div>
+
+              <button className="profile-menu__item" type="button" onClick={goToProfile} role="menuitem">
+                Hồ sơ của tôi
+              </button>
+
+              <button className="profile-menu__item profile-menu__item--danger" type="button" onClick={goToLogout} role="menuitem">
+                Đăng xuất
+              </button>
+            </div>
+          </div>)}
+
+const loginButton = (onNavigate: any)=> (
+  <button className="profile-menu__item profile-menu__item--danger" type="button" onClick={()=> onNavigate && onNavigate('login')} role="menuitem">
+    Đăng nhập
+  </button> 
+)
 export const Header: React.FC<HeaderProps> = ({
   onNavigate,
   profilePage = 'customer-settings',
@@ -26,11 +61,6 @@ export const Header: React.FC<HeaderProps> = ({
     return currentPath.startsWith(path);
   };
 
-  const goToProfile = () => onNavigate && onNavigate(profilePage);
-  const goToLogout = () => {
-    logoutUser()
-    onNavigate && onNavigate('home');
-  }
 
   return (
     <header className="header">
@@ -82,28 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
             <input type="text" placeholder={searchPlaceholder} className="search-input" />
           </div>
           <NotificationMenu badgeStyle="dot" />
-          <div className="profile-dropdown">
-            <button className="profile-btn" type="button" aria-haspopup="menu" aria-label="Tài khoản của tôi">
-              <img src="https://i.pravatar.cc/150?img=32" alt="Avatar" className="avatar-img" />
-            </button>
-
-            <div className="profile-menu" role="menu" aria-label="Tùy chọn tài khoản">
-              <div className="profile-menu__header">
-                <img src="https://i.pravatar.cc/150?img=32" alt="Avatar" className="profile-menu__avatar" />
-                <div>
-                  <p className="profile-menu__name">Hồ sơ của tôi</p>
-                  <p className="profile-menu__sub">Quản lý thông tin cá nhân</p>
-                </div>
-              </div>
-
-              <button className="profile-menu__item" type="button" onClick={goToProfile} role="menuitem">
-                Hồ sơ của tôi
-              </button>
-              <button className="profile-menu__item profile-menu__item--danger" type="button" onClick={goToLogout} role="menuitem">
-                Đăng xuất
-              </button>
-            </div>
-          </div>
+          {isAuthenticated() ? profileDropdown() :  loginButton(onNavigate)}
         </div>
       </div>
     </header>

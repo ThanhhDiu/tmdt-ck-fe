@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -335,6 +335,7 @@ function loginSideItems(): InfoItem[] {
 }
 
 export function LoginPage() {
+  const navigate = useNavigate()
   const [accountType, setAccountType] = useState<AccountType>('customer')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -383,7 +384,9 @@ export function LoginPage() {
         setSuccessMessage(
           `Đăng nhập thành công với vai trò ${accountType === 'customer' ? 'Người dùng' : 'Thợ'}${rememberMe ? ' và đã ghi nhớ phiên đăng nhập.' : '.'}`,
         )
+        navigate('/')
       }, 1100)
+
     } catch (error) {
       setIsSubmitting(false)
       setSuccessMessage('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.')

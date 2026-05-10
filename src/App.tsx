@@ -20,6 +20,8 @@ import TechnicianWalletPage from './pages/TechnicianWalletPage'
 import TechnicianWalletTopUpPage from './pages/TechnicianWalletTopUpPage'
 import TechnicianWalletWithdrawPage from './pages/TechnicianWalletWithdrawPage'
 import TechnicianProfileSettingsPage from './pages/TechnicianProfileSettingsPage'
+import TechnicianVerificationPage from './pages/TechnicianVerificationPage'
+import TechnicianVerificationStatusPage from './pages/TechnicianVerificationStatusPage'
 import CustomerAccountSettingsPage from './pages/CustomerAccountSettingsPage'
 import { ChatPage } from './pages/ChatPage'
 import CustomerLayout from './components/layout/CustomerLayout'
@@ -60,6 +62,14 @@ function App() {
                             <TechnicianProfileSettingsPage />
                         </TechnicianLayout>
                     }
+                />
+                <Route
+                    path="verification"
+                    element={<TechnicianVerificationPage />}
+                />
+                <Route
+                    path="verification-status"
+                    element={<TechnicianVerificationStatusPage />}
                 />
                 <Route
                     path="provider-dashboard"

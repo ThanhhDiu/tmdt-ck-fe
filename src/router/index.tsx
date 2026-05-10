@@ -20,6 +20,7 @@ import ProviderDashboard from '../pages/ProviderDashboard'
 import ProviderProfile from '../pages/ProviderProfile'
 import ServicesPage from '../pages/ServicesPage'
 import TechnicianProfileSettingsPage from '../pages/TechnicianProfileSettingsPage'
+import TechnicianVerificationPage from '../pages/TechnicianVerificationPage'
 
 export default function AppRouter() {
   return (
@@ -40,6 +41,10 @@ export default function AppRouter() {
               <TechnicianProfileSettingsPage />
             </TechnicianLayout>
           }
+        />
+        <Route
+          path="verification"
+          element={<TechnicianVerificationPage />}
         />
       </Route>
 

@@ -21,6 +21,7 @@ import ProviderProfile from '../pages/ProviderProfile'
 import ServicesPage from '../pages/ServicesPage'
 import TechnicianProfileSettingsPage from '../pages/TechnicianProfileSettingsPage'
 import VoucherRewardsPage from '../pages/VoucherRewardsPage'
+import TechnicianVerificationPage from '../pages/TechnicianVerificationPage'
 
 export default function AppRouter() {
   return (
@@ -39,6 +40,14 @@ export default function AppRouter() {
           element={
             <TechnicianLayout activeItem="profile">
               <TechnicianProfileSettingsPage />
+            </TechnicianLayout>
+          }
+        />
+        <Route
+          path="verification"
+          element={
+            <TechnicianLayout activeItem="verification">
+              <TechnicianVerificationPage />
             </TechnicianLayout>
           }
         />

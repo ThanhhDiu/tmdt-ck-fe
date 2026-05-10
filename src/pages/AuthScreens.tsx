@@ -18,6 +18,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import './AuthScreens.css'
+import { loginUser, registerUser } from '../services/auth'
 
 type AccountType = 'customer' | 'technician'
 
@@ -360,7 +361,7 @@ export function LoginPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!validate()) {
@@ -371,12 +372,22 @@ export function LoginPage() {
     setIsSubmitting(true)
     setSuccessMessage('')
 
-    window.setTimeout(() => {
+    try {
+      await loginUser({
+        identifier: identifier,
+        password: password,
+        role: accountType,
+      })
+      window.setTimeout(() => {
+        setIsSubmitting(false)
+        setSuccessMessage(
+          `Đăng nhập thành công với vai trò ${accountType === 'customer' ? 'Người dùng' : 'Thợ'}${rememberMe ? ' và đã ghi nhớ phiên đăng nhập.' : '.'}`,
+        )
+      }, 1100)
+    } catch (error) {
       setIsSubmitting(false)
-      setSuccessMessage(
-        `Đăng nhập thành công với vai trò ${accountType === 'customer' ? 'Người dùng' : 'Thợ'}${rememberMe ? ' và đã ghi nhớ phiên đăng nhập.' : '.'}`,
-      )
-    }, 1100)
+      setSuccessMessage('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.')
+    }
   }
 
   return (
@@ -538,24 +549,18 @@ export function RegisterPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  event.preventDefault()
 
-    if (!validate()) {
-      setSuccessMessage('')
-      return
-    }
-
-    setIsSubmitting(true)
+  if (!validate()) {
     setSuccessMessage('')
-
-    window.setTimeout(() => {
-      setIsSubmitting(false)
-      setSuccessMessage(
-        `Tạo tài khoản ${accountType === 'customer' ? 'Người dùng' : 'Thợ'} thành công. Hệ thống đã sẵn sàng cho bước xác thực tiếp theo.`,
-      )
-    }, 1200)
+    return
   }
+
+  setIsSubmitting(true)
+  await registerUser({ fullName, email, phone, password, accountType }, setSuccessMessage)
+  
+}
 
   return (
     <AuthShell

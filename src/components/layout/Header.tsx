@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import './Header.css';
 import { SearchIcon } from '../common/Icons';
 import NotificationMenu from '../common/NotificationMenu';
+import { logoutUser } from '../../services/auth';
 
 interface HeaderProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,7 +27,10 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const goToProfile = () => onNavigate && onNavigate(profilePage);
-  const goToLogout = () => onNavigate && onNavigate('login');
+  const goToLogout = () => {
+    logoutUser()
+    onNavigate && onNavigate('home');
+  }
 
   return (
     <header className="header">

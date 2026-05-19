@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { authService } from '../services/auth/authService.ts'
+import type { AuthUser } from '../types/auth/auth'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -333,7 +335,22 @@ function loginSideItems(): InfoItem[] {
   ]
 }
 
+function navigateByRole(user: AuthUser, navigate: ReturnType<typeof useNavigate>) {
+  switch (user.role) {
+    case 'admin':
+      navigate('/admin/dashboard', { replace: true })
+      break
+    case 'technician':
+      navigate('/technician/jobs', { replace: true })
+      break
+    default:
+      navigate('/', { replace: true })
+  }
+}
+
 export function LoginPage() {
+  const navigate = useNavigate()
+  const [accountType, setAccountType] = useState<AccountType>('customer')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -341,6 +358,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [serverError, setServerError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -359,21 +377,38 @@ export function LoginPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (!validate()) {
-      setSuccessMessage('')
-      return
-    }
-
-    setIsSubmitting(true)
+    setServerError('')
     setSuccessMessage('')
 
-    window.setTimeout(() => {
+    if (!validate()) return
+
+    setIsSubmitting(true)
+
+    try {
+      const result = await authService.login(
+        { identifier: identifier.trim(), password, role: accountType },
+        rememberMe,
+      )
+
+      if (result.success) {
+        setSuccessMessage(
+          `Đăng nhập thành công. Xin chào, ${result.data.user.fullName}!`,
+        )
+        // Điều hướng sau khi hiển thị thông báo ngắn
+        window.setTimeout(() => navigateByRole(result.data.user, navigate), 800)
+      }
+    } catch (err: unknown) {
+      // Axios ném lỗi khi status 4xx/5xx
+      const axiosError = err as { response?: { data?: { success: false; error?: { message?: string } } } }
+      const message =
+        axiosError.response?.data?.error?.message ??
+        'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
+      setServerError(message)
+    } finally {
       setIsSubmitting(false)
-      setSuccessMessage(`Đăng nhập thành công${rememberMe ? ' và đã ghi nhớ phiên đăng nhập.' : '.'}`)
-    }, 1100)
+    }
   }
 
   return (
@@ -392,6 +427,7 @@ export function LoginPage() {
           description="Đăng nhập bằng email hoặc số điện thoại để tiếp tục."
         />
 
+        {serverError ? <StatusBanner type="error" title="Đăng nhập thất bại" description={serverError} /> : null}
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>

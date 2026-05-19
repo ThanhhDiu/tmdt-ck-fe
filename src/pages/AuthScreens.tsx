@@ -322,7 +322,7 @@ function loginSideItems(): InfoItem[] {
     },
     {
       title: 'Bảo mật rõ ràng',
-      description: 'Quy trình xác thực tách bạch cho người dùng và thợ.',
+      description: 'Quy trình xác thực thống nhất, phù hợp cho mọi tài khoản.',
       icon: <ShieldCheck size={16} />,
     },
     {
@@ -334,7 +334,6 @@ function loginSideItems(): InfoItem[] {
 }
 
 export function LoginPage() {
-  const [accountType, setAccountType] = useState<AccountType>('customer')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -373,9 +372,7 @@ export function LoginPage() {
 
     window.setTimeout(() => {
       setIsSubmitting(false)
-      setSuccessMessage(
-        `Đăng nhập thành công với vai trò ${accountType === 'customer' ? 'Người dùng' : 'Thợ'}${rememberMe ? ' và đã ghi nhớ phiên đăng nhập.' : '.'}`,
-      )
+      setSuccessMessage(`Đăng nhập thành công${rememberMe ? ' và đã ghi nhớ phiên đăng nhập.' : '.'}`)
     }, 1100)
   }
 
@@ -383,7 +380,7 @@ export function LoginPage() {
     <AuthShell
       badge="Giao diện xác thực tối giản"
       title="Đăng nhập nhanh, rõ ràng và an toàn"
-      description="Một trải nghiệm auth hiện đại cho người dùng và thợ, tối ưu cho desktop lẫn mobile."
+      description="Một trải nghiệm auth hiện đại, tối ưu cho desktop lẫn mobile."
       accentTitle="Trải nghiệm giống SaaS hiện đại"
       accentDescription="Card trung tâm, trạng thái rõ ràng, icon trực quan và luồng đổi mật khẩu liền mạch."
       items={loginSideItems()}
@@ -398,8 +395,6 @@ export function LoginPage() {
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>
-          <ToggleGroup value={accountType} onChange={setAccountType} />
-
           <TextField
             name="identifier"
             label="Email hoặc số điện thoại"

@@ -22,6 +22,15 @@ import { Avatar } from '../components/common/Avatar';
 import type { Contact } from '../types/Message';
 import type {UserRole} from "../types/UserRole.ts";
 
+const mockContact: Contact = {
+    id: '1',
+    name: 'Nguyễn Văn An',
+    lastMessage: 'Tôi đã gửi báo giá...',
+    time: '10:45 AM',
+    avatar: 'https://placehold.co/48x48',
+    isOnline: true
+};
+
 const mockContact2: Contact = {
     id: '2',
     name: 'Trần Văn Bình',

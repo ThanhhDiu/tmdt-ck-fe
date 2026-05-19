@@ -14,7 +14,6 @@ interface CustomerAccountProfileCardProps {
   onUploadAvatar?: () => void;
 }
 
-
 export function CustomerAccountProfileCard({
   form,
   onFieldChange,

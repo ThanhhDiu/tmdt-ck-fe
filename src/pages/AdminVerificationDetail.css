@@ -1,7 +1,15 @@
 .avd-layout {
+<<<<<<< HEAD
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-page);
+=======
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
+    linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%);
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
 }
 
 .avd-main {
@@ -48,7 +56,11 @@
   margin: 0;
   font-size: 32px;
   font-weight: 800;
+<<<<<<< HEAD
   color: var(--primary);
+=======
+  color: #0f172a;
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
 }
 
 .avd-status {
@@ -223,7 +235,11 @@
 }
 
 .avd-empty-page button {
+<<<<<<< HEAD
   background: var(--accent);
+=======
+  background: #0f1f53;
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -251,6 +267,13 @@
 }
 
 @media (max-width: 900px) {
+<<<<<<< HEAD
+=======
+  .avd-layout {
+    margin-left: 72px;
+  }
+
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
   .avd-main {
     width: calc(100% - var(--admin-sidebar-collapsed-width));
     max-width: calc(100% - var(--admin-sidebar-collapsed-width));

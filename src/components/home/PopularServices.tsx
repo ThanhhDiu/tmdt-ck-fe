@@ -7,8 +7,7 @@ import {
   FridgeIcon, 
   BroomIcon, 
   WrenchIcon, 
-  BugIcon, 
-  MicrowaveIcon, 
+  BugIcon,  
   CarIcon 
 } from '../common/Icons';
 

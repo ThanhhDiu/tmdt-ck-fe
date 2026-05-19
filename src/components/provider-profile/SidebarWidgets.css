@@ -9,7 +9,11 @@
 .widget-title {
   font-size: 16px;
   font-weight: 700;
+<<<<<<< HEAD
   color: var(--primary);
+=======
+  color: #000C33;
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
   margin: 0 0 20px 0;
   display: flex;
   align-items: center;
@@ -25,7 +29,11 @@
 
 .schedule-box {
   background-color: #ffffff;
+<<<<<<< HEAD
   border: 1px solid var(--border-default);
+=======
+  border: 1px solid #e2e8f0;
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
   border-radius: 12px;
   padding: 12px;
   text-align: center;
@@ -51,7 +59,11 @@
 .sc-time {
   font-size: 13px;
   font-weight: 600;
+<<<<<<< HEAD
   color: var(--primary);
+=======
+  color: #000C33;
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
 }
 
 .schedule-box.full .sc-time {
@@ -73,7 +85,11 @@
   align-items: center;
   gap: 12px;
   font-size: 14px;
+<<<<<<< HEAD
   color: var(--text-secondary);
+=======
+  color: #4A5E8B;
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
   font-weight: 500;
 }
 
@@ -88,11 +104,19 @@
 }
 
 .orange-bg {
+<<<<<<< HEAD
   background-color: var(--accent-bg);
 }
 
 .text-orange-500 {
   color: var(--accent);
+=======
+  background-color: rgba(249, 115, 22, 0.1);
+}
+
+.text-orange-500 {
+  color: #f97316;
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
 }
 
 /* Map Card */

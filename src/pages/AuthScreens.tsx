@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { authService } from '../services/auth/authService.ts'
+import type { AuthUser } from '../types/auth/auth'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -323,7 +325,7 @@ function loginSideItems(): InfoItem[] {
     },
     {
       title: 'Bảo mật rõ ràng',
-      description: 'Quy trình xác thực tách bạch cho người dùng và thợ.',
+      description: 'Quy trình xác thực thống nhất, phù hợp cho mọi tài khoản.',
       icon: <ShieldCheck size={16} />,
     },
     {
@@ -332,6 +334,19 @@ function loginSideItems(): InfoItem[] {
       icon: <KeyRound size={16} />,
     },
   ]
+}
+
+function navigateByRole(user: AuthUser, navigate: ReturnType<typeof useNavigate>) {
+  switch (user.role) {
+    case 'admin':
+      navigate('/admin/dashboard', { replace: true })
+      break
+    case 'technician':
+      navigate('/technician/jobs', { replace: true })
+      break
+    default:
+      navigate('/', { replace: true })
+  }
 }
 
 export function LoginPage() {
@@ -344,6 +359,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [serverError, setServerError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -364,32 +380,35 @@ export function LoginPage() {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (!validate()) {
-      setSuccessMessage('')
-      return
-    }
-
-    setIsSubmitting(true)
+    setServerError('')
     setSuccessMessage('')
 
-    try {
-      await loginUser({
-        identifier: identifier,
-        password: password,
-        role: accountType,
-      })
-      window.setTimeout(() => {
-        setIsSubmitting(false)
-        setSuccessMessage(
-          `Đăng nhập thành công với vai trò ${accountType === 'customer' ? 'Người dùng' : 'Thợ'}${rememberMe ? ' và đã ghi nhớ phiên đăng nhập.' : '.'}`,
-        )
-        navigate('/')
-      }, 1100)
+    if (!validate()) return
 
-    } catch (error) {
+    setIsSubmitting(true)
+
+    try {
+      const result = await authService.login(
+        { identifier: identifier.trim(), password, role: accountType },
+        rememberMe,
+      )
+
+      if (result.success) {
+        setSuccessMessage(
+          `Đăng nhập thành công. Xin chào, ${result.data.user.fullName}!`,
+        )
+        // Điều hướng sau khi hiển thị thông báo ngắn
+        window.setTimeout(() => navigateByRole(result.data.user, navigate), 800)
+      }
+    } catch (err: unknown) {
+      // Axios ném lỗi khi status 4xx/5xx
+      const axiosError = err as { response?: { data?: { success: false; error?: { message?: string } } } }
+      const message =
+        axiosError.response?.data?.error?.message ??
+        'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
+      setServerError(message)
+    } finally {
       setIsSubmitting(false)
-      setSuccessMessage('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.')
     }
   }
 
@@ -397,7 +416,7 @@ export function LoginPage() {
     <AuthShell
       badge="Giao diện xác thực tối giản"
       title="Đăng nhập nhanh, rõ ràng và an toàn"
-      description="Một trải nghiệm auth hiện đại cho người dùng và thợ, tối ưu cho desktop lẫn mobile."
+      description="Một trải nghiệm auth hiện đại, tối ưu cho desktop lẫn mobile."
       accentTitle="Trải nghiệm giống SaaS hiện đại"
       accentDescription="Card trung tâm, trạng thái rõ ràng, icon trực quan và luồng đổi mật khẩu liền mạch."
       items={loginSideItems()}
@@ -409,11 +428,10 @@ export function LoginPage() {
           description="Đăng nhập bằng email hoặc số điện thoại để tiếp tục."
         />
 
+        {serverError ? <StatusBanner type="error" title="Đăng nhập thất bại" description={serverError} /> : null}
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>
-          <ToggleGroup value={accountType} onChange={setAccountType} />
-
           <TextField
             name="identifier"
             label="Email hoặc số điện thoại"
@@ -512,7 +530,6 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -553,33 +570,23 @@ export function RegisterPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!validate()) {
       setSuccessMessage('')
-      setErrorMessage('')
       return
     }
 
     setIsSubmitting(true)
     setSuccessMessage('')
-    setErrorMessage('')
 
-    try {
-      await registerUser({ fullName, email, phone, password, accountType }, setSuccessMessage)
-    } catch (error: any) {
-      const responseData = error.response?.data;
-      if (responseData?.errors) {
-        // Lấy lỗi validation đầu tiên từ backend
-        const firstError = Object.values(responseData.errors)[0] as string;
-        setErrorMessage(firstError || 'Dữ liệu không hợp lệ');
-      } else {
-        setErrorMessage(responseData?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
-      }
-    } finally {
+    window.setTimeout(() => {
       setIsSubmitting(false)
-    }
+      setSuccessMessage(
+        `Tạo tài khoản ${accountType === 'customer' ? 'Người dùng' : 'Thợ'} thành công. Hệ thống đã sẵn sàng cho bước xác thực tiếp theo.`,
+      )
+    }, 1200)
   }
 
   return (
@@ -599,7 +606,6 @@ export function RegisterPage() {
         />
 
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
-        {errorMessage ? <StatusBanner type="error" title="Lỗi đăng ký" description={errorMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>
           <ToggleGroup value={accountType} onChange={setAccountType} />

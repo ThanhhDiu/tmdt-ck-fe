@@ -1,18 +1,17 @@
-import { API_URL, getAccessToken } from "./auth";
+import axiosClient from '../api/axiosClient';
+import { getAccessToken } from './auth';
+
 export async function getInfo() {
     const accessToken = getAccessToken()
     if (accessToken) {
-        const data = await fetch(`${API_URL}/auth/me`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
+        try {
+            const data: any = await axiosClient.get('/auth/me');
+            return data.data; // Assuming your API returns { success: true, data: { ...user } }
+        } catch (error) {
+            console.error("Lỗi khi lấy thông tin user:", error);
+            window.location.href = '/login';
         }
-    });
-    const jsonData = await data.json();
-    return jsonData.data;
     } else {
         window.location.href = '/login';
     }
-    
 }

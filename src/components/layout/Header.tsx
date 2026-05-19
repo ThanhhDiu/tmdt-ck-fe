@@ -44,7 +44,8 @@ const profileDropdown = (): ReactNode => {
             </div>
           </div>)}
 
-const loginButton = (onNavigate: any)=> (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const loginButton = (onNavigate?: (page: string, data?: any) => void)=> (
   <button className="profile-menu__item profile-menu__item--danger" type="button" onClick={()=> onNavigate && onNavigate('login')} role="menuitem">
     Đăng nhập
   </button> 

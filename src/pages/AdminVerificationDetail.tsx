@@ -1,20 +1,35 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AdminHeader } from '../components/admin/AdminHeader'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { Footer } from '../components/layout/Footer'
 import {
   formatDate,
-  getVerificationRequestById,
+  getVerificationById,
   verificationStatusColor,
   verificationStatusLabel,
 } from '../services/verificationService'
+import type { VerificationRequest } from '../types/VerificationRequest'
 import './AdminVerificationDetail.css'
 
 export default function AdminVerificationDetail() {
   const navigate = useNavigate()
   const { requestId } = useParams()
-  const request = useMemo(() => (requestId ? getVerificationRequestById(requestId) : undefined), [requestId])
+  const [request, setRequest] = useState<VerificationRequest | null>(null)
+
+  useEffect(() => {
+    if (requestId) {
+      const fetchDetail = async () => {
+        try {
+          const response: any = await getVerificationById(requestId)
+          setRequest(response.data || response)
+        } catch (error) {
+          console.error('Lỗi khi lấy chi tiết hồ sơ xác minh:', error)
+        }
+      }
+      fetchDetail()
+    }
+  }, [requestId])
 
   if (!request) {
     return (

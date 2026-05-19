@@ -512,6 +512,7 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -553,17 +554,33 @@ export function RegisterPage() {
   }
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault()
+    event.preventDefault()
 
-  if (!validate()) {
+    if (!validate()) {
+      setSuccessMessage('')
+      setErrorMessage('')
+      return
+    }
+
+    setIsSubmitting(true)
     setSuccessMessage('')
-    return
-  }
+    setErrorMessage('')
 
-  setIsSubmitting(true)
-  await registerUser({ fullName, email, phone, password, accountType }, setSuccessMessage)
-  
-}
+    try {
+      await registerUser({ fullName, email, phone, password, accountType }, setSuccessMessage)
+    } catch (error: any) {
+      const responseData = error.response?.data;
+      if (responseData?.errors) {
+        // Lấy lỗi validation đầu tiên từ backend
+        const firstError = Object.values(responseData.errors)[0] as string;
+        setErrorMessage(firstError || 'Dữ liệu không hợp lệ');
+      } else {
+        setErrorMessage(responseData?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <AuthShell
@@ -582,6 +599,7 @@ export function RegisterPage() {
         />
 
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
+        {errorMessage ? <StatusBanner type="error" title="Lỗi đăng ký" description={errorMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>
           <ToggleGroup value={accountType} onChange={setAccountType} />

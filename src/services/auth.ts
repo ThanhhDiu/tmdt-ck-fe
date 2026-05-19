@@ -1,4 +1,6 @@
-export const API_URL = import.meta.env.VITE_API_URL
+import axiosClient from '../api/axiosClient';
+
+// Removed export API_URL since axiosClient handles the base URL
 
 interface RegisterUserData {
   fullName: string
@@ -12,31 +14,18 @@ export const registerUser = async (userData: RegisterUserData, setSuccessMessage
     setSuccessMessage('')
     const { fullName, email, phone, password, accountType } = userData
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone,
-          password,
-          role: accountType,
-        }),
+      const data: any = await axiosClient.post('/auth/register', {
+        fullName,
+        email,
+        phone,
+        password,
+        role: accountType,
       })
   
-      const data = await response.json()
-  
-      if (!response.ok) {
-        throw new Error(data.message || 'Đăng ký thất bại')
-      }
-  
-      setSuccessMessage('Đăng ký thành công')
-      console.log(data)
-    } catch (error) {
-      console.error(error)
-      setSuccessMessage('Có lỗi xảy ra')
+      setSuccessMessage('Đăng ký thành công. Vui lòng quay lại trang Đăng nhập.')
+    } catch (error: any) {
+      console.error('Lỗi đăng ký:', error)
+      throw error;
     }
   }
 
@@ -70,28 +59,21 @@ export interface LoginResponse {
 export const loginUser = async (
   userData: LoginUserData
 ): Promise<LoginResponse> => {
-  const response = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  try {
+    const data: any = await axiosClient.post('/auth/login', {
       identifier: userData.identifier,
       password: userData.password,
       role: userData.role,
-    }),
-  })
-
-  const data: LoginResponse = await response.json()
+    });
   
-  if (!response.ok) {
-    throw new Error('Đăng nhập thất bại')
+    const { user, accessToken, refreshToken } = data.data
+      localStorage.setItem('user', JSON.stringify({ user }))
+      localStorage.setItem('accessToken',  accessToken )
+      localStorage.setItem('refreshToken', refreshToken )
+    return data as LoginResponse;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Đăng nhập thất bại');
   }
-  const { user, accessToken, refreshToken } = data.data
-    localStorage.setItem('user', JSON.stringify({ user }))
-    localStorage.setItem('accessToken',  accessToken )
-    localStorage.setItem('refreshToken', refreshToken )
-  return data
 }
 
 export const logoutUser = () => {
@@ -104,6 +86,7 @@ export const isAuthenticated = (): boolean => {
   const accessToken = localStorage.getItem('accessToken')
   return !!accessToken
 }
+
 export const getAccessToken = (): string | null => {
     if (!isAuthenticated()) {
         return null
@@ -111,3 +94,10 @@ export const getAccessToken = (): string | null => {
   return localStorage.getItem('accessToken')
 }
 
+export const forgotPassword = async (email: string) => {
+  return await axiosClient.post('/auth/forgot-password', { email });
+}
+
+export const changePassword = async (payload: { oldPassword?: string, newPassword: string }) => {
+  return await axiosClient.post('/auth/change-password', payload);
+}

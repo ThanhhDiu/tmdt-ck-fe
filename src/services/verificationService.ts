@@ -226,7 +226,7 @@ export const bootstrapVerificationStore = () => {
     }
   })
 
-  localStorage.setItem(REQUESTS_KEY, JSON.stringify(merged.length > 0 ? merged : seedRequests))
+  // localStorage.setItem(REQUESTS_KEY, JSON.stringify(merged.length > 0 ? merged : seedRequests))
 
   const existingTechMap = parse<Record<string, VerificationStatus>>(localStorage.getItem(TECH_STATUS_KEY), {})
   merged.forEach((req) => {
@@ -234,7 +234,7 @@ export const bootstrapVerificationStore = () => {
       existingTechMap[req.technicianId] = req.status
     }
   })
-  localStorage.setItem(TECH_STATUS_KEY, JSON.stringify(existingTechMap))
+  // localStorage.setItem(TECH_STATUS_KEY, JSON.stringify(existingTechMap))
 }
 
 export const getVerificationRequests = (): VerificationRequest[] => {
@@ -262,13 +262,13 @@ export const updateVerificationRequestStatus = (
     }
   })
 
-  localStorage.setItem(REQUESTS_KEY, JSON.stringify(next))
+  // localStorage.setItem(REQUESTS_KEY, JSON.stringify(next))
 
   const updated = next.find((item) => item.id === id)
   if (updated) {
     const techMap = parse<Record<string, VerificationStatus>>(localStorage.getItem(TECH_STATUS_KEY), {})
     techMap[updated.technicianId] = updated.status
-    localStorage.setItem(TECH_STATUS_KEY, JSON.stringify(techMap))
+    // localStorage.setItem(TECH_STATUS_KEY, JSON.stringify(techMap))
   }
 
   return updated

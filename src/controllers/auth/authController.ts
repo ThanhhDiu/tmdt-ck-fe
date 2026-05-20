@@ -2,6 +2,7 @@ import { authService } from '../../services/auth/authService';
 import {
     saveToken,
     saveRefreshToken,
+    saveRememberMe,
     clearAllTokens,
 } from '../../utils/token';
 import type {
@@ -55,10 +56,11 @@ export const authController = {
                 };
             }
 
-            // Lưu cả access token & refresh token
+            // Lưu cả access token & refresh token vào localStorage
             const { accessToken, refreshToken, user } = res.data;
-            saveToken(accessToken, remember);
-            saveRefreshToken(refreshToken, remember);
+            saveRememberMe(remember);
+            saveToken(accessToken);
+            saveRefreshToken(refreshToken);
 
             return { success: true, user };
 
@@ -101,8 +103,9 @@ export const authController = {
             }
 
             const { accessToken, refreshToken, user } = res.data;
-            saveToken(accessToken, remember);
-            saveRefreshToken(refreshToken, remember);
+            saveRememberMe(true); // register luôn ghi nhớ
+            saveToken(accessToken);
+            saveRefreshToken(refreshToken);
 
             return { success: true, user };
 

@@ -1,7 +1,3 @@
-// ─── Auth Types ──────────────────────────────────────────────────────────────
-
-// ─── Shared ──────────────────────────────────────────────────────────────────
-
 export type UserRole = 'customer' | 'technician' | 'admin';
 export type UserStatus = 'verified' | 'pending' | 'banned';
 
@@ -20,8 +16,6 @@ export interface AuthTokenData {
     refreshToken: string;
     user: AuthUser;
 }
-
-// ─── Login ───────────────────────────────────────────────────────────────────
 
 /** POST /api/auth/login */
 export interface LoginRequest {
@@ -42,8 +36,6 @@ export interface LoginErrorResponse {
         message: string;
     };
 }
-
-// ─── Register ────────────────────────────────────────────────────────────────
 
 /** POST /api/auth/register */
 export interface RegisterRequest {
@@ -71,8 +63,6 @@ export interface RegisterErrorResponse {
         };
     };
 }
-
-// ─── Union response types (dùng với type guard) ───────────────────────────────
 
 export type LoginApiResponse = LoginResponse | LoginErrorResponse;
 export type RegisterApiResponse = RegisterResponse | RegisterErrorResponse;

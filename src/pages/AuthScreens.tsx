@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { authService } from '../services/auth/authService.ts'
+import { authController } from '../controllers/auth/authController'
 import type { AuthUser } from '../types/auth/auth'
 import {
   ArrowLeft,
@@ -387,25 +387,25 @@ export function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      const result = await authService.login(
-        { identifier: identifier.trim(), password, role: accountType },
+      // ✅ Gọi qua authController — nơi có saveToken() và saveRefreshToken()
+      const result = await authController.handleLogin(
+        identifier.trim(),
+        password,
+        accountType,
         rememberMe,
       )
 
       if (result.success) {
         setSuccessMessage(
-          `Đăng nhập thành công. Xin chào, ${result.data.user.fullName}!`,
+          `Đăng nhập thành công. Xin chào, ${result.user.fullName}!`,
         )
         // Điều hướng sau khi hiển thị thông báo ngắn
-        window.setTimeout(() => navigateByRole(result.data.user, navigate), 800)
+        window.setTimeout(() => navigateByRole(result.user, navigate), 800)
+      } else {
+        setServerError(result.message)
       }
     } catch (err: unknown) {
-      // Axios ném lỗi khi status 4xx/5xx
-      const axiosError = err as { response?: { data?: { success: false; error?: { message?: string } } } }
-      const message =
-        axiosError.response?.data?.error?.message ??
-        'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
-      setServerError(message)
+      setServerError('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
     } finally {
       setIsSubmitting(false)
     }
@@ -517,6 +517,7 @@ function registerSideItems(): InfoItem[] {
 }
 
 export function RegisterPage() {
+  const navigate = useNavigate()
   const [accountType, setAccountType] = useState<AccountType>('customer')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -529,6 +530,7 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [serverError, setServerError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -569,23 +571,43 @@ export function RegisterPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setSuccessMessage('')
+    setServerError('')
 
-    if (!validate()) {
-      setSuccessMessage('')
-      return
-    }
+    if (!validate()) return
 
     setIsSubmitting(true)
-    setSuccessMessage('')
 
-    window.setTimeout(() => {
+    try {
+      const result = await authController.handleRegister({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password,
+        role: accountType,
+      })
+
+      if (result.success) {
+        setSuccessMessage(
+          `Tạo tài khoản ${accountType === 'customer' ? 'Người dùng' : 'Thợ'} thành công. Xin chào, ${result.user.fullName}!`,
+        )
+        // Điều hướng sau khi hiển thị thông báo ngắn
+        window.setTimeout(() => navigateByRole(result.user, navigate), 800)
+      } else {
+        // Ánh xạ lỗi field-level từ server (422 VALIDATION_ERROR)
+        if (result.fields && Object.keys(result.fields).length > 0) {
+          setErrors((prev) => ({ ...prev, ...result.fields }))
+        } else {
+          setServerError(result.message)
+        }
+      }
+    } catch {
+      setServerError('Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.')
+    } finally {
       setIsSubmitting(false)
-      setSuccessMessage(
-        `Tạo tài khoản ${accountType === 'customer' ? 'Người dùng' : 'Thợ'} thành công. Hệ thống đã sẵn sàng cho bước xác thực tiếp theo.`,
-      )
-    }, 1200)
+    }
   }
 
   return (
@@ -604,6 +626,7 @@ export function RegisterPage() {
           description="Điền thông tin để bắt đầu sử dụng hệ thống."
         />
 
+        {serverError ? <StatusBanner type="error" title="Đăng ký thất bại" description={serverError} /> : null}
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import './Header.css';
+import { authController } from '../../controllers/auth/authController';
 import { SearchIcon, BellIcon } from '../common/Icons';
 
 interface HeaderProps {
@@ -25,7 +26,10 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const goToProfile = () => onNavigate && onNavigate(profilePage);
-  const goToLogout = () => onNavigate && onNavigate('login');
+  const goToLogout = () => {
+    authController.handleLogout();
+    onNavigate && onNavigate('login');
+  };
 
   return (
     <header className="header">

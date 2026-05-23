@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { authController } from '../controllers/auth/authController'
-import type { AuthUser } from '../types/auth/auth'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -20,6 +18,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import './AuthScreens.css'
+import { loginUser, registerUser } from '../services/auth'
 
 type AccountType = 'customer' | 'technician'
 
@@ -324,7 +323,7 @@ function loginSideItems(): InfoItem[] {
     },
     {
       title: 'Bảo mật rõ ràng',
-      description: 'Quy trình xác thực thống nhất, phù hợp cho mọi tài khoản.',
+      description: 'Quy trình xác thực tách bạch cho người dùng và thợ.',
       icon: <ShieldCheck size={16} />,
     },
     {
@@ -335,22 +334,8 @@ function loginSideItems(): InfoItem[] {
   ]
 }
 
-function navigateByRole(user: AuthUser, navigate: ReturnType<typeof useNavigate>) {
-  switch (user.role) {
-    case 'admin':
-      navigate('/admin/dashboard', { replace: true })
-      break
-    case 'technician':
-      navigate('/technician/jobs', { replace: true })
-      break
-    default:
-      navigate('/', { replace: true })
-  }
-}
-
 export function LoginPage() {
   const navigate = useNavigate()
-  const [accountType, setAccountType] = useState<AccountType>('customer')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -358,7 +343,6 @@ export function LoginPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-  const [serverError, setServerError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -379,35 +363,33 @@ export function LoginPage() {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setServerError('')
-    setSuccessMessage('')
 
-    if (!validate()) return
+    if (!validate()) {
+      setSuccessMessage('')
+      return
+    }
 
     setIsSubmitting(true)
+    setSuccessMessage('')
 
     try {
-      // ✅ Gọi qua authController — nơi có saveToken() và saveRefreshToken()
-      const result = await authController.handleLogin(
-        identifier.trim(),
-        password,
-        accountType,
-        rememberMe,
-      )
+      const loginResponse = await loginUser({
+        identifier: identifier,
+        password: password
+      })
+      const redirectPath = loginResponse.data.user.role.toLowerCase() === 'admin'
+        ? '/admin/dashboard'
+        : '/'
 
-      if (result.success) {
-        setSuccessMessage(
-          `Đăng nhập thành công. Xin chào, ${result.user.fullName}!`,
-        )
-        // Điều hướng sau khi hiển thị thông báo ngắn
-        window.setTimeout(() => navigateByRole(result.user, navigate), 800)
-      } else {
-        setServerError(result.message)
-      }
-    } catch (err: unknown) {
-      setServerError('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
-    } finally {
+      window.setTimeout(() => {
+        setIsSubmitting(false)
+        setSuccessMessage('Đăng nhập thành công.')
+        navigate(redirectPath)
+      }, 1100)
+
+    } catch (error) {
       setIsSubmitting(false)
+      setSuccessMessage('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.')
     }
   }
 
@@ -415,7 +397,7 @@ export function LoginPage() {
     <AuthShell
       badge="Giao diện xác thực tối giản"
       title="Đăng nhập nhanh, rõ ràng và an toàn"
-      description="Một trải nghiệm auth hiện đại, tối ưu cho desktop lẫn mobile."
+      description="Một trải nghiệm auth hiện đại cho người dùng và thợ, tối ưu cho desktop lẫn mobile."
       accentTitle="Trải nghiệm giống SaaS hiện đại"
       accentDescription="Card trung tâm, trạng thái rõ ràng, icon trực quan và luồng đổi mật khẩu liền mạch."
       items={loginSideItems()}
@@ -427,10 +409,10 @@ export function LoginPage() {
           description="Đăng nhập bằng email hoặc số điện thoại để tiếp tục."
         />
 
-        {serverError ? <StatusBanner type="error" title="Đăng nhập thất bại" description={serverError} /> : null}
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>
+
           <TextField
             name="identifier"
             label="Email hoặc số điện thoại"
@@ -517,7 +499,6 @@ function registerSideItems(): InfoItem[] {
 }
 
 export function RegisterPage() {
-  const navigate = useNavigate()
   const [accountType, setAccountType] = useState<AccountType>('customer')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -530,7 +511,6 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-  const [serverError, setServerError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -572,43 +552,17 @@ export function RegisterPage() {
   }
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  event.preventDefault()
+
+  if (!validate()) {
     setSuccessMessage('')
-    setServerError('')
-
-    if (!validate()) return
-
-    setIsSubmitting(true)
-
-    try {
-      const result = await authController.handleRegister({
-        fullName: fullName.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        password,
-        role: accountType,
-      })
-
-      if (result.success) {
-        setSuccessMessage(
-          `Tạo tài khoản ${accountType === 'customer' ? 'Người dùng' : 'Thợ'} thành công. Xin chào, ${result.user.fullName}!`,
-        )
-        // Điều hướng sau khi hiển thị thông báo ngắn
-        window.setTimeout(() => navigateByRole(result.user, navigate), 800)
-      } else {
-        // Ánh xạ lỗi field-level từ server (422 VALIDATION_ERROR)
-        if (result.fields && Object.keys(result.fields).length > 0) {
-          setErrors((prev) => ({ ...prev, ...result.fields }))
-        } else {
-          setServerError(result.message)
-        }
-      }
-    } catch {
-      setServerError('Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.')
-    } finally {
-      setIsSubmitting(false)
-    }
+    return
   }
+
+  setIsSubmitting(true)
+  await registerUser({ fullName, email, phone, password, accountType }, setSuccessMessage)
+  
+}
 
   return (
     <AuthShell
@@ -626,7 +580,6 @@ export function RegisterPage() {
           description="Điền thông tin để bắt đầu sử dụng hệ thống."
         />
 
-        {serverError ? <StatusBanner type="error" title="Đăng ký thất bại" description={serverError} /> : null}
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>

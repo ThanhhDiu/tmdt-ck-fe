@@ -28,6 +28,7 @@ import CustomerLayout from './components/layout/CustomerLayout'
 import ServicesPage from "./pages/ServicesPage.tsx";
 import Provider from "./pages/Provider.tsx";
 import {ChangePasswordPage, ForgotPasswordPage, LoginPage, RegisterPage} from "./pages/AuthScreens.tsx";
+import AdminOrdersPage from './pages/AdminOrdersPage.tsx'
 
 function App() {
     return (
@@ -154,6 +155,7 @@ function App() {
                 </CustomerLayout>
             }/>
             <Route path="/provider-dashboard" element={<ProviderDashboard/>}/>
+            <Route path="/admin/orders" element={<AdminOrdersPage/>}/>
             <Route path="/admin/users" element={<AdminUserManagement/>}/>
             <Route path="/admin/users/:id" element={<AdminUserDetail/>}/>
             <Route path="/admin/finance" element={<AdminFinancePage/>}/>

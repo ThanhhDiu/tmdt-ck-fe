@@ -77,7 +77,7 @@ export default function AppRouter() {
         </TechnicianLayout>
       } />
       <Route path="/provider-dashboard" element={<ProviderDashboard />} />
-      <Route path="orders" element={<AdminOrdersPage />} />
+      <Route path="/admin/orders" element={<AdminOrdersPage />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUserManagement />} />
       <Route path="/admin/users/:id" element={<AdminUserDetail />} />

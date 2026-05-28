@@ -350,7 +350,7 @@ function navigateByRole(user: AuthUser, navigate: ReturnType<typeof useNavigate>
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const [accountType, setAccountType] = useState<AccountType>('customer')
+  const [accountType] = useState<AccountType>('customer')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -404,7 +404,7 @@ export function LoginPage() {
       } else {
         setServerError(result.message)
       }
-    } catch (err: unknown) {
+    } catch {
       setServerError('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
     } finally {
       setIsSubmitting(false)

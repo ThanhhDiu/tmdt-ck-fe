@@ -88,7 +88,6 @@ export const authController = {
 
     handleRegister: async (
         payload: RegisterRequest,
-        remember = true,
     ): Promise<AuthResult> => {
         try {
             const res = await authService.register(payload);

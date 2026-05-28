@@ -23,7 +23,7 @@ export const ServicesPage: React.FC = () => {
     navigate(`/provider?service=${encodeURIComponent(service.name)}`);
   };
 
-  const onNavigate = (page: string, data?: any) => {
+  const onNavigate = (page: string, data?: unknown) => {
     const path = pageMap[page] || '/';
     navigate(path, { state: data });
   };

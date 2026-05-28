@@ -20,7 +20,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import './AuthScreens.css'
-import { loginUser, registerUser } from '../services/auth'
+// import { loginUser, registerUser } from '../services/auth'
 
 type AccountType = 'customer' | 'technician'
 
@@ -351,7 +351,7 @@ function navigateByRole(user: AuthUser, navigate: ReturnType<typeof useNavigate>
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const [accountType, setAccountType] = useState<AccountType>('customer')
+  const [accountType] = useState<AccountType>('customer')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -389,8 +389,7 @@ export function LoginPage() {
 
     try {
       const result = await authService.login(
-        { identifier: identifier.trim(), password, role: accountType },
-        rememberMe,
+        { identifier: identifier.trim(), password, role: accountType }
       )
 
       if (result.success) {
@@ -518,6 +517,7 @@ function registerSideItems(): InfoItem[] {
 }
 
 export function RegisterPage() {
+  const navigate = useNavigate()
   const [accountType, setAccountType] = useState<AccountType>('customer')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -530,6 +530,7 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [apiError, setApiError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -570,23 +571,116 @@ export function RegisterPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!validate()) {
       setSuccessMessage('')
+      setApiError('')
       return
     }
 
     setIsSubmitting(true)
     setSuccessMessage('')
+    setApiError('')
 
-    window.setTimeout(() => {
+    try {
+      const response = await authService.register({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password,
+        role: accountType,
+      })
+
+      if (response.success) {
+        setSuccessMessage(
+          `Tạo tài khoản ${accountType === 'customer' ? 'Người dùng' : 'Thợ'} thành công. Vui lòng kiểm tra email để xác thực tài khoản.`,
+        )
+        
+        // Chuyển hướng sang trang đăng nhập sau 2 giây
+        window.setTimeout(() => {
+          navigate('/auth/login', { replace: true })
+        }, 2000)
+      } else {
+        setApiError(response.error?.message || 'Đăng ký thất bại. Vui lòng thử lại.')
+      }
+    } catch (error: unknown) {
+      console.error('Lỗi đăng ký:', error)
+      let errorMessage = 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.'
+      let fieldErrors: FieldError = {}
+      
+      // Xử lý AxiosError
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { 
+          response?: { status: number; data: unknown }; 
+          message?: string 
+        }
+        
+        if (axiosError.response) {
+          const { status, data } = axiosError.response
+          
+          // Xử lý lỗi 409 (Conflict - email hoặc phone đã tồn tại)
+          if (status === 409) {
+            errorMessage = 'Email hoặc số điện thoại này đã được đăng ký. Vui lòng sử dụng thông tin khác hoặc đăng nhập nếu bạn đã có tài khoản.'
+            
+            if (data && typeof data === 'object') {
+              const errorData = data as Record<string, unknown>
+              if (errorData.error && typeof errorData.error === 'object') {
+                const err = errorData.error as Record<string, unknown>
+                if (typeof err.message === 'string') {
+                  errorMessage = err.message
+                }
+                if (err.fields && typeof err.fields === 'object') {
+                  fieldErrors = err.fields as FieldError
+                }
+              }
+            }
+          } else if (status === 400) {
+            // Validation error
+            if (data && typeof data === 'object') {
+              const errorData = data as Record<string, unknown>
+              if (errorData.error && typeof errorData.error === 'object') {
+                const err = errorData.error as Record<string, unknown>
+                if (typeof err.message === 'string') {
+                  errorMessage = err.message
+                }
+                if (err.fields && typeof err.fields === 'object') {
+                  fieldErrors = err.fields as FieldError
+                }
+              }
+            }
+          } else if (status === 500) {
+            errorMessage = 'Lỗi máy chủ. Vui lòng thử lại sau.'
+          } else {
+            if (data && typeof data === 'object') {
+              const errorData = data as Record<string, unknown>
+              if (errorData.error && typeof errorData.error === 'object') {
+                const err = errorData.error as Record<string, unknown>
+                if (typeof err.message === 'string') {
+                  errorMessage = err.message
+                }
+              } else if (typeof errorData.message === 'string') {
+                errorMessage = errorData.message
+              }
+            }
+          }
+        } else if (axiosError.message?.includes('timeout')) {
+          errorMessage = 'Yêu cầu quá lâu. Vui lòng kiểm tra kết nối internet và thử lại.'
+        } else if (axiosError.message) {
+          errorMessage = axiosError.message
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      }
+      
+      setApiError(errorMessage)
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors((current) => ({ ...current, ...fieldErrors }))
+      }
+    } finally {
       setIsSubmitting(false)
-      setSuccessMessage(
-        `Tạo tài khoản ${accountType === 'customer' ? 'Người dùng' : 'Thợ'} thành công. Hệ thống đã sẵn sàng cho bước xác thực tiếp theo.`,
-      )
-    }, 1200)
+    }
   }
 
   return (
@@ -604,6 +698,8 @@ export function RegisterPage() {
           title="Tạo tài khoản mới"
           description="Điền thông tin để bắt đầu sử dụng hệ thống."
         />
+
+        {apiError ? <StatusBanner type="error" title="Lỗi" description={apiError} /> : null}
 
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
 

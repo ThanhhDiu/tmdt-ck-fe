@@ -13,7 +13,19 @@ import './ProviderProfile.css';
 export const ProviderProfile: React.FC = () => {
   const onNavigate = useCustomerNavigate();
   const location = useLocation();
-  const providerData = location.state as any;
+  const providerData = location.state as {
+    name?: string;
+    avatar?: string;
+    rating?: number;
+    reviewCount?: number;
+    location?: string;
+    type?: string;
+    titleBadge?: string;
+    coverImage?: string;
+    completedJobs?: string;
+    isAvailable?: boolean;
+    activeTab?: string;
+  } | undefined;
 
   const [activeTab, setActiveTab] = useState(() => providerData?.activeTab || 'about');
   
@@ -32,13 +44,16 @@ export const ProviderProfile: React.FC = () => {
 
   const profileData = providerData ? {
     ...defaultProfile,
-    name: providerData.name,
-    avatar: providerData.avatar,
-    rating: providerData.rating || 4.9,
-    reviewCount: providerData.reviewCount || 1240,
-    location: providerData.location || 'Khu vực TP.HCM',
-    type: providerData.type || 'normal',
-    titleBadge: providerData.titleBadge || ''
+    name: providerData.name ?? defaultProfile.name,
+    avatar: providerData.avatar ?? defaultProfile.avatar,
+    rating: providerData.rating ?? defaultProfile.rating,
+    reviewCount: providerData.reviewCount ?? defaultProfile.reviewCount,
+    location: providerData.location ?? defaultProfile.location,
+    type: providerData.type ?? defaultProfile.type,
+    titleBadge: providerData.titleBadge ?? defaultProfile.titleBadge,
+    coverImage: providerData.coverImage ?? defaultProfile.coverImage,
+    completedJobs: providerData.completedJobs ?? defaultProfile.completedJobs,
+    isAvailable: providerData.isAvailable ?? defaultProfile.isAvailable,
   } : defaultProfile;
 
   return (

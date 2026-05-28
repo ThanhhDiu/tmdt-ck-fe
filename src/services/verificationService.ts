@@ -1,5 +1,5 @@
 import axiosClient from '../api/axiosClient';
-import type { VerificationRequest, VerificationStatus } from '../types/VerificationRequest';
+import type { VerificationStatus } from '../types/VerificationRequest';
 
 // Helper function formatting date if needed by components
 export const formatDate = (iso: string): string => {
@@ -45,10 +45,10 @@ export const getTechnicianVerificationStatus = async (technicianId: string | num
     return await axiosClient.get(`/verifications/status/${technicianId}`); // Thay đổi endpoint tương ứng với BE nếu cần
 }
 
-export const getVerificationRequests = async (params?: any) => {
-    return await axiosClient.get(`/verifications`, { params });
+export const getVerificationRequests = async (params?: Record<string, unknown>) => {
+  return await axiosClient.get(`/verifications`, { params });
 }
 
-export const updateVerificationRequestStatus = async (id: string | number, payload: any) => {
-    return await axiosClient.patch(`/verifications/${id}/status`, payload);
+export const updateVerificationRequestStatus = async (id: string | number, payload: Record<string, unknown>) => {
+  return await axiosClient.patch(`/verifications/${id}/status`, payload);
 }

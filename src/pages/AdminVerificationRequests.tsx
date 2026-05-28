@@ -31,7 +31,7 @@ export default function AdminVerificationRequests() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response: any = await getVerificationRequests()
+        const response = await getVerificationRequests()
         // Axios interceptor của bạn đang trả về response.data. Do đó response có thể là mảng trực tiếp hoặc có bọc data tuỳ thuộc API BE.
         setRequests(Array.isArray(response) ? response : (response.data || []))
       } catch (error) {

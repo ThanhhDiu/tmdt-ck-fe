@@ -152,7 +152,7 @@ const allProviders = [
 ];
 
 interface Props {
-    onNavigate?: (page: string, data?: any) => void;
+    onNavigate?: (page: string, data?: unknown) => void;
     selectedService?: string;
     currentPage?: number;
     setCurrentPage?: (page: number) => void;
@@ -169,9 +169,9 @@ export const ProviderList: React.FC<Props> = ({
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [selectedSort, setSelectedSort] = useState('PHỔ BIẾN NHẤT');
     const ITEMS_PER_PAGE = 7;
-    const [selectedProvider, setSelectedProvider] = useState<any>(null);
+    const [selectedProvider, setSelectedProvider] = useState<unknown>(null);
 
-    const handleNavigate = (page: string, data?: any) => {
+    const handleNavigate = (page: string, data?: unknown) => {
         if (page === 'open-modal') {
             setSelectedProvider(data);
             return;
@@ -203,12 +203,12 @@ export const ProviderList: React.FC<Props> = ({
             }
 
             if (selectedSort === 'PHỔ BIẾN NHẤT') {
-                return ((b as any).reviewCount || 0) - ((a as any).reviewCount || 0);
+                return ((b as unknown as { reviewCount?: number }).reviewCount || 0) - ((a as unknown as { reviewCount?: number }).reviewCount || 0);
             }
             return 0; // or implement other sorts like GIÁ THẤP NHẤT
         });
         return sorted;
-    }, [filteredProviders, selectedSort]);
+    }, [filteredProviders, selectedSort, selectedService]);
 
     const pageTitle = selectedService
         ? `Thợ chuyên ${selectedService}`
@@ -269,8 +269,10 @@ export const ProviderList: React.FC<Props> = ({
             <div className="pl-cards">
                 {paginatedProviders.map((p) => {
                     if (p.type === 'premium') {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         return <PremiumProviderCard key={p.id} provider={p as any} onNavigate={onNavigate} />;
                     }
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return <ProviderCard key={p.id} provider={p as any} onNavigate={handleNavigate} />;
                 })}
             </div>

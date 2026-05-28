@@ -22,7 +22,7 @@ export default function AdminVerificationUpdate() {
     if (requestId) {
       const fetchDetail = async () => {
         try {
-          const response: any = await getVerificationById(requestId)
+          const response = await getVerificationById(requestId)
           setRequest(response.data || response)
         } catch (error) {
           console.error('Lỗi khi lấy chi tiết hồ sơ xác minh:', error)
@@ -58,7 +58,7 @@ export default function AdminVerificationUpdate() {
         reviewedBy: 'Admin AD-9902',
       })
 
-      const techStatusRes: any = await getTechnicianVerificationStatus(request.technicianId)
+      const techStatusRes = await getTechnicianVerificationStatus(request.technicianId)
       setSavedStatus(techStatusRes?.status || techStatusRes?.data?.status || status)
       setIsDone(true)
     } catch (error) {

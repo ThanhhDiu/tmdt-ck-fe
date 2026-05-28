@@ -9,11 +9,12 @@ import { customerPageMap } from './customerNavigation';
 interface HeaderProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onNavigate?: (page: string, data?: any) => void;
-  profilePage?: string;
+  profilePage?: string; // Removed unused variable
   searchPlaceholder?: string;
 }
 
-const profileDropdown = (): ReactNode => {
+// TODO: Refactor profileDropdown component to fix React Hook issue
+const ProfileDropdown = (): ReactNode => {
   const navigate = useNavigate()
     const goToProfile = () => navigate && navigate(customerPageMap['customer-settings']);
   const goToLogout = () => {
@@ -52,7 +53,6 @@ const loginButton = (onNavigate?: (page: string, data?: any) => void)=> (
 )
 export const Header: React.FC<HeaderProps> = ({
   onNavigate,
-  profilePage = 'customer-settings',
   searchPlaceholder = 'Tìm kiếm dịch vụ...',
 }) => {
   const location = useLocation();
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
             <input type="text" placeholder={searchPlaceholder} className="search-input" />
           </div>
           <NotificationMenu badgeStyle="dot" />
-          {isAuthenticated() ? profileDropdown() :  loginButton(onNavigate)}
+           {isAuthenticated() ? <ProfileDropdown /> :  loginButton(onNavigate)}
         </div>
       </div>
     </header>

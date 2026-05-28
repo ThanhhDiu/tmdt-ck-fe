@@ -21,7 +21,7 @@ export default function AdminVerificationDetail() {
     if (requestId) {
       const fetchDetail = async () => {
         try {
-          const response: any = await getVerificationById(requestId)
+          const response = await getVerificationById(requestId)
           setRequest(response.data || response)
         } catch (error) {
           console.error('Lỗi khi lấy chi tiết hồ sơ xác minh:', error)

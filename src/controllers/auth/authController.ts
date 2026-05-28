@@ -62,9 +62,10 @@ export const authController = {
 
             return { success: true, user };
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             // Xử lý lỗi HTTP (401, network error, ...)
-            const apiError = error.response?.data;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const apiError = (error as any)?.response?.data;
 
             if (apiError && !apiError.success) {
                 return {
@@ -106,8 +107,9 @@ export const authController = {
 
             return { success: true, user };
 
-        } catch (error: any) {
-            const apiError = error.response?.data;
+        } catch (error: unknown) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const apiError = (error as any)?.response?.data;
 
             if (apiError && !apiError.success) {
                 return {

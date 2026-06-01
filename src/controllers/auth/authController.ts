@@ -40,11 +40,10 @@ export const authController = {
     handleLogin: async (
         identifier: string,
         password: string,
-        role: LoginRequest['role'],
         remember = true,
     ): Promise<AuthResult> => {
         try {
-            const payload: LoginRequest = { identifier, password, role };
+            const payload: LoginRequest = { identifier, password };
             const res = await authService.login(payload);
 
             if (!res.success) {

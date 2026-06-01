@@ -3,6 +3,7 @@ import { Footer } from './Footer';
 import Header from './Header';
 import { SettingsFrame } from './SettingsFrame';
 import { CustomerSettingsSidebar } from '../settings/customer/CustomerSettingsSidebar';
+import { authController } from '../../controllers/auth/authController';
 import '../settings/SettingsUI.css';
 import { useCustomerNavigate } from './useCustomerNavigate';
 import './layout.css';
@@ -25,6 +26,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
 
   const handleSidebarSelect = (id: string) => {
     if (id === 'logout') {
+      authController.handleLogout();
       onNavigate('login');
       return;
     }

@@ -21,7 +21,6 @@ export interface AuthTokenData {
 export interface LoginRequest {
     identifier: string;   // số điện thoại hoặc email
     password: string;
-    role: Extract<UserRole, 'customer' | 'technician'>;
 }
 
 export interface LoginResponse {

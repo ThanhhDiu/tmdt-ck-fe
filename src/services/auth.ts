@@ -73,6 +73,11 @@ export interface RefreshTokenResponse {
   }
 }
 
+interface AuthMeResponse {
+  success: boolean
+  data: User
+}
+
 type FetchWithAuthOptions = RequestInit & {
   skipAuth?: boolean
 }
@@ -135,8 +140,9 @@ export const fetchWithAuth = async (
 ): Promise<Response> => {
   const { skipAuth, headers, ...rest } = init
   const nextHeaders = new Headers(headers || undefined)
+  const isFormDataBody = rest.body instanceof FormData
 
-  if (!nextHeaders.has('Content-Type')) {
+  if (!nextHeaders.has('Content-Type') && !isFormDataBody) {
     nextHeaders.set('Content-Type', 'application/json')
   }
 
@@ -192,3 +198,34 @@ export const getRefreshToken = (): string | null => {
   return localStorage.getItem('refreshToken')
 }
 
+export const getStoredUser = (): User | null => {
+  const raw = localStorage.getItem('user')
+  if (!raw) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as { user?: User } | User
+    if ('user' in parsed && parsed.user) {
+      return parsed.user
+    }
+    return parsed as User
+  } catch {
+    return null
+  }
+}
+
+export const fetchCurrentUser = async (): Promise<User> => {
+  const response = await fetchWithAuth(`${API_URL}/auth/me`, {
+    method: 'GET',
+  })
+
+  const payload: AuthMeResponse = await response.json()
+
+  if (!response.ok || !payload.success) {
+    throw new Error('Không thể lấy thông tin người dùng')
+  }
+
+  localStorage.setItem('user', JSON.stringify({ user: payload.data }))
+  return payload.data
+}

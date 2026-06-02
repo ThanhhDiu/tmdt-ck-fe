@@ -228,7 +228,7 @@ const requestOptionalApi = async <T>(path: string): Promise<T | null> => {
   return payload.data;
 };
 
-const toApiStatus = (status?: OrderStatusUi): OrderStatusApi | undefined => {
+const toApiStatus = (status?: OrderStatusUi | 'TẤT CẢ'): OrderStatusApi | undefined => {
   if (!status || status === 'TẤT CẢ') {
     return undefined;
   }

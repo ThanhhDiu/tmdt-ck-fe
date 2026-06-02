@@ -1,10 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './technicianHeader.css';
-import { FaLocationDot, FaEye, FaEyeSlash, FaBell } from 'react-icons/fa6';
+import { FaLocationDot, FaEye, FaEyeSlash } from 'react-icons/fa6';
+import NotificationMenu from '../common/NotificationMenu';
+import { getWalletSummary } from '../../services/walletService';
 
 export const TechnicianHeader: React.FC = () => {
     const [isOnline, setIsOnline] = useState(true);
     const [showBalance, setShowBalance] = useState(false);
+    const [personalBalance, setPersonalBalance] = useState<number | null>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadWallet = async () => {
+            try {
+                const wallet = await getWalletSummary();
+                if (!isMounted) {
+                    return;
+                }
+                setPersonalBalance(wallet.personalWallet.balance);
+            } catch {
+                if (!isMounted) {
+                    return;
+                }
+                setPersonalBalance(null);
+            }
+        };
+
+        loadWallet();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     return (
         <header className="db-header">
@@ -18,9 +46,11 @@ export const TechnicianHeader: React.FC = () => {
             <div className="db-header-right">
                 {/* Số dư ví */}
                 <div className="db-wallet-quick">
-                    <span className="wallet-label">Số dư:</span>
+                    <span className="wallet-label">Ví cá nhân:</span>
                     <span className="wallet-amount">
-                        {showBalance ? '1.250.000 ₫' : '******'}
+                        {showBalance
+                            ? `${(personalBalance || 0).toLocaleString('vi-VN')} ₫`
+                            : '******'}
                     </span>
                     <button
                         className="btn-icon toggle-eye"
@@ -45,10 +75,7 @@ export const TechnicianHeader: React.FC = () => {
                 </div>
 
                 {/* Thông báo */}
-                <button className="btn-icon notification">
-                    <FaBell />
-                    <span className="badge">3</span>
-                </button>
+                <NotificationMenu variant="dark" badgeStyle="count" />
             </div>
         </header>
     );

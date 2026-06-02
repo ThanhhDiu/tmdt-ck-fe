@@ -1,9 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  getAdminUsers,
+  updateAdminUserStatus,
+  mapUserResponseToFrontend,
+} from '../../services/adminUserService';
+import { isAuthenticated } from '../../services/auth';
 import './UserManagementTable.css';
 
 type UserRole = 'customer' | 'technician';
-type UserStatus = 'verified' | 'pending' | 'locked';
+type UserStatus = 'active' | 'pending' | 'locked' | 'inactive';
 
 interface User {
   id: string;
@@ -19,238 +25,11 @@ interface User {
   isVerified: boolean;
 }
 
-const initialUsers: User[] = [
-  {
-    id: 'GLW-9921',
-    name: 'Phạm Hoàng Nam',
-    avatar: 'https://i.pravatar.cc/150?img=12',
-    phone: '090 123 4567',
-    district: 'Quận 1',
-    role: 'technician',
-    status: 'verified',
-    serviceType: 'Điện lạnh',
-    orderCount: 124,
-    joinedAt: '12/05/2023',
-    isVerified: true,
-  },
-  {
-    id: 'GLW-8842',
-    name: 'Nguyễn Minh Tú',
-    avatar: 'https://i.pravatar.cc/150?img=25',
-    phone: '098 765 4321',
-    district: 'Quận 7',
-    role: 'technician',
-    status: 'pending',
-    serviceType: 'Máy giặt',
-    orderCount: 8,
-    joinedAt: '20/03/2026',
-    isVerified: false,
-  },
-  {
-    id: 'GLW-7710',
-    name: 'Trần Huy',
-    avatar: 'https://i.pravatar.cc/150?img=8',
-    phone: '091 445 5667',
-    district: 'Quận 3',
-    role: 'technician',
-    status: 'locked',
-    serviceType: 'Tủ lạnh',
-    orderCount: 61,
-    joinedAt: '11/11/2024',
-    isVerified: true,
-  },
-  {
-    id: 'CUS-1182',
-    name: 'Lê Ngọc Trâm',
-    avatar: 'https://i.pravatar.cc/150?img=47',
-    phone: '090 774 2244',
-    district: 'Thủ Đức',
-    role: 'customer',
-    status: 'verified',
-    orderCount: 15,
-    joinedAt: '01/02/2025',
-    isVerified: true,
-  },
-  {
-    id: 'CUS-5590',
-    name: 'Võ Thành An',
-    avatar: 'https://i.pravatar.cc/150?img=58',
-    phone: '093 222 1988',
-    district: 'Quận 7',
-    role: 'customer',
-    status: 'pending',
-    orderCount: 2,
-    joinedAt: '19/04/2026',
-    isVerified: false,
-  },
-  {
-    id: 'CUS-7701',
-    name: 'Nguyễn Thu Hà',
-    avatar: 'https://i.pravatar.cc/150?img=32',
-    phone: '097 778 4412',
-    district: 'Quận 1',
-    role: 'customer',
-    status: 'verified',
-    orderCount: 31,
-    joinedAt: '09/09/2024',
-    isVerified: true,
-  },
-  {
-    id: 'GLW-3351',
-    name: 'Đỗ Khánh Linh',
-    avatar: 'https://i.pravatar.cc/150?img=5',
-    phone: '086 999 1234',
-    district: 'Thủ Đức',
-    role: 'technician',
-    status: 'verified',
-    serviceType: 'Vệ sinh máy lạnh',
-    orderCount: 83,
-    joinedAt: '16/07/2025',
-    isVerified: true,
-  },
-  {
-    id: 'GLW-4402',
-    name: 'Lê Quốc Khải',
-    avatar: 'https://i.pravatar.cc/150?img=14',
-    phone: '090 445 3321',
-    district: 'Quận 1',
-    role: 'technician',
-    status: 'verified',
-    serviceType: 'Điện nước',
-    orderCount: 138,
-    joinedAt: '03/03/2024',
-    isVerified: true,
-  },
-  {
-    id: 'GLW-4420',
-    name: 'Ngô Văn Khang',
-    avatar: 'https://i.pravatar.cc/150?img=19',
-    phone: '096 118 2233',
-    district: 'Quận 3',
-    role: 'technician',
-    status: 'pending',
-    serviceType: 'Máy lạnh âm trần',
-    orderCount: 12,
-    joinedAt: '18/04/2026',
-    isVerified: false,
-  },
-  {
-    id: 'GLW-4521',
-    name: 'Trịnh Hải Nam',
-    avatar: 'https://i.pravatar.cc/150?img=24',
-    phone: '088 557 6644',
-    district: 'Thủ Đức',
-    role: 'technician',
-    status: 'locked',
-    serviceType: 'Tủ đông',
-    orderCount: 44,
-    joinedAt: '27/08/2024',
-    isVerified: true,
-  },
-  {
-    id: 'GLW-4618',
-    name: 'Phạm Đức Phúc',
-    avatar: 'https://i.pravatar.cc/150?img=31',
-    phone: '085 900 7712',
-    district: 'Quận 7',
-    role: 'technician',
-    status: 'verified',
-    serviceType: 'Máy giặt sấy',
-    orderCount: 95,
-    joinedAt: '14/10/2025',
-    isVerified: true,
-  },
-  {
-    id: 'GLW-4724',
-    name: 'Vũ Tuấn Kiệt',
-    avatar: 'https://i.pravatar.cc/150?img=42',
-    phone: '092 771 5544',
-    district: 'Quận 1',
-    role: 'technician',
-    status: 'verified',
-    serviceType: 'Bảo trì hệ thống lạnh',
-    orderCount: 167,
-    joinedAt: '21/12/2023',
-    isVerified: true,
-  },
-  {
-    id: 'CUS-9902',
-    name: 'Đinh Thảo My',
-    avatar: 'https://i.pravatar.cc/150?img=52',
-    phone: '097 111 8765',
-    district: 'Quận 3',
-    role: 'customer',
-    status: 'verified',
-    orderCount: 28,
-    joinedAt: '22/01/2025',
-    isVerified: true,
-  },
-  {
-    id: 'CUS-9911',
-    name: 'Hồ Trọng Phúc',
-    avatar: 'https://i.pravatar.cc/150?img=54',
-    phone: '090 220 7711',
-    district: 'Quận 7',
-    role: 'customer',
-    status: 'pending',
-    orderCount: 3,
-    joinedAt: '12/04/2026',
-    isVerified: false,
-  },
-  {
-    id: 'CUS-9923',
-    name: 'Tạ Quỳnh Anh',
-    avatar: 'https://i.pravatar.cc/150?img=56',
-    phone: '084 887 4567',
-    district: 'Thủ Đức',
-    role: 'customer',
-    status: 'verified',
-    orderCount: 19,
-    joinedAt: '05/06/2025',
-    isVerified: true,
-  },
-  {
-    id: 'CUS-9936',
-    name: 'Lâm Quốc Minh',
-    avatar: 'https://i.pravatar.cc/150?img=57',
-    phone: '091 678 0099',
-    district: 'Quận 1',
-    role: 'customer',
-    status: 'locked',
-    orderCount: 7,
-    joinedAt: '17/02/2024',
-    isVerified: true,
-  },
-  {
-    id: 'CUS-9947',
-    name: 'Trần Hồng Nhung',
-    avatar: 'https://i.pravatar.cc/150?img=60',
-    phone: '093 300 2244',
-    district: 'Quận 7',
-    role: 'customer',
-    status: 'verified',
-    orderCount: 42,
-    joinedAt: '29/09/2024',
-    isVerified: true,
-  },
-  {
-    id: 'CUS-9955',
-    name: 'Phan Nhật Quang',
-    avatar: 'https://i.pravatar.cc/150?img=64',
-    phone: '095 113 7788',
-    district: 'Quận 3',
-    role: 'customer',
-    status: 'pending',
-    orderCount: 1,
-    joinedAt: '25/04/2026',
-    isVerified: false,
-  },
-];
-
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  verified: { label: 'Đã xác minh', color: '#d97706', bg: '#fff7e8' },
+  active: { label: 'Đã xác minh', color: '#d97706', bg: '#fff7e8' },
   pending: { label: 'Chờ duyệt', color: '#64748b', bg: '#f1f5f9' },
   locked: { label: 'Bị khóa', color: '#dc2626', bg: '#fee2e2' },
+  inactive: { label: 'Ngưng hoạt động', color: '#6b7280', bg: '#f3f4f6' },
 };
 
 interface Props {
@@ -273,10 +52,65 @@ export const UserManagementTable: React.FC<Props> = ({
   onAreaFilterChange,
 }) => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
+
+  // ============================================================================
+  // FETCH DATA FROM API
+  // ============================================================================
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Check authentication first
+        if (!isAuthenticated()) {
+          setError('Vui lòng đăng nhập để tiếp tục');
+          setUsers([]);
+          setLoading(false);
+          return;
+        }
+
+        const response = await getAdminUsers({
+          role: activeRole,
+          status: statusFilter === 'all' ? undefined : statusFilter,
+          district: areaFilter === 'all' ? undefined : areaFilter,
+          keyword: searchKeyword || undefined,
+          page: 1,
+          limit: 100, // Fetch all to handle client-side pagination
+        });
+
+        // Map backend response to frontend User interface
+        const mappedUsers = response.items.map((userResponse) => {
+          const mapped = mapUserResponseToFrontend(userResponse);
+          return {
+            ...mapped,
+            serviceType: mapped.role === 'technician' ? 'Dịch vụ' : undefined,
+          } as User;
+        });
+
+        setUsers(mappedUsers);
+        setCurrentPage(1);
+        setSelectedIds([]);
+      } catch (err: any) {
+        const errorMessage = err.message || 'Lỗi khi tải danh sách người dùng';
+        setError(errorMessage);
+        console.error('Error fetching users:', err);
+        // Fallback to empty list on error
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [activeRole, statusFilter, areaFilter, searchKeyword]);
 
   const roleCounts = useMemo(
     () => ({
@@ -344,17 +178,54 @@ export const UserManagementTable: React.FC<Props> = ({
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
-  const toggleLockStatus = (id: string) => {
-    setUsers((prev) =>
-      prev.map((user) => {
-        if (user.id !== id) return user;
-        return { ...user, status: user.status === 'locked' ? 'verified' : 'locked' };
-      })
-    );
+  const toggleLockStatus = async (id: string) => {
+    try {
+      const user = users.find((u) => u.id === id);
+      if (!user) return;
+
+      const currentStatus = user.status;
+      const newStatus = currentStatus === 'locked' ? 'active' : 'locked';
+
+      // Call API to update status
+      const userId = parseInt(id, 10);
+      await updateAdminUserStatus(userId, {
+        status: newStatus as any,
+        reason: `Thay đổi trạng thái từ admin`,
+      });
+
+      // Update local state
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id !== id) return u;
+          return { ...u, status: newStatus as any };
+        })
+      );
+    } catch (err: any) {
+      console.error('Error updating user status:', err);
+      alert(`Lỗi: ${err.message || 'Cập nhật trạng thái thất bại'}`);
+    }
   };
 
-  const approveUser = (id: string) => {
-    setUsers((prev) => prev.map((user) => (user.id === id ? { ...user, status: 'verified', isVerified: true } : user)));
+  const approveUser = async (id: string) => {
+    try {
+      // Call API to update status to verified
+      const userId = parseInt(id, 10);
+      await updateAdminUserStatus(userId, {
+        status: 'active',
+        reason: 'Phê duyệt từ admin',
+      });
+
+      // Update local state
+      setUsers((prev) =>
+        prev.map((u) => {
+          if (u.id !== id) return u;
+          return { ...u, status: 'active', isVerified: true };
+        })
+      );
+    } catch (err: any) {
+      console.error('Error approving user:', err);
+      alert(`Lỗi: ${err.message || 'Phê duyệt thất bại'}`);
+    }
   };
 
   const exportCsv = () => {
@@ -380,6 +251,38 @@ export const UserManagementTable: React.FC<Props> = ({
 
   return (
     <div className="umt-container">
+      {error && (
+        <div
+          className="umt-error-banner"
+          style={{
+            backgroundColor: '#fee2e2',
+            color: '#dc2626',
+            padding: '12px 16px',
+            borderRadius: '4px',
+            marginBottom: '16px',
+            fontSize: '14px',
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div
+          className="umt-loading-banner"
+          style={{
+            backgroundColor: '#e0f2fe',
+            color: '#0369a1',
+            padding: '12px 16px',
+            borderRadius: '4px',
+            marginBottom: '16px',
+            fontSize: '14px',
+          }}
+        >
+          Đang tải dữ liệu...
+        </div>
+      )}
+
       <div className="umt-topbar">
         <div className="umt-tabs">
           <button className={`umt-tab ${activeRole === 'customer' ? 'active' : ''}`} onClick={() => onRoleChange('customer')}>
@@ -399,9 +302,10 @@ export const UserManagementTable: React.FC<Props> = ({
             onChange={(e) => onStatusFilterChange(e.target.value as 'all' | UserStatus)}
           >
             <option value="all">Tất cả trạng thái</option>
-            <option value="verified">Đã xác minh</option>
+            <option value="active">Đã xác minh</option>
             <option value="pending">Chờ duyệt</option>
             <option value="locked">Bị khóa</option>
+            <option value="inactive">Ngưng hoạt động</option>
           </select>
 
           <select
@@ -438,7 +342,13 @@ export const UserManagementTable: React.FC<Props> = ({
           </thead>
           <tbody>
             {paginatedUsers.map((user) => {
-              const st = statusConfig[user.status];
+              // Lấy config an toàn
+              const statusKey = user.status;
+              const st = statusConfig[statusKey];
+              const statusColor = st?.color ?? '#000';
+              const statusBg = st?.bg ?? '#f1f3f5';
+              const statusLabel = st?.label ?? 'Không xác định';
+
               return (
                 <tr key={user.id} className="umt-row">
                   <td className="umt-col-check">
@@ -446,26 +356,30 @@ export const UserManagementTable: React.FC<Props> = ({
                       type="checkbox"
                       checked={selectedIds.includes(user.id)}
                       onChange={() => toggleSelectOne(user.id)}
-                      aria-label={`Chọn ${user.name}`}
+                      aria-label={`Chọn ${user.name ?? 'người dùng'}`}
                     />
                   </td>
                   <td>
                     <div className="umt-user-cell">
-                      <img src={user.avatar} alt={user.name} className="umt-user-avatar" />
+                      <img 
+                        src={user.avatar ?? '/default-avatar.png'} 
+                        alt={user.name ?? 'avatar'} 
+                        className="umt-user-avatar" 
+                      />
                       <div className="umt-user-info">
-                        <span className="umt-user-name">{user.name}</span>
-                        <span className="umt-user-id">ID: {user.id}</span>
+                        <span className="umt-user-name">{user.name ?? 'Không tên'}</span>
+                        <span className="umt-user-id">ID: {user.id ?? '???'}</span>
                       </div>
                     </div>
                   </td>
-                  <td className="umt-phone">{user.phone}</td>
+                  <td className="umt-phone">{user.phone ?? 'Chưa có'}</td>
                   <td>
-                    <span className="umt-service-tag">{user.district}</span>
+                    <span className="umt-service-tag">{user.district ?? 'Chưa rõ'}</span>
                   </td>
                   <td>
-                    <span className="umt-status-badge" style={{ color: st.color, backgroundColor: st.bg }}>
-                      <span className="umt-status-dot" style={{ backgroundColor: st.color }}></span>
-                      {st.label}
+                    <span className="umt-status-badge" style={{ color: statusColor, backgroundColor: statusBg }}>
+                      <span className="umt-status-dot" style={{ backgroundColor: statusColor }}></span>
+                      {statusLabel}
                     </span>
                   </td>
                   <td>

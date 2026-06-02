@@ -1,5 +1,6 @@
 import React from 'react';
 import './ServiceDistributionChart.css';
+import type { ServiceDistributionDataPoint } from '../../services/adminDashboardService.ts';
 
 interface ServiceData {
   name: string;
@@ -7,17 +8,19 @@ interface ServiceData {
   color: string;
 }
 
-export const ServiceDistributionChart: React.FC = () => {
-  const services: ServiceData[] = [
-    { name: 'Mãy lạnh', percentage: 40, color: '#3b82f6' },
-    { name: 'Mãy giặt', percentage: 25, color: '#8b5cf6' },
-    { name: 'Tủ lạnh', percentage: 20, color: '#f59e0b' },
-    { name: 'Khác', percentage: 15, color: '#06b6d4' },
-  ];
+interface ServiceDistributionChartProps {
+  services: ServiceDistributionDataPoint[];
+  isLoading?: boolean;
+}
+
+export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> = ({ services, isLoading = false }) => {
+  const chartServices: ServiceData[] = services.length > 0
+    ? services
+    : [{ name: 'Chưa có dữ liệu', percentage: 100, color: '#cbd5e1' }];
 
   // Calculate angles for pie chart
   let currentAngle = -90;
-  const segments = services.map((service) => {
+  const segments = chartServices.map((service) => {
     const startAngle = currentAngle;
     const endAngle = currentAngle + (service.percentage / 100) * 360;
     const isLarge = service.percentage > 50 ? 1 : 0;
@@ -69,7 +72,7 @@ export const ServiceDistributionChart: React.FC = () => {
       </div>
 
       <div className="sdc-legend">
-        {services.map((service, index) => (
+        {chartServices.map((service, index) => (
           <div key={index} className="sdc-legend-item">
             <div className="sdc-legend-color" style={{ backgroundColor: service.color }}></div>
             <div className="sdc-legend-content">
@@ -79,6 +82,10 @@ export const ServiceDistributionChart: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {!isLoading && services.length === 0 && (
+        <div className="sdc-no-data">Chưa có dữ liệu tỷ trọng dịch vụ.</div>
+      )}
     </div>
   );
 };

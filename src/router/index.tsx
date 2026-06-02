@@ -16,6 +16,7 @@ import AdminDashboard from '../pages/AdminDashboard'
 import Provider from '../pages/Provider'
 import HomePage from '../pages/HomePage'
 import { OrderManagementPage } from '../pages/OrderManagementPage'
+import AdminOrdersPage from '../pages/AdminOrdersPage'
 import ProviderDashboard from '../pages/ProviderDashboard'
 import ProviderProfile from '../pages/ProviderProfile'
 import ServicesPage from '../pages/ServicesPage'
@@ -76,6 +77,7 @@ export default function AppRouter() {
         </TechnicianLayout>
       } />
       <Route path="/provider-dashboard" element={<ProviderDashboard />} />
+      <Route path="/admin/orders" element={<AdminOrdersPage />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUserManagement />} />
       <Route path="/admin/users/:id" element={<AdminUserDetail />} />

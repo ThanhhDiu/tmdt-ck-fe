@@ -1,12 +1,9 @@
 .ad-layout {
-  display: block;
+  display: flex;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
-    linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%);
+  background-color: var(--bg-page);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   text-align: left;
-  margin-left: 240px;
 }
 
 .ad-main {
@@ -33,15 +30,61 @@
 .ad-page-title {
   font-size: 28px;
   font-weight: 800;
-  color: #1a1e3b;
+  color: var(--primary);
   margin: 0 0 6px;
   letter-spacing: -0.5px;
 }
 
 .ad-page-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-secondary);
   margin: 0;
+}
+
+.ad-dashboard-error {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ad-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ad-global-time-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ad-global-mode-buttons {
+  display: flex;
+  gap: 8px;
+  background: var(--border-default);
+  padding: 4px;
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.ad-select-input {
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid #dbe4ef;
+  background: #fff;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .ad-export-btn {
@@ -49,7 +92,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -57,12 +100,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(229, 115, 58, 0.3);
 }
 
 .ad-export-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  background: var(--accent-hover);
+  box-shadow: 0 6px 16px rgba(229, 115, 58, 0.4);
 }
 
 /* Charts Container */
@@ -103,16 +147,8 @@
 .ad-chart-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1e3b;
+  color: var(--primary);
   margin: 0;
-}
-
-.ad-time-filter {
-  display: flex;
-  gap: 8px;
-  background: #f1f5f9;
-  padding: 4px;
-  border-radius: 10px;
 }
 
 .ad-filter-btn {
@@ -122,19 +158,19 @@
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .ad-filter-btn:hover {
-  background: rgba(255, 255, 255, 0.5);
-  color: #475569;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--primary);
 }
 
 .ad-filter-btn.active {
   background: #fff;
-  color: #3b82f6;
+  color: var(--accent);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
@@ -166,6 +202,11 @@
     flex-direction: column;
   }
 
+  .ad-page-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .ad-export-btn {
     width: 100%;
     justify-content: center;
@@ -176,7 +217,11 @@
     align-items: flex-start;
   }
 
-  .ad-time-filter {
+  .ad-global-mode-buttons {
+    width: 100%;
+  }
+
+  .ad-select-input {
     width: 100%;
   }
 }

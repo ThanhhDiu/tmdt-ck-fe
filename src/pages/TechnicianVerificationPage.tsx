@@ -1,13 +1,19 @@
 import React, { useState } from 'react'
-import { ArrowLeft, Check, Camera, Upload } from 'lucide-react'
+import { ArrowLeft, Check, Camera, Upload, Phone, Mail, MapPin, Grid, Image, ChevronRight } from 'lucide-react'
 import './TechnicianVerificationPage.css'
 
-type VerificationStep = 'identity' | 'face' | 'complete'
+type VerificationStep = 'identity' | 'face' | 'description' | 'complete'
 
 interface VerificationData {
   idFront: File | null
   idBack: File | null
   faceSelfie: File | null
+  certificate?: File | null
+  phone?: string
+  email?: string
+  area?: string
+  services?: string
+  experience?: string
 }
 
 export const TechnicianVerificationPage: React.FC = () => {
@@ -16,6 +22,12 @@ export const TechnicianVerificationPage: React.FC = () => {
     idFront: null,
     idBack: null,
     faceSelfie: null,
+    certificate: null,
+    phone: '',
+    email: '',
+    area: '',
+    services: '',
+    experience: '',
   })
 
   const handleFileUpload = (fileType: 'idFront' | 'idBack', file: File | null) => {
@@ -37,11 +49,19 @@ export const TechnicianVerificationPage: React.FC = () => {
   }
 
   const handleNextStep = () => {
-    if (currentStep === 'identity' && verificationData.idFront && verificationData.idBack) {
+    if (currentStep === 'identity') {
       setCurrentStep('face')
-    } else if (currentStep === 'face' && verificationData.faceSelfie) {
+    } else if (currentStep === 'face') {
+      setCurrentStep('description')
+    } else if (currentStep === 'description') {
       setCurrentStep('complete')
     }
+  }
+
+  const handlePrevStep = () => {
+    if (currentStep === 'face') setCurrentStep('identity')
+    else if (currentStep === 'description') setCurrentStep('face')
+    else if (currentStep === 'complete') setCurrentStep('description')
   }
 
   const handleContinue = () => {
@@ -56,6 +76,8 @@ export const TechnicianVerificationPage: React.FC = () => {
         return !!(verificationData.idFront && verificationData.idBack)
       case 'face':
         return !!verificationData.faceSelfie
+      case 'description':
+        return !!(verificationData.phone || verificationData.email || verificationData.area || verificationData.services || verificationData.experience)
       case 'complete':
         return true
       default:
@@ -73,13 +95,13 @@ export const TechnicianVerificationPage: React.FC = () => {
           </button>
           <h1 className="verification-title">Xác minh danh tính</h1>
           <p className="verification-subtitle">
-            Hoàn thành 3 bước xác minh để bắt đầu nhận việc làm GlowUp
+            Hoàn thành 4 bước xác minh để bắt đầu nhận việc làm GlowUp
           </p>
         </div>
 
         {/* Steps indicator */}
         <div className="steps-indicator">
-          <div className="step-item">
+          <div className="step-item" onClick={() => setCurrentStep('identity')}>
             <div className={`step-number ${currentStep === 'identity' || isStepComplete('identity') ? 'active' : ''} ${isStepComplete('identity') ? 'completed' : ''}`}>
               {isStepComplete('identity') ? <Check size={20} /> : '1'}
             </div>
@@ -91,7 +113,7 @@ export const TechnicianVerificationPage: React.FC = () => {
 
           <div className="step-divider"></div>
 
-          <div className="step-item">
+          <div className="step-item" onClick={() => setCurrentStep('face')}>
             <div className={`step-number ${currentStep === 'face' || isStepComplete('face') ? 'active' : ''} ${isStepComplete('face') ? 'completed' : ''}`}>
               {isStepComplete('face') ? <Check size={20} /> : '2'}
             </div>
@@ -103,9 +125,21 @@ export const TechnicianVerificationPage: React.FC = () => {
 
           <div className="step-divider"></div>
 
-          <div className="step-item">
+          <div className="step-item" onClick={() => setCurrentStep('description')}>
+            <div className={`step-number ${currentStep === 'description' ? 'active' : ''} ${isStepComplete('description') ? 'completed' : ''}`}>
+              {isStepComplete('description') ? <Check size={20} /> : '3'}
+            </div>
+            <div className="step-label">
+              <p className="step-title">Mô tả bản thân</p>
+              <p className="step-description">Thông tin liên hệ & kinh nghiệm</p>
+            </div>
+          </div>
+
+          <div className="step-divider"></div>
+
+          <div className="step-item" onClick={() => setCurrentStep('complete')}>
             <div className={`step-number ${currentStep === 'complete' ? 'active' : ''} ${isStepComplete('complete') ? 'completed' : ''}`}>
-              {isStepComplete('complete') ? <Check size={20} /> : '3'}
+              {isStepComplete('complete') ? <Check size={20} /> : '4'}
             </div>
             <div className="step-label">
               <p className="step-title">Hoàn tất</p>
@@ -129,12 +163,23 @@ export const TechnicianVerificationPage: React.FC = () => {
               data={verificationData}
               onFaceCapture={handleFaceCapture}
               onNext={handleNextStep}
+              onPrev={handlePrevStep}
+            />
+          )}
+
+          {currentStep === 'description' && (
+            <DescriptionStep
+              data={verificationData}
+              onChange={(fields) => setVerificationData(prev => ({ ...prev, ...fields }))}
+              onNext={handleNextStep}
+              onPrev={handlePrevStep}
             />
           )}
 
           {currentStep === 'complete' && (
             <CompleteVerificationStep
               onContinue={handleContinue}
+              onPrev={handlePrevStep}
             />
           )}
         </div>
@@ -331,13 +376,14 @@ const IdentityVerificationStep: React.FC<IdentityVerificationStepProps> = ({
         </div>
       </div>
 
-      <button
-        className={`primary-button ${data.idFront && data.idBack ? '' : 'disabled'}`}
-        onClick={onNext}
-        disabled={!data.idFront || !data.idBack}
-      >
-        Tiếp tục
-      </button>
+      <div className="step-actions">
+        <button
+          className={`primary-button ${data.idFront && data.idBack ? '' : 'disabled'}`}
+          onClick={onNext}
+        >
+          Tiếp tục
+        </button>
+      </div>
     </div>
   )
 }
@@ -346,12 +392,14 @@ interface FaceVerificationStepProps {
   data: VerificationData
   onFaceCapture: (file: File | null) => void
   onNext: () => void
+  onPrev?: () => void
 }
 
 const FaceVerificationStep: React.FC<FaceVerificationStepProps> = ({
   data,
   onFaceCapture,
   onNext,
+  onPrev,
 }) => {
   const [preview, setPreview] = useState<string>('')
   const videoRef = React.useRef<HTMLVideoElement>(null)
@@ -462,23 +510,32 @@ const FaceVerificationStep: React.FC<FaceVerificationStepProps> = ({
         </ul>
       </div>
 
-      <button
-        className={`primary-button ${data.faceSelfie ? '' : 'disabled'}`}
-        onClick={onNext}
-        disabled={!data.faceSelfie}
-      >
-        Tiếp tục
-      </button>
+      <div className="step-actions">
+        {onPrev && (
+          <button className="secondary-button" onClick={onPrev}>
+            Quay lại
+          </button>
+        )}
+
+        <button
+          className={`primary-button ${data.faceSelfie ? '' : 'disabled'}`}
+          onClick={onNext}
+        >
+          Tiếp tục
+        </button>
+      </div>
     </div>
   )
 }
 
 interface CompleteVerificationStepProps {
   onContinue: () => void
+  onPrev?: () => void
 }
 
 const CompleteVerificationStep: React.FC<CompleteVerificationStepProps> = ({
   onContinue,
+  onPrev,
 }) => {
   return (
     <div className="step-content">
@@ -493,9 +550,135 @@ const CompleteVerificationStep: React.FC<CompleteVerificationStepProps> = ({
         </p>
       </div>
 
-      <button className="primary-button" onClick={onContinue}>
-        Tiếp tục
-      </button>
+      <div className="step-actions">
+        {onPrev && (
+          <button className="secondary-button" onClick={onPrev}>
+            Quay lại
+          </button>
+        )}
+
+        <button className="primary-button" onClick={onContinue}>
+          Tiếp tục
+        </button>
+      </div>
+    </div>
+  )
+}
+
+interface DescriptionStepProps {
+  data: VerificationData
+  onChange: (fields: Partial<VerificationData>) => void
+  onNext: () => void
+  onPrev?: () => void
+}
+
+const DescriptionStep: React.FC<DescriptionStepProps> = ({ data, onChange, onNext, onPrev }) => {
+  const [certPreview, setCertPreview] = useState<string>('')
+  const handleCertUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    onChange({ certificate: file || null })
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (ev) => setCertPreview(ev.target?.result as string)
+      reader.readAsDataURL(file)
+    } else {
+      setCertPreview('')
+    }
+  }
+
+  return (
+    <div className="step-content description-step">
+      <div className="description-header">
+        <div className="icon-circle">
+          <Image size={20} />
+        </div>
+        <div>
+          <h3>Thông tin mô tả bản thân</h3>
+          <p className="muted">Vui lòng cung cấp thông tin chi tiết để chúng tôi hiểu bạn hơn</p>
+        </div>
+      </div>
+
+      <div className="form-row">
+        <label>Số điện thoại <span className="required">*</span></label>
+        <div className="input-with-icon">
+          <Phone size={16} className="input-icon" />
+          <input value={data.phone || ''} onChange={e => onChange({ phone: e.target.value })} placeholder="Nhập số điện thoại của bạn" />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <label>Email <span className="required">*</span></label>
+        <div className="input-with-icon">
+          <Mail size={16} className="input-icon" />
+          <input value={data.email || ''} onChange={e => onChange({ email: e.target.value })} placeholder="Nhập email của bạn" />
+        </div>
+      </div>
+
+      <div className="form-row split">
+        <div>
+          <label>Khu vực hoạt động <span className="required">*</span></label>
+          <div className="input-with-icon">
+            <MapPin size={16} className="input-icon" />
+            <input value={data.area || ''} onChange={e => onChange({ area: e.target.value })} placeholder="Chọn khu vực hoạt động" />
+            <ChevronRight size={18} className="input-arrow" />
+          </div>
+        </div>
+
+        <div>
+          <label>Dịch vụ <span className="required">*</span></label>
+          <div className="input-with-icon">
+            <Grid size={16} className="input-icon" />
+            <input value={data.services || ''} onChange={e => onChange({ services: e.target.value })} placeholder="Chọn dịch vụ (ví dụ: Máy lạnh, Tủ lạnh)" />
+            <ChevronRight size={18} className="input-arrow" />
+          </div>
+        </div>
+      </div>
+
+      <div className="form-row">
+        <label>Chứng chỉ hành nghề (nếu có)</label>
+        <div className="cert-upload">
+          {certPreview ? (
+            <div className="cert-preview">
+              <img src={certPreview} alt="chứng chỉ" />
+              <button className="change-button" onClick={() => {
+                const input = document.getElementById('cert-input') as HTMLInputElement
+                input?.click()
+              }}>Thay đổi</button>
+            </div>
+          ) : (
+            <label className="upload-card">
+              <input id="cert-input" type="file" accept="image/*" onChange={handleCertUpload} style={{ display: 'none' }} />
+              <div className="upload-inner">
+                <Image size={28} />
+                <div>
+                  <p className="upload-title">Tải ảnh chứng chỉ hành nghề</p>
+                  <p className="upload-sub">(Tùy chọn)</p>
+                </div>
+              </div>
+            </label>
+          )}
+        </div>
+      </div>
+
+      <div className="form-row">
+        <label>Kinh nghiệm</label>
+        <div className="textarea-wrap">
+          <textarea value={data.experience || ''} onChange={e => onChange({ experience: e.target.value })} maxLength={500} placeholder="Mô tả kinh nghiệm của bạn" />
+          <div className="char-counter">{(data.experience || '').length}/500</div>
+        </div>
+      </div>
+
+      <div className="step-actions">
+        {onPrev && (
+          <button className="secondary-button" onClick={onPrev}>
+            Quay lại
+          </button>
+        )}
+
+        <button className="primary-button" onClick={onNext}>
+          Tiếp tục
+        </button>
+      </div>
     </div>
   )
 }

@@ -84,4 +84,29 @@ export const orderService = {
         const response = await apiClient.get(`/api/orders/${id}`);
         return normalizeOrder(response.data);
     },
+
+    requestPriceAdjustment: async (
+        orderId: string,
+        payload: {
+            newPrice: number;
+            reason: string;
+            parts?: { name: string; price: number; partCode?: string }[];
+            evidenceImages?: string[];
+        }
+    ): Promise<OrderResponse> => {
+        await apiClient.patch(`/api/orders/${orderId}/price`, payload);
+        return orderService.getOrderById(orderId);
+    },
+
+    approvePriceAdjustment: async (orderId: string): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/price/approve`);
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
+
+    rejectPriceAdjustment: async (orderId: string, reason: string): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/price/reject`, { reason });
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
 };

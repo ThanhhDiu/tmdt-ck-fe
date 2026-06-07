@@ -63,7 +63,7 @@ export const ProviderCard: React.FC<{
 
                     <div className="pc-actions">
                         <button className="pc-btn-outline"
-                                onClick={() => onNavigate?.('provider-profile', provider)}>Xem hồ sơ
+                                onClick={() => onNavigate?.('provider-profile', { id: provider.id, name: provider.name, avatar: provider.avatar })}>Xem hồ sơ
                         </button>
                         <button
                             className="pc-btn-solid"

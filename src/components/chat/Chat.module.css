@@ -236,3 +236,88 @@
     font-weight: var(--fw-bold);
     text-align: left;
 }
+
+.repairRequestCard {
+    width: min(100%, 380px);
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    padding: 16px;
+    margin-bottom: 8px;
+}
+
+.repairRequestBadge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #1d4ed8;
+    background: #dbeafe;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+}
+
+.repairRequestTitle {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.repairRequestMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.repairRequestImages {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.repairRequestImages img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.priceAdjustmentCard {
+    width: min(100%, 380px);
+    border-radius: 16px;
+    border: 1px solid #fcd34d;
+    background: #fffbeb;
+    padding: 16px;
+}
+
+.priceAdjustmentCard h4 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #92400e;
+}
+
+.priceAdjustmentCard p {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #78350f;
+}
+
+.chatStatusRejected {
+    font-size: 12px;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 8px 0;
+}
+
+.chatEmptyState {
+    padding: 24px;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+}

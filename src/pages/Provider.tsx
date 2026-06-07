@@ -5,6 +5,7 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { FilterSidebar } from '../components/provider/FilterSidebar';
 import { ProviderList } from '../components/provider/ProviderList';
+import { buildProviderProfilePath } from '../utils/providerNavigation';
 
 const pageMap: Record<string, string> = {
   'home': '/',
@@ -25,6 +26,19 @@ export const Provider: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const onNavigate = (page: string, data?: unknown) => {
+    const record = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
+    const technicianId =
+      typeof record?.id === 'string'
+        ? record.id
+        : typeof record?.technicianId === 'string'
+          ? record.technicianId
+          : null;
+
+    if (page === 'provider-profile' && technicianId) {
+      nav(buildProviderProfilePath(technicianId), { state: { ...record, id: technicianId } });
+      return;
+    }
+
     const path = pageMap[page] || '/';
     nav(path, { state: data });
   };

@@ -3,13 +3,15 @@ import Modal from "../common/Modal";
 import "./css/repairRequestModal.css";
 import {X} from "lucide-react";
 import {useNavigate} from "react-router-dom";
+import { navigateToChat } from "../../utils/chatNavigation";
 
 interface RepairRequestModalProps {
     open: boolean;
     onClose: () => void;
+    technicianId?: string;
 }
 
-const RepairRequestModal: React.FC<RepairRequestModalProps> = ({open, onClose}) => {
+const RepairRequestModal: React.FC<RepairRequestModalProps> = ({open, onClose, technicianId}) => {
     const navigate = useNavigate();
 
     return (
@@ -74,7 +76,17 @@ const RepairRequestModal: React.FC<RepairRequestModalProps> = ({open, onClose}) 
 
                 {/* FOOTER */}
                 <footer className="repair-footer">
-                    <button className="btn-submit" onClick={() => navigate("/customer/chat")}>
+                    <button
+                        className="btn-submit"
+                        onClick={() => {
+                            onClose();
+                            if (technicianId) {
+                                navigateToChat(navigate, "customer", { technicianId });
+                                return;
+                            }
+                            navigate("/customer/chat");
+                        }}
+                    >
                             Gửi yêu cầu & Chat ngay
                 </button>
             </footer>

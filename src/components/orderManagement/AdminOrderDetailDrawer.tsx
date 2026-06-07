@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { OrderDetailViewModel, OrderReportItem, OrderTimelineEntry, OrderWarrantyItem } from '../../services/orderService';
 import { OrderStatusBadge } from './OrderStatusBadge';
 

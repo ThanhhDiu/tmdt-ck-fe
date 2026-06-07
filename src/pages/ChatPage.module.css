@@ -112,3 +112,11 @@
     border-top: 1px solid #eee;
     background: white;
 }
+
+.emptySidebar,
+.emptyChat {
+    padding: 16px;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+}

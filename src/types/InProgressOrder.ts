@@ -1,5 +1,7 @@
 export interface InProgressOrder {
     id: string;
+    technicianId?: string;
+    customerId?: string;
     serviceName: string;
     subService: string;
     technicianName: string;

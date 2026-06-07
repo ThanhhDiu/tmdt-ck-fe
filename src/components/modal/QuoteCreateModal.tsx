@@ -8,9 +8,10 @@ import "./css/quote.css";
 interface QuoteCreateModalProps {
     open: boolean;
     onClose: () => void;
+    onSubmit: (quote: Quote) => Promise<void>;
 }
 
-const QuoteCreateModal: React.FC<QuoteCreateModalProps> = ({ open, onClose }) => {
+const QuoteCreateModal: React.FC<QuoteCreateModalProps> = ({ open, onClose, onSubmit }) => {
     const [quote, setQuote] = useState<Quote>({
         serviceName: "Sửa máy lạnh",
         description: "",
@@ -20,19 +21,22 @@ const QuoteCreateModal: React.FC<QuoteCreateModalProps> = ({ open, onClose }) =>
         notes: "",
     });
 
+    const previewSchedule =
+        quote.date && quote.time
+            ? new Date(`${quote.date}T${quote.time}`).toISOString()
+            : undefined;
+
     return (
         <Modal open={open} onClose={onClose}>
             <div className="quote-modal">
-                {/* LEFT: FORM */}
                 <div className="quote-left">
                     <QuoteForm
                         quote={quote}
                         setQuote={setQuote}
                         onClose={onClose}
+                        onSubmit={onSubmit}
                     />
                 </div>
-
-                {/* RIGHT: PREVIEW */}
                 <div className="quote-right">
                     <div className="preview-header-text" style={{ marginBottom: '24px' }}>
                         <div className="preview-title">XEM TRƯỚC BÁO GIÁ</div>
@@ -42,6 +46,7 @@ const QuoteCreateModal: React.FC<QuoteCreateModalProps> = ({ open, onClose }) =>
                         serviceName={quote.serviceName}
                         description={quote.description}
                         price={quote.price}
+                        scheduledAt={previewSchedule}
                         previewMode={true}
                     />
                 </div>

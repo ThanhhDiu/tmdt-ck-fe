@@ -102,7 +102,7 @@ export const authController = {
             }
 
             const { accessToken, refreshToken, user } = res.data;
-            saveRememberMe(true); // register luôn ghi nhớ
+            saveRememberMe(remember);
             saveToken(accessToken);
             saveRefreshToken(refreshToken);
 

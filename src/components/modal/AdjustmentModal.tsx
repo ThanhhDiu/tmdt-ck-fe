@@ -1,28 +1,110 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { FaXmark, FaPlus, FaCamera } from 'react-icons/fa6';
-import "./css/adjustmentModal.css"
+import { uploadService } from '../../services/uploadService';
+import "./css/adjustmentModal.css";
 
-interface ModalProps {
+export type AdjustmentPart = {
+    name: string;
+    price: number;
+    partCode?: string;
+};
+
+export type AdjustmentSubmitPayload = {
+    newPrice: number;
+    reason: string;
+    parts: AdjustmentPart[];
+    evidenceImages: string[];
+};
+
+interface AdjustmentModalProps {
     currentPrice: number;
     onClose: () => void;
-    onSubmit: (newPrice: number) => void;
+    onSubmit: (payload: AdjustmentSubmitPayload) => Promise<void>;
 }
 
-export const AdjustmentModal: React.FC<ModalProps> = ({ currentPrice, onClose, onSubmit }) => {
-    const adjustedPrice = 600000;
+export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
+    currentPrice,
+    onClose,
+    onSubmit,
+}) => {
+    const [newPrice, setNewPrice] = useState(currentPrice);
+    const [reason, setReason] = useState('');
+    const [parts, setParts] = useState<AdjustmentPart[]>([
+        { name: '', price: 0, partCode: '' },
+    ]);
+    const [evidenceUrls, setEvidenceUrls] = useState<string[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const diff = adjustedPrice - currentPrice;
+    const diff = newPrice - currentPrice;
+
+    const handleAddPart = () => {
+        setParts((prev) => [...prev, { name: '', price: 0, partCode: '' }]);
+    };
+
+    const handlePartChange = (index: number, field: keyof AdjustmentPart, value: string | number) => {
+        setParts((prev) =>
+            prev.map((part, i) => (i === index ? { ...part, [field]: value } : part))
+        );
+    };
+
+    const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files?.length) return;
+
+        try {
+            const uploads = await Promise.all(
+                Array.from(files).map((file) => uploadService.uploadImage(file, 'evidence'))
+            );
+            setEvidenceUrls((prev) => [...prev, ...uploads].slice(0, 5));
+        } catch {
+            setError('Không thể tải ảnh lên');
+        } finally {
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!reason.trim()) {
+            setError('Vui lòng nhập lý do điều chỉnh');
+            return;
+        }
+        if (newPrice <= 0) {
+            setError('Giá mới không hợp lệ');
+            return;
+        }
+
+        const validParts = parts.filter((p) => p.name.trim() && p.price > 0);
+
+        setIsSubmitting(true);
+        setError(null);
+        try {
+            await onSubmit({
+                newPrice,
+                reason: reason.trim(),
+                parts: validParts,
+                evidenceImages: evidenceUrls,
+            });
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Gửi điều chỉnh giá thất bại');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="modal-overlay">
             <div className="modal-content">
                 <div className="modal-header">
                     <h2>Điều chỉnh Chi phí Thực tế</h2>
-                    <button className="icon-btn" onClick={onClose}><FaXmark /></button>
+                    <button type="button" className="icon-btn" onClick={onClose}><FaXmark /></button>
                 </div>
 
                 <div className="modal-body">
-                    {/* So sánh giá */}
                     <div className="price-compare-box">
                         <div className="old-price">
                             <label>Giá dự kiến ban đầu</label>
@@ -31,34 +113,57 @@ export const AdjustmentModal: React.FC<ModalProps> = ({ currentPrice, onClose, o
                         <div className="new-price">
                             <label>Tổng chi phí thực tế mới</label>
                             <div className="new-val-row">
-                                <h1>{adjustedPrice.toLocaleString('vi-VN')}đ</h1>
-                                {diff > 0 && <span className="diff-tag text-blue">Tăng +{diff.toLocaleString('vi-VN')}đ</span>}
+                                <input
+                                    type="number"
+                                    className="input"
+                                    value={newPrice}
+                                    min={0}
+                                    onChange={(e) => setNewPrice(Number(e.target.value))}
+                                />
+                                {diff > 0 && (
+                                    <span className="diff-tag text-blue">
+                                        Tăng +{diff.toLocaleString('vi-VN')}đ
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Khối chia 2 cột cho chi tiết */}
                     <div className="modal-split-row">
                         <div className="col-left">
                             <div className="section-head">
                                 <h3>Danh mục Vật tư & Linh kiện</h3>
-                                <button className="btn-text"><FaPlus /> Thêm linh kiện</button>
+                                <button type="button" className="btn-text" onClick={handleAddPart}>
+                                    <FaPlus /> Thêm linh kiện
+                                </button>
                             </div>
-                            <div className="part-item-gray">
-                                <div>
-                                    <strong>Thay tụ quạt dàn lạnh</strong>
-                                    <p>Mã: CAP-D822</p>
+                            {parts.map((part, index) => (
+                                <div key={index} className="part-item-gray" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+                                    <input
+                                        className="input"
+                                        placeholder="Tên linh kiện"
+                                        value={part.name}
+                                        onChange={(e) => handlePartChange(index, 'name', e.target.value)}
+                                    />
+                                    <input
+                                        className="input"
+                                        type="number"
+                                        placeholder="Giá"
+                                        value={part.price || ''}
+                                        onChange={(e) => handlePartChange(index, 'price', Number(e.target.value))}
+                                    />
                                 </div>
-                                <span>150.000đ</span>
-                            </div>
+                            ))}
 
                             <div className="section-head mt-4">
                                 <h3>Lý do điều chỉnh</h3>
                             </div>
                             <textarea
                                 className="reason-input"
-                                placeholder="Giải thích rõ nguyên nhân phát sinh (ví dụ: thay tụ điện do cháy nổ, bảo hành linh kiện...)"
-                            ></textarea>
+                                placeholder="Giải thích rõ nguyên nhân phát sinh..."
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                            />
                         </div>
 
                         <div className="col-right">
@@ -66,21 +171,38 @@ export const AdjustmentModal: React.FC<ModalProps> = ({ currentPrice, onClose, o
                                 <h3>Hình ảnh minh chứng</h3>
                             </div>
                             <div className="photo-grid-mini">
-                                <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=100" alt="Ev" />
-                                <img src="https://images.unsplash.com/photo-1581092335397-9583eb92d232?w=100" alt="Ev" />
-                                <div className="upload-box-mini">
-                                    <FaCamera className="icon"/>
+                                {evidenceUrls.map((url) => (
+                                    <img key={url} src={url} alt="Minh chứng" />
+                                ))}
+                                <div
+                                    className="upload-box-mini"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    role="button"
+                                    tabIndex={0}
+                                >
+                                    <FaCamera className="icon" />
                                     <span>Tải ảnh lên</span>
                                 </div>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    hidden
+                                    onChange={handleUpload}
+                                />
                             </div>
                         </div>
                     </div>
+                    {error && <p style={{ color: '#dc2626', marginTop: 12 }}>{error}</p>}
                 </div>
 
                 <div className="modal-footer">
-                    <button className="btn-outline" onClick={onClose}>Hủy bỏ</button>
-                    <button className="btn-solid" onClick={() => onSubmit(adjustedPrice)}>
-                        Gửi báo giá điều chỉnh
+                    <button type="button" className="btn-outline" onClick={onClose} disabled={isSubmitting}>
+                        Hủy bỏ
+                    </button>
+                    <button type="button" className="btn-solid" onClick={handleSubmit} disabled={isSubmitting}>
+                        {isSubmitting ? 'Đang gửi...' : 'Gửi báo giá điều chỉnh'}
                     </button>
                 </div>
             </div>

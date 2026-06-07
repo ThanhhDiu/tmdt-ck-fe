@@ -1,9 +1,11 @@
 import React from 'react';
 import './ProfileHeader.css';
 import {StarIcon, BadgeCheckIcon, ArrowLeftIcon} from '../common/Icons';
-import { useNavigate } from "react-router-dom"; //
+import { useNavigate } from "react-router-dom";
+import { navigateToChat } from "../../utils/chatNavigation";
 
 export interface ProfileHeaderProps {
+    technicianId?: string;
     name: string;
     avatar: string;
     coverImage: string;
@@ -82,7 +84,15 @@ export const ProfileHeader: React.FC<{
                 <div className="ph-action-section">
                     <button
                         className="ph-primary-btn"
-                        onClick={() => navigate("/customer/chat")}
+                        onClick={() => {
+                            if (!profile.technicianId) {
+                                navigate("/customer/chat");
+                                return;
+                            }
+                            navigateToChat(navigate, "customer", {
+                                technicianId: profile.technicianId,
+                            });
+                        }}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

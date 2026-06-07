@@ -353,6 +353,8 @@ export const getMergedVisibleOrders = (orders: OrderResponse[], optimisticOrders
 
 export const mapOrderToRequestData = (order: OrderResponse): RequestData => ({
     id: order.id,
+    customerId: order.customer?.id,
+    technicianId: order.technician?.id,
     customerName: pickPersonName(order.customer, 'Khách hàng'),
     technicianName: order.technician?.fullName,
     timeAgo: formatTimeAgo(order.createdAt),
@@ -366,6 +368,8 @@ export const mapOrderToRequestData = (order: OrderResponse): RequestData => ({
 
 export const mapOrderToScheduledOrder = (order: OrderResponse): ScheduledOrder => ({
     id: order.id,
+    technicianId: order.technician?.id,
+    customerId: order.customer?.id,
     serviceName: order.serviceName ?? order.deviceName ?? 'Đơn hàng',
     subService: order.subService ?? order.serviceCategory ?? order.description ?? 'Chưa có mô tả',
     customerName: pickPersonName(order.customer, 'Khách hàng'),
@@ -379,6 +383,8 @@ export const mapOrderToScheduledOrder = (order: OrderResponse): ScheduledOrder =
 
 export const mapOrderToInProgressOrder = (order: OrderResponse): InProgressOrder => ({
     id: order.id,
+    technicianId: order.technician?.id,
+    customerId: order.customer?.id,
     serviceName: order.serviceName ?? order.deviceName ?? 'Đơn hàng',
     subService: order.subService ?? order.serviceCategory ?? order.description ?? 'Chưa có mô tả',
     technicianName: pickPersonName(order.technician, 'Chưa phân công'),

@@ -5,7 +5,7 @@ import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { Footer } from '../components/layout/Footer'
 import {
   formatDate,
-  getVerificationById,
+  getVerificationRequestById,
   verificationStatusColor,
   verificationStatusLabel,
 } from '../services/verificationService'
@@ -21,8 +21,8 @@ export default function AdminVerificationDetail() {
     if (requestId) {
       const fetchDetail = async () => {
         try {
-          const response = await getVerificationById(requestId)
-          setRequest(response.data || response)
+          const response = await getVerificationRequestById(requestId)
+          setRequest(response ?? null)
         } catch (error) {
           console.error('Lỗi khi lấy chi tiết hồ sơ xác minh:', error)
         }

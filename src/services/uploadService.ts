@@ -1,15 +1,23 @@
-import axiosClient from '../api/axiosClient';
+import apiClient from '../api/config';
 
-export const uploadImages = async (files: File[]) => {
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append('files', file); // Backend dùng tên parameter là 'files'
-  });
-  formData.append('folder', 'general'); // Backend bắt buộc có tham số folder
+const unwrap = <T,>(payload: unknown): T => {
+  if (payload && typeof payload === 'object' && 'success' in payload && (payload as { success?: boolean }).success && 'data' in payload) {
+    return (payload as { data: T }).data;
+  }
+  return payload as T;
+};
 
-  return await axiosClient.post('/upload/images', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-}
+export const uploadService = {
+  uploadImage: async (file: File, folder = 'evidence'): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+
+    const response = await apiClient.post('/api/upload/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    const data = unwrap<{ url: string }>(response.data);
+    return data.url;
+  },
+};

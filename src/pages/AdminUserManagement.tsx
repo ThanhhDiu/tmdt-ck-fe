@@ -8,7 +8,7 @@ import './AdminUserManagement.css';
 const AdminUserManagement: React.FC = () => {
   const [activeRole, setActiveRole] = useState<'customer' | 'technician'>('technician');
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'verified' | 'pending' | 'locked'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'locked' | 'inactive'>('all');
   const [areaFilter, setAreaFilter] = useState<'all' | 'Quận 1' | 'Quận 3' | 'Quận 7' | 'Thủ Đức'>('all');
 
   return (

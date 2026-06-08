@@ -1,122 +1,90 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './orderManagementPage.css';
 
-import type { RequestData } from "../types/RequestData.ts";
-import type { UserRole } from "../types/UserRole.ts";
-import type { ScheduledOrder } from "../types/ScheduledOrder.ts";
-import type { InProgressOrder } from "../types/InProgressOrder.ts";
-import type { CompletedOrder } from "../types/CompletedOrder.ts";
-import type { CancelledOrder } from "../types/CancelledOrder.ts";
+import type { UserRole } from '../types/UserRole.ts';
+import type { OrderResponse } from '../types/order/order';
 
-import OrderTabs from "../components/orderManagement/OrderTabs.tsx";
-import RequestCard from "../components/orderManagement/RequestCard.tsx";
-import RequestDetail from "../components/orderManagement/RequestDetail.tsx";
-import { ScheduledCard } from "../components/orderManagement/ScheduledCard.tsx";
-import { ScheduledDetail } from "../components/orderManagement/ScheduledDetail.tsx";
-import { InProgressCard } from "../components/orderManagement/InProgressCard.tsx";
-import { InProgressDetail } from "../components/orderManagement/InProgressDetail.tsx";
-import { CompletedCard } from "../components/orderManagement/CompletedCard.tsx";
-import { CompletedDetail } from "../components/orderManagement/CompletedDetail.tsx";
-import { CancelledCard } from "../components/orderManagement/CancelledCard.tsx";
+import OrderTabs from '../components/orderManagement/OrderTabs.tsx';
+import RequestCard from '../components/orderManagement/RequestCard.tsx';
+import { ScheduledCard } from '../components/orderManagement/ScheduledCard.tsx';
+import { InProgressCard } from '../components/orderManagement/InProgressCard.tsx';
+import { CompletedCard } from '../components/orderManagement/CompletedCard.tsx';
+import { CancelledCard } from '../components/orderManagement/CancelledCard.tsx';
+import OrderDetailPanel from '../components/orderManagement/OrderDetailPanel.tsx';
+import { OrderManagementProvider } from '../contexts/OrderManagementContext';
+import { useOrderManagement } from '../hooks/useOrderManagement';
+import {
+    getOrderTab,
+    mapOrderToCancelledOrder,
+    mapOrderToCompletedOrder,
+    mapOrderToInProgressOrder,
+    mapOrderToRequestData,
+    mapOrderToScheduledOrder,
+} from '../stores/orderStore';
 
 interface OrderPageProps {
     role: UserRole;
 }
 
-// ==========================================
-// MOCK DATA (Dữ liệu giả lập cho 6 Tabs)
-// ==========================================
-const mockRequests: RequestData[] = [
-    {
-        id: 'REQ-8829', customerName: 'Chị Lan', technicianName: '', timeAgo: '10 phút trước',
-        deviceName: 'Máy giặt cửa ngang LG', description: 'Máy giặt nhà tôi dạo này chạy không vắt được...',
-        address: 'Quận 7, HCMC', estPrice: 450000, expectedTime: '14:00 - 24/05/2026', images: []
-    }
-];
+const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
+    const {
+        state,
+        visibleOrders,
+        selectOrder,
+        setActiveTab,
+        setPage,
+        setSearch,
+        openCancelModal,
+        closeCancelModal,
+        setCancelReason,
+        confirmCancel,
+        clearSelectedOrder,
+    } = useOrderManagement();
 
-const mockScheduled: ScheduledOrder[] = [
-    {
-        id: 'GU-99210', serviceName: 'Sửa máy lạnh Daikin', subService: 'Inverter 1.5 HP - Vệ sinh & Nạp gas',
-        customerName: 'Anh Hoàng', technicianName: 'Nguyễn Văn Minh', time: 'Hôm nay, 14:00',
-        address: '25 Bis Nguyễn Thị Minh Khai, Quận 1', statusText: 'ĐÃ XÁC NHẬN', estPrice: 450000,
-    }
-];
-
-const mockInProgress: InProgressOrder[] = [
-    {
-        id: 'GU-99210', serviceName: 'Sửa máy lạnh Daikin', subService: 'Inverter 1.5 HP',
-        technicianName: 'Nguyễn Văn Minh', startTime: '14:00', address: 'Quận 1, HCMC',
-        statusText: 'ĐANG SỬA', currentPrice: 450000, isWaitingApproval: true
-    }
-];
-
-const mockCompleted: CompletedOrder[] = [
-    {
-        id: 'GU-99200', serviceName: 'Bảo trì máy lạnh Panasonic', subService: 'Inverter',
-        customerName: 'Anh Minh Khôi', technicianName: 'Nguyễn Văn Minh', completionDate: '24/05/2024',
-        totalPrice: 450000, rating: 5
-    }
-];
-
-const mockCancelled: CancelledOrder[] = [
-    {
-        id: 'GU-99100', serviceName: 'Sửa tủ lạnh Samsung', subService: 'Side-by-side',
-        customerName: 'Chú Ba', technicianName: 'Nguyễn Văn Minh', cancelDate: '20/05/2024, 15:30',
-        cancelledBy: 'technician',
-        cancelReason: 'Tôi đang kẹt xe ở quận khác không về kịp, đã gọi điện xin lỗi khách.'
-    },
-    {
-        id: 'GU-99105', serviceName: 'Vệ sinh máy giặt', subService: 'Cửa ngang',
-        customerName: 'Chị Mai', technicianName: 'Nguyễn Văn Minh', cancelDate: '21/05/2024, 09:00',
-        cancelledBy: 'customer',
-        cancelReason: 'Tôi tìm được người quen sửa giúp rồi.'
-    }
-];
-
-const mockWarranty: ScheduledOrder[] = [
-    {
-        id: 'WR-99200', serviceName: '[BẢO HÀNH] Bảo trì máy lạnh Panasonic', subService: 'Máy rỉ nước sau khi sửa',
-        customerName: 'Anh Minh Khôi', technicianName: 'Nguyễn Văn Minh', time: 'Ngày mai, 09:00',
-        address: 'Quận Bình Thạnh, HCMC', statusText: 'ĐANG XỬ LÝ', estPrice: 0, note: 'Khách báo máy lạnh rỉ nước lại chỗ cũ.'
-    }
-];
-
-export const OrderManagementPage: React.FC<OrderPageProps> = ({ role }) => {
-    const [activeTab, setActiveTab] = useState('new');
-    const [selectedReqId, setSelectedReqId] = useState<string | null>(null);
-
-    // --- STATE QUẢN LÝ MODAL HỦY ---
-    const [showCancelModal, setShowCancelModal] = useState(false);
-    const [orderToCancel, setOrderToCancel] = useState<string | null>(null);
-    const [cancelReason, setCancelReason] = useState('');
-
-    const handleTabChange = (tabId: string) => {
-        setActiveTab(tabId);
-        setSelectedReqId(null);
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab as typeof state.activeTab);
+        clearSelectedOrder();
     };
 
-    // Hàm Mở Modal Hủy
-    const handleOpenCancelModal = (id: string) => {
-        setOrderToCancel(id);
-        setShowCancelModal(true);
-        setCancelReason(''); // Reset lý do
-    };
+    const renderOrderCard = (order: OrderResponse) => {
+        const tab = getOrderTab(order);
 
-    // Hàm Xác nhận Hủy
-    const handleConfirmCancel = () => {
-        if (!cancelReason.trim()) {
-            alert("Vui lòng nhập lý do hủy đơn!");
-            return;
+        switch (tab) {
+            case 'new':
+                return (
+                    <RequestCard
+                        key={order.id}
+                        data={mapOrderToRequestData(order)}
+                        role={role}
+                        onViewDetail={selectOrder}
+                        onCancel={openCancelModal}
+                    />
+                );
+
+            case 'scheduled':
+            case 'warranty':
+                return (
+                    <ScheduledCard
+                        key={order.id}
+                        data={mapOrderToScheduledOrder(order)}
+                        role={role}
+                        onViewDetail={selectOrder}
+                        onCancel={openCancelModal}
+                    />
+                );
+
+            case 'in-progress':
+                return <InProgressCard key={order.id} data={mapOrderToInProgressOrder(order)} onViewDetail={selectOrder} />;
+
+            case 'completed':
+                return <CompletedCard key={order.id} data={mapOrderToCompletedOrder(order)} role={role} onViewDetail={selectOrder} />;
+
+            case 'cancelled':
+                return <CancelledCard key={order.id} data={mapOrderToCancelledOrder(order)} role={role} onViewDetail={selectOrder} />;
+
+            default:
+                return null;
         }
-
-        console.log(`Đã hủy đơn ${orderToCancel} với lý do: ${cancelReason}`);
-        // TODO: Gọi API Hủy đơn ở đây
-
-        // Đóng modal và reset view
-        setShowCancelModal(false);
-        setOrderToCancel(null);
-        setSelectedReqId(null);
-        setActiveTab('cancelled');
     };
 
     return (
@@ -124,133 +92,121 @@ export const OrderManagementPage: React.FC<OrderPageProps> = ({ role }) => {
             <div className="main-content">
                 <main className="page-body bg-plate-white">
                     <div className="orders-container">
-
-                        {/* ========================================================
-                            PHẦN 1: CÁC MÀN HÌNH CHI TIẾT
-                            ======================================================== */}
-                        {selectedReqId && activeTab === 'new' && (
-                            <RequestDetail
-                                data={mockRequests.find(r => r.id === selectedReqId)!}
-                                role={role}
-                                onBack={() => setSelectedReqId(null)}
-                                onCancel={handleOpenCancelModal} // Gọi hàm mở Modal
-                            />
-                        )}
-
-                        {selectedReqId && activeTab === 'scheduled' && (
-                            <ScheduledDetail
-                                data={mockScheduled.find(r => r.id === selectedReqId)!}
-                                role={role}
-                                onBack={() => setSelectedReqId(null)}
-                                onCancel={handleOpenCancelModal}
-                            />
-                        )}
-
-                        {selectedReqId && activeTab === 'in-progress' && role === 'customer' && (
-                            <InProgressDetail role={role} onBack={() => setSelectedReqId(null)}/>
-                        )}
-
-                        {selectedReqId && activeTab === 'completed' && (
-                            <CompletedDetail role={role} onBack={() => setSelectedReqId(null)}/>
-                        )}
-
-                        {selectedReqId && activeTab === 'warranty' && (
-                            <ScheduledDetail data={mockWarranty.find(r => r.id === selectedReqId)!} role={role} onBack={() => setSelectedReqId(null)} />
-                        )}
-
-                        {/* ========================================================
-                            PHẦN 2: DANH SÁCH TABS & THẺ
-                            ======================================================== */}
-                        {!selectedReqId && (
+                        {state.selectedOrder ? (
+                            state.loadingDetail ? (
+                                <div className="order-alert loading">Đang tải chi tiết đơn hàng...</div>
+                            ) : state.detailError ? (
+                                <div className="order-alert error">{state.detailError}</div>
+                            ) : (
+                                <OrderDetailPanel
+                                    order={state.selectedOrder}
+                                    role={role}
+                                    onBack={clearSelectedOrder}
+                                    onCancel={openCancelModal}
+                                />
+                            )
+                        ) : (
                             <>
-                                <div className="page-header">
-                                    <h2>Quản lý Đơn hàng</h2>
+                                <div className="page-header order-page-header">
+                                    <div>
+                                        <h2>Quản lý đơn hàng</h2>
+                                        <p className="order-page-subtitle">
+                                            Dữ liệu được lấy từ API và phân nhóm theo trạng thái.
+                                        </p>
+                                    </div>
                                     <div className="search-bar">
-                                        <input type="text" placeholder="Tìm kiếm mã đơn, khách hàng..."/>
+                                        <input
+                                            type="text"
+                                            placeholder="Tìm kiếm mã đơn, khách hàng, thợ..."
+                                            value={state.search}
+                                            onChange={(event) => setSearch(event.target.value)}
+                                        />
                                     </div>
                                 </div>
 
-                                <OrderTabs activeTab={activeTab} onChangeTab={handleTabChange}/>
+                                <OrderTabs activeTab={state.activeTab} onChangeTab={handleTabChange} />
+
+                                {state.error && <div className="order-alert error">{state.error}</div>}
+
+                                {state.loadingList && <div className="order-alert loading">Đang tải danh sách đơn hàng...</div>}
 
                                 <div className="request-list">
-                                    {activeTab === 'new' && mockRequests.map(req => (
-                                        <RequestCard
-                                            key={req.id}
-                                            data={req}
-                                            role={role}
-                                            onViewDetail={setSelectedReqId}
-                                            onCancel={handleOpenCancelModal} // Gọi hàm mở Modal từ thẻ
-                                        />
-                                    ))}
-
-                                    {activeTab === 'scheduled' && mockScheduled.map(req => (
-                                        <ScheduledCard
-                                            key={req.id}
-                                            data={req}
-                                            role={role}
-                                            onViewDetail={setSelectedReqId}
-                                            onCancel={handleOpenCancelModal}
-                                        />
-                                    ))}
-
-                                    {activeTab === 'completed' && mockCompleted.map(req => (
-                                        <CompletedCard key={req.id} data={req} role={role} onViewDetail={setSelectedReqId}/>
-                                    ))}
-
-                                    {activeTab === 'cancelled' && mockCancelled.map(req => (
-                                        <CancelledCard key={req.id} data={req} role={role} onViewDetail={setSelectedReqId} />
-                                    ))}
-
-                                    {activeTab === 'warranty' && mockWarranty.map(req => (
-                                        <ScheduledCard key={req.id} data={req} role={role} onViewDetail={setSelectedReqId} />
-                                    ))}
-
-                                    {activeTab === 'in-progress' && (
-                                        role === 'customer'
-                                            ? mockInProgress.map(req => <InProgressCard key={req.id} data={req} onViewDetail={setSelectedReqId}/>)
-                                            : <InProgressDetail role={role} onBack={() => handleTabChange('scheduled')}/>
+                                    {visibleOrders.length > 0 ? (
+                                        visibleOrders.map(renderOrderCard)
+                                    ) : (
+                                        !state.loadingList && (
+                                            <div className="order-empty-state">
+                                                Không có đơn hàng phù hợp với bộ lọc hiện tại.
+                                            </div>
+                                        )
                                     )}
+                                </div>
+
+                                <div className="order-pagination">
+                                    <button
+                                        className="btn-secondary"
+                                        disabled={state.page <= 0 || state.loadingList}
+                                        onClick={() => setPage(state.page - 1)}
+                                    >
+                                        Trang trước
+                                    </button>
+                                    <span>
+                                        Trang {state.page + 1} / {Math.max(state.totalPages, 1)}
+                                    </span>
+                                    <button
+                                        className="btn-secondary"
+                                        disabled={state.loadingList || (state.totalPages > 0 && state.page >= state.totalPages - 1)}
+                                        onClick={() => setPage(state.page + 1)}
+                                    >
+                                        Trang sau
+                                    </button>
                                 </div>
                             </>
                         )}
 
-                        {/* ========================================================
-                            PHẦN 3: MODAL HỦY ĐƠN
-                            ======================================================== */}
-                        {showCancelModal && (
-                            <div className="modal-overlay" style={{ zIndex: 9999 }}>
-                                <div className="modal-content" style={{ width: '500px' }}>
-                                    <div className="modal-header">
+                        {state.showCancelModal && (
+                            <div className="modal-overlay order-cancel-modal-overlay" style={{ zIndex: 9999 }}>
+                                <div className="modal-content order-cancel-modal-content" style={{ width: '500px' }}>
+                                    <div className="modal-header order-cancel-modal-header">
                                         <h2 style={{ color: '#ef4444' }}>
                                             {role === 'technician' ? 'Từ chối yêu cầu' : 'Xác nhận hủy đơn'}
                                         </h2>
                                     </div>
-                                    <div className="modal-body">
+                                    <div className="modal-body order-cancel-modal-body">
                                         <p style={{ fontSize: '14px', color: 'var(--stem-grey)', marginBottom: '16px' }}>
-                                            Vui lòng cho biết lý do bạn muốn {role === 'technician' ? 'từ chối' : 'hủy'} đơn hàng <strong>{orderToCancel}</strong>.
+                                            Vui lòng cho biết lý do bạn muốn {role === 'technician' ? 'từ chối' : 'hủy'} đơn hàng <strong>{state.orderToCancelId}</strong>.
                                         </p>
                                         <textarea
-                                            className="reason-input"
+                                            className="reason-input order-cancel-reason-input"
                                             placeholder="Nhập lý do chi tiết..."
-                                            value={cancelReason}
-                                            onChange={(e) => setCancelReason(e.target.value)}
+                                            value={state.cancelReason}
+                                            onChange={(event) => setCancelReason(event.target.value)}
                                             style={{ minHeight: '120px' }}
-                                        ></textarea>
+                                        />
                                     </div>
-                                    <div className="modal-footer">
-                                        <button className="btn-outline" onClick={() => setShowCancelModal(false)}>Quay lại</button>
-                                        <button className="btn-solid" style={{ background: '#ef4444', color: '#fff' }} onClick={handleConfirmCancel}>
+                                    <div className="modal-footer order-cancel-modal-footer">
+                                        <button className="btn-outline order-cancel-btn-back" onClick={closeCancelModal}>
+                                            Quay lại
+                                        </button>
+                                        <button className="btn-solid order-cancel-btn-confirm" style={{ background: '#ef4444', color: '#fff' }} onClick={confirmCancel}>
                                             Xác nhận
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         )}
-
                     </div>
                 </main>
             </div>
         </div>
+    );
+};
+
+export const OrderManagementPage: React.FC<OrderPageProps> = ({ role }) => {
+    return (
+        <OrderManagementProvider role={role}>
+            <OrderManagementContent role={role} />
+        </OrderManagementProvider>
     );
 };
 

@@ -1,5 +1,7 @@
 export interface ScheduledOrder {
     id: string;
+    technicianId?: string;
+    customerId?: string;
     serviceName: string;
     subService: string;
     customerName: string;

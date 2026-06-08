@@ -5,6 +5,7 @@ import "./requestCard.css"
 
 import {FaLocationDot, FaCreditCard} from 'react-icons/fa6';
 import {useNavigate} from "react-router-dom";
+import { navigateToChat } from "../../utils/chatNavigation";
 
 interface RequestCardProps {
     data: RequestData;
@@ -16,12 +17,18 @@ interface RequestCardProps {
 export const RequestCard: React.FC<RequestCardProps> = ({data, role, onViewDetail, onCancel}) => {
     const navigate = useNavigate();
     const handleChatClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Chặn sự kiện click nhầm vào background của Card
-        if (role === 'customer') {
-            navigate('/customer/chat');
-        } else {
-            navigate('/technician/chat');
+        e.stopPropagation();
+        if (role === 'customer' && data.technicianId) {
+            navigateToChat(navigate, role, {
+                technicianId: data.technicianId,
+                orderId: data.id,
+            });
+            return;
         }
+        navigateToChat(navigate, role, {
+            orderId: data.id,
+            customerId: data.customerId,
+        });
     };
 
     return (

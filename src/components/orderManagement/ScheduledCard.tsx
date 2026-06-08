@@ -4,6 +4,7 @@ import { FaLocationDot, FaClock, FaUser, FaPhone, FaPersonWalkingLuggage, FaMess
 import './scheduledCard.css';
 import type {ScheduledOrder} from "../../types/ScheduledOrder.ts";
 import {useNavigate} from "react-router-dom";
+import { navigateToChat } from "../../utils/chatNavigation";
 
 interface ScheduledCardProps {
     data: ScheduledOrder;
@@ -15,12 +16,18 @@ interface ScheduledCardProps {
 export const ScheduledCard: React.FC<ScheduledCardProps> = ({ data, role, onViewDetail, onCancel }) => {
     const navigate = useNavigate();
     const handleChatClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Chặn sự kiện click nhầm vào background của Card
-        if (role === 'customer') {
-            navigate('/customer/chat');
-        } else {
-            navigate('/technician/chat');
+        e.stopPropagation();
+        if (role === 'customer' && data.technicianId) {
+            navigateToChat(navigate, role, {
+                technicianId: data.technicianId,
+                orderId: data.id,
+            });
+            return;
         }
+        navigateToChat(navigate, role, {
+            orderId: data.id,
+            customerId: data.customerId,
+        });
     };
     return (
         <div className="sched-card" onClick={() => onViewDetail(data.id)}>

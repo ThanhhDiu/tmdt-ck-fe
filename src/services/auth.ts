@@ -1,6 +1,4 @@
-import axiosClient from '../api/axiosClient';
-
-// Removed export API_URL since axiosClient handles the base URL
+export const API_URL = 'http://localhost:8080/api'
 
 interface RegisterUserData {
   fullName: string
@@ -14,25 +12,37 @@ export const registerUser = async (userData: RegisterUserData, setSuccessMessage
     setSuccessMessage('')
     const { fullName, email, phone, password, accountType } = userData
     try {
-      const data: any = await axiosClient.post('/auth/register', {
-        fullName,
-        email,
-        phone,
-        password,
-        role: accountType,
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName,
+          email,
+          phone,
+          password,
+          role: accountType,
+        }),
       })
   
-      setSuccessMessage('Đăng ký thành công. Vui lòng quay lại trang Đăng nhập.')
-    } catch (error: any) {
-      console.error('Lỗi đăng ký:', error)
-      throw error;
+      const data = await response.json()
+  
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng ký thất bại')
+      }
+  
+      setSuccessMessage('Đăng ký thành công')
+      console.log(data)
+    } catch (error) {
+      console.error(error)
+      setSuccessMessage('Có lỗi xảy ra')
     }
   }
 
 export interface LoginUserData {
   identifier: string
   password: string
-  role: 'customer' | 'technician'
 }
 
 export interface User {
@@ -56,24 +66,115 @@ export interface LoginResponse {
   }
 }
 
+export interface RefreshTokenResponse {
+  success: boolean
+  data: {
+    accessToken: string
+  }
+}
+
+interface AuthMeResponse {
+  success: boolean
+  data: User
+}
+
+type FetchWithAuthOptions = RequestInit & {
+  skipAuth?: boolean
+}
+
 export const loginUser = async (
   userData: LoginUserData
 ): Promise<LoginResponse> => {
-  try {
-    const data: any = await axiosClient.post('/auth/login', {
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
       identifier: userData.identifier,
       password: userData.password,
-      role: userData.role,
-    });
+    }),
+  })
+
+  const data: LoginResponse = await response.json()
   
-    const { user, accessToken, refreshToken } = data.data
-      localStorage.setItem('user', JSON.stringify({ user }))
-      localStorage.setItem('accessToken',  accessToken )
-      localStorage.setItem('refreshToken', refreshToken )
-    return data as LoginResponse;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Đăng nhập thất bại');
+  if (!response.ok) {
+    throw new Error('Đăng nhập thất bại')
   }
+  const { user, accessToken, refreshToken } = data.data
+    localStorage.setItem('user', JSON.stringify({ user }))
+    localStorage.setItem('accessToken',  accessToken )
+    localStorage.setItem('refreshToken', refreshToken )
+  return data
+}
+
+export const refreshAccessToken = async (): Promise<string | null> => {
+  const refreshToken = localStorage.getItem('refreshToken')
+
+  if (!refreshToken) {
+    return null
+  }
+
+  const response = await fetch(`${API_URL}/auth/refresh-token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refreshToken }),
+  })
+
+  const data: RefreshTokenResponse = await response.json()
+
+  if (!response.ok) {
+    throw new Error('Làm mới token thất bại')
+  }
+
+  localStorage.setItem('accessToken', data.data.accessToken)
+  return data.data.accessToken
+}
+
+export const fetchWithAuth = async (
+  input: RequestInfo | URL,
+  init: FetchWithAuthOptions = {},
+  retryOnUnauthorized: boolean = true
+): Promise<Response> => {
+  const { skipAuth, headers, ...rest } = init
+  const nextHeaders = new Headers(headers || undefined)
+  const isFormDataBody = rest.body instanceof FormData
+
+  if (!nextHeaders.has('Content-Type') && !isFormDataBody) {
+    nextHeaders.set('Content-Type', 'application/json')
+  }
+
+  if (!skipAuth) {
+    const accessToken = getAccessToken()
+    if (accessToken) {
+      nextHeaders.set('Authorization', `Bearer ${accessToken}`)
+    }
+  }
+
+  const response = await fetch(input, {
+    ...rest,
+    headers: nextHeaders,
+  })
+
+  if (response.status !== 401 || !retryOnUnauthorized || skipAuth) {
+    return response
+  }
+
+  const refreshedAccessToken = await refreshAccessToken()
+  if (!refreshedAccessToken) {
+    logoutUser()
+    return response
+  }
+
+  const retryHeaders = new Headers(nextHeaders)
+  retryHeaders.set('Authorization', `Bearer ${refreshedAccessToken}`)
+
+  return fetch(input, {
+    ...rest,
+    headers: retryHeaders,
+  })
 }
 
 export const logoutUser = () => {
@@ -86,7 +187,6 @@ export const isAuthenticated = (): boolean => {
   const accessToken = localStorage.getItem('accessToken')
   return !!accessToken
 }
-
 export const getAccessToken = (): string | null => {
     if (!isAuthenticated()) {
         return null
@@ -94,10 +194,38 @@ export const getAccessToken = (): string | null => {
   return localStorage.getItem('accessToken')
 }
 
-export const forgotPassword = async (email: string) => {
-  return await axiosClient.post('/auth/forgot-password', { email });
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem('refreshToken')
 }
 
-export const changePassword = async (payload: { oldPassword?: string, newPassword: string }) => {
-  return await axiosClient.post('/auth/change-password', payload);
+export const getStoredUser = (): User | null => {
+  const raw = localStorage.getItem('user')
+  if (!raw) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as { user?: User } | User
+    if ('user' in parsed && parsed.user) {
+      return parsed.user
+    }
+    return parsed as User
+  } catch {
+    return null
+  }
+}
+
+export const fetchCurrentUser = async (): Promise<User> => {
+  const response = await fetchWithAuth(`${API_URL}/auth/me`, {
+    method: 'GET',
+  })
+
+  const payload: AuthMeResponse = await response.json()
+
+  if (!response.ok || !payload.success) {
+    throw new Error('Không thể lấy thông tin người dùng')
+  }
+
+  localStorage.setItem('user', JSON.stringify({ user: payload.data }))
+  return payload.data
 }

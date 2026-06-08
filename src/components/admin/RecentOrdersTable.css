@@ -77,6 +77,13 @@
   vertical-align: middle;
 }
 
+.rot-empty-row td {
+  text-align: center;
+  color: #64748b;
+  font-weight: 600;
+  padding: 28px 16px;
+}
+
 /* Customer Cell */
 .rot-customer-info {
   display: flex;

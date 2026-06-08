@@ -5,6 +5,8 @@ import {
 } from 'react-icons/fa6';
 import './inProgressCard.css';
 import type {InProgressOrder} from "../../types/InProgressOrder.ts";
+import { useNavigate } from 'react-router-dom';
+import { navigateToChat } from '../../utils/chatNavigation';
 
 interface InProgressCardProps {
     data: InProgressOrder;
@@ -12,6 +14,16 @@ interface InProgressCardProps {
 }
 
 export const InProgressCard: React.FC<InProgressCardProps> = ({data, onViewDetail}) => {
+    const navigate = useNavigate();
+
+    const handleChatClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        navigateToChat(navigate, 'customer', {
+            technicianId: data.technicianId,
+            orderId: data.id,
+        });
+    };
+
     return (
         <div className={`ip-list-card ${data.isWaitingApproval ? 'needs-action' : ''}`}
              onClick={() => onViewDetail(data.id)}>
@@ -61,7 +73,7 @@ export const InProgressCard: React.FC<InProgressCardProps> = ({data, onViewDetai
                 <button className="btn-primary" onClick={() => onViewDetail(data.id)}>
                     <FaWrench/> Xem tiến độ
                 </button>
-                <button className="btn-secondary">
+                <button type="button" className="btn-secondary" onClick={handleChatClick}>
                     <FaMessage/> Chat với thợ
                 </button>
             </div>

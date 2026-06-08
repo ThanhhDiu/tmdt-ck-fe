@@ -1,64 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './RecentOrdersTable.css';
+import type { RecentOrderTableItem } from '../../services/adminDashboardService.ts';
 
-interface Order {
-  id: number;
-  customer: string;
-  service: string;
-  provider: string;
-  status: 'Đã hoàn thành' | 'Đang xử lý' | 'Chờ xác nhận';
-  date: string;
-  amount: string;
+interface RecentOrdersTableProps {
+  orders: RecentOrderTableItem[];
+  isLoading?: boolean;
 }
 
-export const RecentOrdersTable: React.FC = () => {
-  const [orders] = useState<Order[]>([
-    {
-      id: 1,
-      customer: 'Nguyễn Văn A',
-      service: 'Sửa Mãy lạnh',
-      provider: 'Trần Minh Tâm',
-      status: 'Đã hoàn thành',
-      date: '10:30, 24/05',
-      amount: '₫450k',
-    },
-    {
-      id: 2,
-      customer: 'Lê Thị B',
-      service: 'Sửa Mãy giặt LG',
-      provider: 'Hoàng Văn Dũng',
-      status: 'Đã hoàn thành',
-      date: '11:15, 24/05',
-      amount: '₫600k',
-    },
-    {
-      id: 3,
-      customer: 'Phạm Hùng',
-      service: 'Bảo trì lạnh',
-      provider: 'Lý Gia Thành',
-      status: 'Đang xử lý',
-      date: '12:05, 24/05',
-      amount: '₫350k',
-    },
-    {
-      id: 4,
-      customer: 'Ế ơ Hoàng',
-      service: 'Sửa bình nóng lạnh',
-      provider: 'Vũ Ức Nam',
-      status: 'Chờ xác nhận',
-      date: '12:30, 24/05',
-      amount: '₫280k',
-    },
-    {
-      id: 5,
-      customer: 'Trần Anh',
-      service: 'Sửa Tủ lạnh',
-      provider: 'Bùi Văn Tuấn',
-      status: 'Đã hoàn thành',
-      date: '13:00, 24/05',
-      amount: '₫520k',
-    },
-  ]);
+export const RecentOrdersTable: React.FC<RecentOrdersTableProps> = ({ orders, isLoading = false }) => {
 
   const getStatusClass = (status: string) => {
     switch (status) {
@@ -130,6 +79,11 @@ export const RecentOrdersTable: React.FC = () => {
                 </td>
               </tr>
             ))}
+            {!isLoading && orders.length === 0 && (
+              <tr className="rot-empty-row">
+                <td colSpan={6}>Chưa có đơn hàng gần đây.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

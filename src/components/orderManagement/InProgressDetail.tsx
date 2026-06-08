@@ -18,7 +18,8 @@ export const InProgressDetail: React.FC<InProgressProps> = ({ role, onBack }) =>
     const [currentTotal, setCurrentTotal] = useState(450000);
     const [proposedTotal, setProposedTotal] = useState(0);
 
-    const handleSumbitAdjustment = (newPrice: number) => {
+    const handleSumbitAdjustment = async (payload: { newPrice: number }) => {
+        const newPrice = payload.newPrice;
         setProposedTotal(newPrice);
         setIsPendingApproval(true);
         setShowAdjustModal(false);

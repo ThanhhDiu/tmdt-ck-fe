@@ -41,6 +41,52 @@
   margin: 0;
 }
 
+.ad-dashboard-error {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ad-page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ad-global-time-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ad-global-mode-buttons {
+  display: flex;
+  gap: 8px;
+  background: var(--border-default);
+  padding: 4px;
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.ad-select-input {
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid #dbe4ef;
+  background: #fff;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
 .ad-export-btn {
   display: flex;
   align-items: center;
@@ -164,6 +210,11 @@
     flex-direction: column;
   }
 
+  .ad-page-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .ad-export-btn {
     width: 100%;
     justify-content: center;
@@ -174,7 +225,11 @@
     align-items: flex-start;
   }
 
-  .ad-time-filter {
+  .ad-global-mode-buttons {
+    width: 100%;
+  }
+
+  .ad-select-input {
     width: 100%;
   }
 }

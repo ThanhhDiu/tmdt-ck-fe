@@ -13,8 +13,7 @@ interface HeaderProps {
   searchPlaceholder?: string;
 }
 
-// TODO: Refactor profileDropdown component to fix React Hook issue
-const ProfileDropdown = (): ReactNode => {
+const profileDropdown = (): ReactNode => {
   const navigate = useNavigate()
     const goToProfile = () => navigate && navigate(customerPageMap['customer-settings']);
   const goToLogout = () => {
@@ -45,8 +44,7 @@ const ProfileDropdown = (): ReactNode => {
             </div>
           </div>)}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const loginButton = (onNavigate?: (page: string, data?: any) => void)=> (
+const loginButton = (onNavigate: any)=> (
   <button className="profile-menu__item profile-menu__item--danger" type="button" onClick={()=> onNavigate && onNavigate('login')} role="menuitem">
     Đăng nhập
   </button> 
@@ -114,7 +112,7 @@ export const Header: React.FC<HeaderProps> = ({
             <input type="text" placeholder={searchPlaceholder} className="search-input" />
           </div>
           <NotificationMenu badgeStyle="dot" />
-           {isAuthenticated() ? <ProfileDropdown /> :  loginButton(onNavigate)}
+          {isAuthenticated() ? profileDropdown() :  loginButton(onNavigate)}
         </div>
       </div>
     </header>

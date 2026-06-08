@@ -5,7 +5,9 @@
     linear-gradient(180deg, var(--primary-light) 0%, var(--primary-hover) 100%);
   color: var(--text-white); display: flex; flex-direction: column;
   justify-content: space-between; padding: 32px 20px 24px;
-  min-height: 100vh; position: sticky; top: 0; box-sizing: border-box;
+  height: 100vh; position: fixed; top: 0; left: 0; box-sizing: border-box;
+  z-index: 30; border-right: 1px solid rgba(226, 232, 240, 0.1);
+  box-shadow: 16px 0 38px rgba(36, 51, 83, 0.26);
 }
 
 .db-sidebar-brand { margin-bottom: 48px; padding-left: 12px; }

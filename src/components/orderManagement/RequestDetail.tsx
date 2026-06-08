@@ -3,6 +3,7 @@ import type {RequestData} from "../../types/RequestData.ts";
 import type {UserRole} from "../../types/UserRole.ts";
 import "./requestDetail.css"
 import {FaLocationDot, FaClock, FaRegCommentDots, FaArrowLeft} from 'react-icons/fa6';
+import { navigateToChat } from "../../utils/chatNavigation";
 import {useNavigate} from "react-router-dom";
 
 interface RequestDetailProps {
@@ -15,12 +16,18 @@ interface RequestDetailProps {
 export const RequestDetail: React.FC<RequestDetailProps> = ({ data, role, onBack, onCancel }) => {
     const navigate = useNavigate();
     const handleChatClick = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Chặn sự kiện click nhầm vào background của Card
-        if (role === 'customer') {
-            navigate('/customer/chat');
-        } else {
-            navigate('/technician/chat');
+        e.stopPropagation();
+        if (role === 'customer' && data.technicianId) {
+            navigateToChat(navigate, role, {
+                technicianId: data.technicianId,
+                orderId: data.id,
+            });
+            return;
         }
+        navigateToChat(navigate, role, {
+            orderId: data.id,
+            customerId: data.customerId,
+        });
     };
     return (
         <div className="request-detail">

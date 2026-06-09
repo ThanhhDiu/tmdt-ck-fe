@@ -271,7 +271,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
 
                 if (role === 'customer' && technicianId) {
                     const existing = items.find((c) => c.partner?.id === technicianId);
-                    if (existing) {
+                    if (existing && (!orderId || existing.orderId === orderId)) {
                         await openConversation(
                             existing.id,
                             existing.orderId ?? orderId ?? null
@@ -423,6 +423,35 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
         setIsPriceConfirmOpen(false);
     };
 
+    const handleAcceptOrder = async () => {
+        if (!linkedOrder?.id) return;
+        try {
+            const updated = await orderService.acceptOrder(linkedOrder.id);
+            setLinkedOrder(updated);
+            if (activeConversationId) {
+                await loadMessages(activeConversationId);
+            }
+            await refreshConversations();
+        } catch (err) {
+            alert(err instanceof Error ? err.message : "Không thể chấp nhận đơn hàng");
+        }
+    };
+
+    const handleRejectOrder = async () => {
+        if (!linkedOrder?.id) return;
+        const reason = prompt("Nhập lý do từ chối yêu cầu:") || "Thợ từ chối yêu cầu sửa chữa";
+        try {
+            const updated = await orderService.cancelOrder(linkedOrder.id, reason);
+            setLinkedOrder(updated);
+            if (activeConversationId) {
+                await loadMessages(activeConversationId);
+            }
+            await refreshConversations();
+        } catch (err) {
+            alert(err instanceof Error ? err.message : "Không thể từ chối đơn hàng");
+        }
+    };
+
     const onNavigate = (page: string, data?: unknown) => {
         const path = pageMap[page] || '/';
         navigate(path, { state: data });
@@ -520,7 +549,12 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                         {!isLoading && activeConversationId && linkedOrder && showRepairCard && (
                             <div className={styles.messageRow}>
                                 <div className={styles.messageContent}>
-                                    <RepairRequestCard order={linkedOrder} />
+                                    <RepairRequestCard 
+                                        order={linkedOrder} 
+                                        role={role}
+                                        onAccept={handleAcceptOrder}
+                                        onReject={handleRejectOrder}
+                                    />
                                 </div>
                             </div>
                         )}

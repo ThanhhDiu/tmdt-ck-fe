@@ -4,9 +4,17 @@ import styles from './Chat.module.css';
 
 type RepairRequestCardProps = {
   order: OrderResponse;
+  role?: string;
+  onAccept?: () => void;
+  onReject?: () => void;
 };
 
-export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ order }) => {
+export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ 
+  order, 
+  role = 'customer',
+  onAccept,
+  onReject
+}) => {
   const formatPrice = (value?: number) =>
     new Intl.NumberFormat('vi-VN').format(value ?? 0);
 
@@ -29,6 +37,45 @@ export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ order }) =
           {order.images.slice(0, 3).map((src) => (
             <img key={src} src={src} alt="Ảnh yêu cầu" />
           ))}
+        </div>
+      )}
+      
+      {role === 'technician' && order.status?.toLowerCase() === 'new' && (
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <button
+            onClick={onAccept}
+            style={{
+              flex: 1,
+              padding: '8px 16px',
+              backgroundColor: '#aa3bff',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            Chấp nhận
+          </button>
+          <button
+            onClick={onReject}
+            style={{
+              flex: 1,
+              padding: '8px 16px',
+              backgroundColor: '#ef4444',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '14px',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            Từ chối
+          </button>
         </div>
       )}
     </div>

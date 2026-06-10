@@ -17,30 +17,32 @@
 .wallet-section-kicker {
   margin: 0 0 6px;
   color: var(--berry-bloom);
-  font-size: 12px;
+  font-size: 16px;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: var(--fw-semibold);
+  letter-spacing: 1.4px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
 }
 
 .wallet-home-header h1 {
   margin: 0;
-  font-size: 30px;
-  letter-spacing: -0.6px;
+  font-size: clamp(36px, 5vw, 52px);
+  letter-spacing: -1px;
   color: var(--blueberry-skin);
+  font-weight: 800;
 }
 
 .wallet-home-subtitle {
   margin: 10px 0 0;
-  max-width: 720px;
+  max-width: 860px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.6;
   margin-left: auto;
   margin-right: auto;
-  color: var(--text-secondary);
-  font-size: 15px;
 }
 
 .wallet-overview-card {
@@ -220,32 +222,6 @@
   color: var(--white);
   background: var(--blueberry-skin);
   box-shadow: 0 12px 22px rgba(36, 51, 83, 0.18);
-}
-
-.wallet-rules-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-bottom: 18px;
-}
-
-.wallet-rule-card {
-  background: var(--white);
-  border: 1px solid var(--border-default);
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 8px 20px rgba(19, 30, 66, 0.04);
-}
-
-.wallet-rule-card h2 {
-  margin: 0 0 10px;
-  font-size: 24px;
-  letter-spacing: -0.4px;
-}
-
-.wallet-rule-card p:last-child {
-  margin: 0;
-  color: var(--text-secondary);
 }
 
 .wallet-pocket-note {

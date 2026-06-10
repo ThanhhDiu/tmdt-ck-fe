@@ -1,411 +1,336 @@
 import { API_URL, fetchWithAuth } from './auth'
 
-type ApiResponse<T> = {
+interface ApiResponse<T> {
   success: boolean
   data: T
   error?: {
     code?: string
     message?: string
-    fields?: Record<string, string>
   }
 }
 
-type PaginationMeta = {
-  page: number
-  limit: number
-  total: number
-  totalPages: number
+interface PaginationApi {
+  page?: number
+  limit?: number
+  size?: number
+  total?: number
+  totalPages?: number
 }
 
-export type WalletPocketType = 'credit' | 'personal'
-export type WalletTransactionType = 'topup' | 'withdraw' | 'commission' | 'payment' | 'refund' | 'all'
-export type WalletPaymentMethod = 'momo' | 'zalopay' | 'vietqr' | 'vnpay'
-
-export type WalletPocket = {
-  type: WalletPocketType
-  balance: number
-  pendingBalance: number
-  status: string
+interface PagedResponseApi<T> {
+  items?: T[]
+  content?: T[]
+  page?: number
+  limit?: number
+  size?: number
+  totalElements?: number
+  totalPages?: number
+  pagination?: PaginationApi
 }
 
-export type WalletSummary = {
+interface WalletApi {
+  userId?: string | null
+  balance?: number | string | null
+  creditBalance?: number | string | null
+  personalBalance?: number | string | null
+  status?: string | null
+  pendingBalance?: number | string | null
+  totalEarned?: number | string | null
+  totalWithdrawn?: number | string | null
+  currency?: string | null
+  updatedAt?: string | null
+}
+
+interface WalletTransactionApi {
+  id?: string | null
+  type?: string | null
+  title?: string | null
+  category?: string | null
+  amount?: number | string | null
+  afterBalance?: number | null
+  note?: string | null
+  actor?: string | null
+  relatedOrderCode?: string | null
+  status?: string | null
+  createdAt?: string | null
+}
+
+interface BankAccountApi {
+  id?: string | null
+  bankName?: string | null
+  accountNumber?: string | null
+  accountOwner?: string | null
+  isDefault?: boolean | null
+  createdAt?: string | null
+}
+
+interface BankAccountListApi {
+  items?: BankAccountApi[] | null
+}
+
+interface TopUpApi {
+  transactionId?: string | null
+  amount?: number | string | null
+  method?: string | null
+  checkoutUrl?: string | null
+  deepLink?: string | null
+  qrCodeUrl?: string | null
+  paymentInfo?: {
+    bankName?: string | null
+    accountName?: string | null
+    accountNumber?: string | null
+    transferContent?: string | null
+    qrCode?: string | null
+  } | null
+  expiredAt?: string | null
+  status?: string | null
+}
+
+interface WithdrawApi {
+  transactionId?: string | null
+  amount?: number | string | null
+  fee?: number | string | null
+  netAmount?: number | string | null
+  bankAccount?: {
+    bankName?: string | null
+    accountNumber?: string | null
+    owner?: string | null
+  } | null
+  status?: string | null
+}
+
+export type WalletStatus = 'normal' | 'low_balance' | 'locked'
+export type WalletGroup = 'credit' | 'personal'
+
+export interface TechnicianWalletSummary {
   userId: string
-  totalBalance: number
-  creditWallet: WalletPocket
-  personalWallet: WalletPocket
+  creditBalance: number
+  personalBalance: number
+  pendingBalance: number
   totalEarned: number
   totalWithdrawn: number
   currency: string
-  updatedAt: string | null
+  status: WalletStatus
+  updatedAt: string
 }
 
-export type WalletTransaction = {
+export interface TechnicianWalletHistoryItem {
   id: string
-  type: Exclude<WalletTransactionType, 'all'>
-  walletType: WalletPocketType
+  type: string
   title: string
   category: string
   amount: number
   afterBalance: number | null
   note: string
   actor: string
-  relatedOrderCode: string | null
-  status: string
-  createdAt: string | null
+  relatedOrderCode: string
+  status: 'success' | 'pending'
+  createdAt: string
+  walletGroup: WalletGroup
 }
 
-export type WalletTransactionList = {
-  items: WalletTransaction[]
-  pagination: PaginationMeta
-}
-
-export type WalletTopUpResult = {
-  transactionId: string
-  amount: number
-  walletType: WalletPocketType
-  method: WalletPaymentMethod
-  checkoutUrl: string | null
-  deepLink: string | null
-  qrCodeUrl: string | null
-  paymentInfo: {
-    bankName: string
-    accountName: string
-    accountNumber: string
-    transferContent: string
-    qrCode: string | null
-  } | null
-  expiredAt: string | null
-  status: string
-}
-
-export type WalletTopUpConfirmResult = {
-  transactionId: string
-  status: string
-  message: string
-}
-
-export type BankAccount = {
+export interface TechnicianBankAccount {
   id: string
   bankName: string
   accountNumber: string
   accountOwner: string
   isDefault: boolean
-  createdAt: string | null
+  createdAt: string
 }
 
-export type WalletWithdrawResult = {
+export interface WalletTopUpResult {
+  transactionId: string
+  amount: number
+  method: string
+  checkoutUrl: string
+  deepLink: string
+  qrCodeUrl: string
+  expiredAt: string
+  status: string
+}
+
+export interface WalletWithdrawResult {
   transactionId: string
   amount: number
   fee: number
   netAmount: number
-  walletType: WalletPocketType
-  remainingBalance: number
-  bankAccount: {
-    bankName: string
-    accountNumber: string
-    owner: string
-  } | null
   status: string
 }
 
-const parseNumber = (value?: number | string | null): number => {
-  if (typeof value === 'number') return Number.isFinite(value) ? value : 0
+const parseNumber = (value: number | string | null | undefined): number => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0
+  }
+
   if (typeof value === 'string') {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : 0
   }
+
   return 0
 }
 
 const requestApi = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
-  const response = await fetchWithAuth(`${API_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init.headers || {}),
-    },
-  })
-
+  const response = await fetchWithAuth(`${API_URL}${path}`, init)
   const payload: ApiResponse<T> = await response.json()
 
   if (!response.ok || !payload.success) {
-    throw new Error(payload.error?.message || 'Không thể xử lý yêu cầu ví')
+    throw new Error(payload.error?.message || 'Không thể tải dữ liệu ví')
   }
 
   return payload.data
 }
 
-const toWalletPocketType = (value?: string | null): WalletPocketType =>
-  value?.toLowerCase() === 'personal' ? 'personal' : 'credit'
+const readPagedItems = <T>(payload: PagedResponseApi<T>): T[] => payload.items || payload.content || []
 
-const toWalletPaymentMethod = (value?: string | null): WalletPaymentMethod => {
-  const normalized = value?.toLowerCase()
-  if (normalized === 'momo' || normalized === 'zalopay' || normalized === 'vietqr') {
-    return normalized
+const toWalletStatus = (value?: string | null): WalletStatus => {
+  const normalized = (value || '').trim().toLowerCase()
+
+  if (normalized === 'locked') {
+    return 'locked'
   }
-  return 'vnpay'
+
+  if (normalized === 'low' || normalized === 'low_balance') {
+    return 'low_balance'
+  }
+
+  return 'normal'
 }
 
-export const getWalletSummary = async (): Promise<WalletSummary> => {
-  const payload = await requestApi<{
-    userId?: string
-    totalBalance?: number | string | null
-    creditWallet?: {
-      type?: string
-      balance?: number | string | null
-      pendingBalance?: number | string | null
-      status?: string
-    } | null
-    personalWallet?: {
-      type?: string
-      balance?: number | string | null
-      pendingBalance?: number | string | null
-      status?: string
-    } | null
-    totalEarned?: number | string | null
-    totalWithdrawn?: number | string | null
-    currency?: string
-    updatedAt?: string | null
-  }>('/wallet')
+const mapWalletGroup = (transaction: WalletTransactionApi): WalletGroup => {
+  const type = (transaction.type || '').trim().toLowerCase()
+  const category = (transaction.category || '').trim().toLowerCase()
+  const amount = parseNumber(transaction.amount)
+
+  if (type === 'topup') {
+    return 'credit'
+  }
+
+  if (type === 'withdraw') {
+    return 'personal'
+  }
+
+  if (type === 'commission') {
+    if (category === 'commission_deduction' || amount < 0) {
+      return 'credit'
+    }
+
+    return 'personal'
+  }
+
+  return amount >= 0 ? 'personal' : 'credit'
+}
+
+const mapTransactionStatus = (status?: string | null): 'success' | 'pending' => {
+  const normalized = (status || '').trim().toLowerCase()
+  return normalized === 'success' ? 'success' : 'pending'
+}
+
+export const getTechnicianWalletSummary = async (): Promise<TechnicianWalletSummary> => {
+  const wallet = await requestApi<WalletApi>('/wallet', { method: 'GET' })
 
   return {
-    userId: payload.userId || '',
-    totalBalance: parseNumber(payload.totalBalance),
-    creditWallet: {
-      type: toWalletPocketType(payload.creditWallet?.type),
-      balance: parseNumber(payload.creditWallet?.balance),
-      pendingBalance: parseNumber(payload.creditWallet?.pendingBalance),
-      status: payload.creditWallet?.status || 'normal',
-    },
-    personalWallet: {
-      type: toWalletPocketType(payload.personalWallet?.type || 'personal'),
-      balance: parseNumber(payload.personalWallet?.balance),
-      pendingBalance: parseNumber(payload.personalWallet?.pendingBalance),
-      status: payload.personalWallet?.status || 'normal',
-    },
-    totalEarned: parseNumber(payload.totalEarned),
-    totalWithdrawn: parseNumber(payload.totalWithdrawn),
-    currency: payload.currency || 'VND',
-    updatedAt: payload.updatedAt || null,
+    userId: wallet.userId || '',
+    creditBalance: parseNumber(wallet.creditBalance ?? wallet.balance),
+    personalBalance: parseNumber(wallet.personalBalance),
+    pendingBalance: parseNumber(wallet.pendingBalance),
+    totalEarned: parseNumber(wallet.totalEarned),
+    totalWithdrawn: parseNumber(wallet.totalWithdrawn),
+    currency: wallet.currency || 'VND',
+    status: toWalletStatus(wallet.status),
+    updatedAt: wallet.updatedAt || '',
   }
 }
 
-export const getWalletTransactions = async (
-  type: WalletTransactionType = 'all',
-  walletType: WalletPocketType | 'all' = 'all',
-  page: number = 1,
-  limit: number = 20,
-): Promise<WalletTransactionList> => {
-  const query = new URLSearchParams({
-    type,
-    walletType,
-    page: String(page),
-    limit: String(limit),
+export const getTechnicianWalletHistory = async (): Promise<TechnicianWalletHistoryItem[]> => {
+  const payload = await requestApi<PagedResponseApi<WalletTransactionApi>>('/wallet/transactions?type=all&page=1&limit=50', {
+    method: 'GET',
   })
 
-  const payload = await requestApi<{
-    items?: Array<{
-      id?: string
-      type?: string
-      walletType?: string
-      title?: string
-      category?: string
-      amount?: number | string | null
-      afterBalance?: number | null
-      note?: string
-      actor?: string
-      relatedOrderCode?: string | null
-      status?: string
-      createdAt?: string | null
-    }>
-    pagination?: Partial<PaginationMeta>
-  }>(`/wallet/transactions?${query.toString()}`)
-
-  const items = (payload.items || []).map((item) => ({
+  return readPagedItems(payload).map((item) => ({
     id: item.id || '',
-    type: ((item.type || 'payment').toLowerCase() as Exclude<WalletTransactionType, 'all'>),
-    walletType: toWalletPocketType(item.walletType),
+    type: item.type || '',
     title: item.title || 'Giao dịch ví',
-    category: item.category || '--',
+    category: item.category || '',
     amount: parseNumber(item.amount),
-    afterBalance: typeof item.afterBalance === 'number' ? item.afterBalance : null,
+    afterBalance: item.afterBalance ?? null,
     note: item.note || '',
     actor: item.actor || '',
-    relatedOrderCode: item.relatedOrderCode || null,
-    status: item.status || 'pending',
-    createdAt: item.createdAt || null,
+    relatedOrderCode: item.relatedOrderCode || '',
+    status: mapTransactionStatus(item.status),
+    createdAt: item.createdAt || '',
+    walletGroup: mapWalletGroup(item),
   }))
+}
+
+export const getTechnicianBankAccounts = async (): Promise<TechnicianBankAccount[]> => {
+  const payload = await requestApi<BankAccountListApi>('/wallet/bank-accounts', { method: 'GET' })
+
+  return (payload.items || []).map((item) => ({
+    id: item.id || '',
+    bankName: item.bankName || '',
+    accountNumber: item.accountNumber || '',
+    accountOwner: item.accountOwner || '',
+    isDefault: Boolean(item.isDefault),
+    createdAt: item.createdAt || '',
+  }))
+}
+
+export const createTechnicianBankAccount = async (input: {
+  bankName: string
+  accountNumber: string
+  accountOwner: string
+}): Promise<TechnicianBankAccount> => {
+  const payload = await requestApi<BankAccountApi>('/wallet/bank-accounts', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 
   return {
-    items,
-    pagination: {
-      page: payload.pagination?.page || page,
-      limit: payload.pagination?.limit || limit,
-      total: payload.pagination?.total || items.length,
-      totalPages: payload.pagination?.totalPages || 1,
-    },
+    id: payload.id || '',
+    bankName: payload.bankName || '',
+    accountNumber: payload.accountNumber || '',
+    accountOwner: payload.accountOwner || '',
+    isDefault: Boolean(payload.isDefault),
+    createdAt: payload.createdAt || '',
   }
 }
 
-export const createWalletTopUp = async (
-  amount: number,
-  method: WalletPaymentMethod,
-): Promise<WalletTopUpResult> => {
-  const payload = await requestApi<{
-    transactionId?: string
-    amount?: number | string | null
-    walletType?: string
-    method?: string
-    checkoutUrl?: string | null
-    deepLink?: string | null
-    qrCodeUrl?: string | null
-    paymentInfo?: {
-      bankName?: string
-      accountName?: string
-      accountNumber?: string
-      transferContent?: string
-      qrCode?: string | null
-    } | null
-    expiredAt?: string | null
-    status?: string
-  }>('/wallet/topup', {
+export const createTechnicianWalletTopUp = async (amount: number): Promise<WalletTopUpResult> => {
+  const payload = await requestApi<TopUpApi>('/wallet/topup', {
     method: 'POST',
     body: JSON.stringify({
       amount,
-      method,
+      method: 'vnpay',
     }),
   })
 
   return {
     transactionId: payload.transactionId || '',
     amount: parseNumber(payload.amount),
-    walletType: toWalletPocketType(payload.walletType),
-    method: toWalletPaymentMethod(payload.method),
-    checkoutUrl: payload.checkoutUrl || null,
-    deepLink: payload.deepLink || null,
-    qrCodeUrl: payload.qrCodeUrl || null,
-    paymentInfo: payload.paymentInfo
-      ? {
-          bankName: payload.paymentInfo.bankName || '--',
-          accountName: payload.paymentInfo.accountName || '--',
-          accountNumber: payload.paymentInfo.accountNumber || '--',
-          transferContent: payload.paymentInfo.transferContent || '--',
-          qrCode: payload.paymentInfo.qrCode || null,
-        }
-      : null,
-    expiredAt: payload.expiredAt || null,
-    status: payload.status || 'awaiting_payment',
+    method: payload.method || 'vnpay',
+    checkoutUrl: payload.checkoutUrl || '',
+    deepLink: payload.deepLink || '',
+    qrCodeUrl: payload.qrCodeUrl || '',
+    expiredAt: payload.expiredAt || '',
+    status: payload.status || '',
   }
 }
 
-export const confirmWalletTopUp = async (transactionId: string): Promise<WalletTopUpConfirmResult> => {
-  const payload = await requestApi<{
-    transactionId?: string
-    status?: string
-    message?: string
-  }>('/wallet/topup/confirm', {
-    method: 'POST',
-    body: JSON.stringify({ transactionId }),
-  })
-
-  return {
-    transactionId: payload.transactionId || transactionId,
-    status: payload.status || 'pending_verification',
-    message: payload.message || 'Yêu cầu đang được xác minh',
-  }
-}
-
-export const getWalletBankAccounts = async (): Promise<BankAccount[]> => {
-  const payload = await requestApi<{
-    items?: Array<{
-      id?: string
-      bankName?: string
-      accountNumber?: string
-      accountOwner?: string
-      isDefault?: boolean
-      createdAt?: string | null
-    }>
-  }>('/wallet/bank-accounts')
-
-  return (payload.items || []).map((item) => ({
-    id: item.id || '',
-    bankName: item.bankName || '--',
-    accountNumber: item.accountNumber || '--',
-    accountOwner: item.accountOwner || '--',
-    isDefault: Boolean(item.isDefault),
-    createdAt: item.createdAt || null,
-  }))
-}
-
-export const createWalletBankAccount = async (payload: {
-  bankName: string
-  accountNumber: string
-  accountOwner: string
-}): Promise<BankAccount> => {
-  const data = await requestApi<{
-    id?: string
-    bankName?: string
-    accountNumber?: string
-    accountOwner?: string
-    isDefault?: boolean
-    createdAt?: string | null
-  }>('/wallet/bank-accounts', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-
-  return {
-    id: data.id || '',
-    bankName: data.bankName || '--',
-    accountNumber: data.accountNumber || '--',
-    accountOwner: data.accountOwner || '--',
-    isDefault: Boolean(data.isDefault),
-    createdAt: data.createdAt || null,
-  }
-}
-
-export const deleteWalletBankAccount = async (id: string): Promise<void> => {
-  await requestApi(`/wallet/bank-accounts/${id}`, {
-    method: 'DELETE',
-  })
-}
-
-export const createWalletWithdraw = async (payload: {
+export const createTechnicianWalletWithdraw = async (input: {
   amount: number
   bankAccountId: string
 }): Promise<WalletWithdrawResult> => {
-  const data = await requestApi<{
-    transactionId?: string
-    amount?: number | string | null
-    fee?: number | string | null
-    netAmount?: number | string | null
-    walletType?: string
-    remainingBalance?: number | string | null
-    bankAccount?: {
-      bankName?: string
-      accountNumber?: string
-      owner?: string
-    } | null
-    status?: string
-  }>('/wallet/withdraw', {
+  const payload = await requestApi<WithdrawApi>('/wallet/withdraw', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(input),
   })
 
   return {
-    transactionId: data.transactionId || '',
-    amount: parseNumber(data.amount),
-    fee: parseNumber(data.fee),
-    netAmount: parseNumber(data.netAmount),
-    walletType: toWalletPocketType(data.walletType || 'personal'),
-    remainingBalance: parseNumber(data.remainingBalance),
-    bankAccount: data.bankAccount
-      ? {
-          bankName: data.bankAccount.bankName || '--',
-          accountNumber: data.bankAccount.accountNumber || '--',
-          owner: data.bankAccount.owner || '--',
-        }
-      : null,
-    status: data.status || 'pending',
+    transactionId: payload.transactionId || '',
+    amount: parseNumber(payload.amount),
+    fee: parseNumber(payload.fee),
+    netAmount: parseNumber(payload.netAmount),
+    status: payload.status || '',
   }
 }

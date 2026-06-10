@@ -1,21 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaArrowLeft, FaArrowRight, FaCircleCheck, FaPlus, FaShieldHalved, FaTrash } from 'react-icons/fa6'
+import { FaArrowLeft, FaCircleCheck, FaShieldHalved, FaArrowRight, FaPlus } from 'react-icons/fa6'
 import {
-  createWalletBankAccount,
-  createWalletWithdraw,
-  deleteWalletBankAccount,
-  getWalletBankAccounts,
-  getWalletSummary,
-  type BankAccount,
+  createTechnicianBankAccount,
+  createTechnicianWalletWithdraw,
+  getTechnicianBankAccounts,
+  getTechnicianWalletSummary,
+  type TechnicianBankAccount,
 } from '../services/walletService'
 import './TechnicianWalletWithdrawPage.css'
 
 const bankOptions = ['Vietcombank', 'Techcombank', 'BIDV', 'ACB', 'MB Bank', 'VPBank']
+const withdrawFee = 5000
 
 const TechnicianWalletWithdrawPage: React.FC = () => {
   const navigate = useNavigate()
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
+  const [bankAccounts, setBankAccounts] = useState<TechnicianBankAccount[]>([])
   const [selectedBank, setSelectedBank] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [isAddBankOpen, setIsAddBankOpen] = useState(false)
@@ -23,10 +23,9 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
   const [newAccountOwner, setNewAccountOwner] = useState('')
   const [newAccountNumber, setNewAccountNumber] = useState('')
   const [balance, setBalance] = useState(0)
-  const [pendingBalance, setPendingBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isAddingBank, setIsAddingBank] = useState(false)
+  const [isCreatingBank, setIsCreatingBank] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -35,26 +34,33 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    let isMounted = true
+    let mounted = true
 
     const loadData = async () => {
       setIsLoading(true)
       setError('')
 
       try {
-        const [wallet, accounts] = await Promise.all([getWalletSummary(), getWalletBankAccounts()])
+        const [walletSummary, accounts] = await Promise.all([
+          getTechnicianWalletSummary(),
+          getTechnicianBankAccounts(),
+        ])
 
-        if (!isMounted) return
+        if (!mounted) {
+          return
+        }
 
-        setBalance(wallet.personalWallet.balance)
-        setPendingBalance(wallet.personalWallet.pendingBalance)
+        setBalance(walletSummary.personalBalance)
         setBankAccounts(accounts)
-        setSelectedBank(accounts.find((item) => item.isDefault)?.id || accounts[0]?.id || '')
-      } catch (err) {
-        if (!isMounted) return
-        setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu rút tiền')
+        setSelectedBank((current) => current || accounts.find((account) => account.isDefault)?.id || accounts[0]?.id || '')
+      } catch (loadError) {
+        if (!mounted) {
+          return
+        }
+
+        setError(loadError instanceof Error ? loadError.message : 'Không thể tải dữ liệu rút tiền')
       } finally {
-        if (isMounted) {
+        if (mounted) {
           setIsLoading(false)
         }
       }
@@ -63,35 +69,28 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
     loadData()
 
     return () => {
-      isMounted = false
+      mounted = false
     }
   }, [])
 
   const amountNumber = Number(withdrawAmount.replace(/\D/g, '')) || 0
-  const fee = amountNumber > 0 ? 5000 : 0
+  const fee = amountNumber > 0 ? withdrawFee : 0
   const remaining = Math.max(balance - amountNumber, 0)
-  const netAmount = Math.max(amountNumber - fee, 0)
-
-  const selectedBankAccount = useMemo(
-    () => bankAccounts.find((account) => account.id === selectedBank) || null,
-    [bankAccounts, selectedBank],
-  )
 
   const handleAddBank = async () => {
-    setError('')
-    setSuccessMessage('')
-
     if (!newAccountOwner.trim() || !newAccountNumber.trim()) {
-      setError('Vui lòng nhập đủ tên chủ tài khoản và số tài khoản')
+      setError('Vui lòng nhập đầy đủ thông tin ngân hàng')
       return
     }
 
-    setIsAddingBank(true)
+    setIsCreatingBank(true)
+    setError('')
+
     try {
-      const nextBank = await createWalletBankAccount({
+      const nextBank = await createTechnicianBankAccount({
         bankName: newBankName,
-        accountOwner: newAccountOwner.trim().toUpperCase(),
         accountNumber: newAccountNumber.trim(),
+        accountOwner: newAccountOwner.trim().toUpperCase(),
       })
 
       setBankAccounts((current) => [...current, nextBank])
@@ -100,61 +99,40 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
       setNewBankName(bankOptions[0])
       setNewAccountOwner('')
       setNewAccountNumber('')
-      setSuccessMessage('Đã thêm tài khoản ngân hàng')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể thêm tài khoản ngân hàng')
+      setSuccessMessage('Đã thêm tài khoản ngân hàng mới')
+    } catch (createError) {
+      setError(createError instanceof Error ? createError.message : 'Không thể thêm tài khoản ngân hàng')
     } finally {
-      setIsAddingBank(false)
-    }
-  }
-
-  const handleDeleteBank = async (bankId: string) => {
-    setError('')
-    setSuccessMessage('')
-
-    try {
-      await deleteWalletBankAccount(bankId)
-      const nextAccounts = bankAccounts.filter((item) => item.id !== bankId)
-      setBankAccounts(nextAccounts)
-      setSelectedBank((current) => (current === bankId ? nextAccounts[0]?.id || '' : current))
-      setSuccessMessage('Đã xóa tài khoản ngân hàng')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể xóa tài khoản ngân hàng')
+      setIsCreatingBank(false)
     }
   }
 
   const handleWithdraw = async () => {
-    setError('')
-    setSuccessMessage('')
-
     if (!selectedBank) {
       setError('Vui lòng chọn tài khoản ngân hàng nhận tiền')
       return
     }
 
-    if (amountNumber < 50000) {
-      setError('Số tiền rút tối thiểu là 50.000đ')
-      return
-    }
-
-    if (amountNumber <= fee) {
-      setError('Số tiền rút phải lớn hơn phí rút')
+    if (amountNumber <= 0) {
+      setError('Vui lòng nhập số tiền muốn rút')
       return
     }
 
     setIsSubmitting(true)
+    setError('')
+    setSuccessMessage('')
+
     try {
-      const result = await createWalletWithdraw({
+      const result = await createTechnicianWalletWithdraw({
         amount: amountNumber,
         bankAccountId: selectedBank,
       })
 
-      setBalance(result.remainingBalance)
-      setPendingBalance((current) => current + result.netAmount)
+      setSuccessMessage(`Đã tạo yêu cầu rút tiền ${result.transactionId}`)
+      setBalance((current) => Math.max(0, current - result.amount))
       setWithdrawAmount('')
-      setSuccessMessage(`Đã tạo yêu cầu rút tiền thành công. Số tiền thực nhận là ${result.netAmount.toLocaleString('vi-VN')}đ`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể tạo yêu cầu rút tiền')
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Không thể tạo yêu cầu rút tiền')
     } finally {
       setIsSubmitting(false)
     }
@@ -170,52 +148,37 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
         <div>
           <p className="withdraw-kicker">Rút tiền về ngân hàng</p>
           <h1>Chuyển số dư ví cá nhân về tài khoản liên kết</h1>
-          {error ? <p className="withdraw-hint" style={{ color: '#b42318' }}>{error}</p> : null}
-          {successMessage ? <p className="withdraw-hint" style={{ color: '#0f7b6c' }}>{successMessage}</p> : null}
         </div>
       </header>
+
+      {error ? <div className="withdraw-card"><p>{error}</p></div> : null}
+      {successMessage ? <div className="withdraw-card"><p>{successMessage}</p></div> : null}
 
       <div className="withdraw-layout">
         <section className="withdraw-card">
           <div className="section-head">
             <span>Chọn ngân hàng</span>
-            <h2>{isLoading ? 'Đang tải tài khoản...' : 'Tài khoản nhận tiền'}</h2>
+            <h2>Tài khoản nhận tiền</h2>
           </div>
 
           <div className="bank-list">
             {bankAccounts.map((bank) => (
-              <div key={bank.id} style={{ display: 'grid', gap: 8 }}>
-                <button
-                  type="button"
-                  className={`bank-item ${selectedBank === bank.id ? 'active' : ''}`}
-                  onClick={() => setSelectedBank(bank.id)}
-                >
-                  <span className="bank-icon" style={{ backgroundColor: '#1a3b6b' }}>
-                    {bank.bankName.charAt(0).toUpperCase()}
-                  </span>
-                  <span className="bank-info">
-                    <strong>{bank.bankName}{bank.isDefault ? ' • Mặc định' : ''}</strong>
-                    <small>{bank.accountOwner}</small>
-                    <small>{bank.accountNumber}</small>
-                  </span>
-                  <span className="bank-radio" aria-hidden="true" />
-                </button>
-
-                <button
-                  type="button"
-                  className="bank-item bank-item-add"
-                  onClick={() => handleDeleteBank(bank.id)}
-                  style={{ paddingTop: 12, paddingBottom: 12 }}
-                >
-                  <span className="bank-icon bank-icon-add" aria-hidden="true">
-                    <FaTrash />
-                  </span>
-                  <span className="bank-info">
-                    <strong>Xóa tài khoản này</strong>
-                    <small>Một số tài khoản có thể không xóa được nếu đang được sử dụng</small>
-                  </span>
-                </button>
-              </div>
+              <button
+                key={bank.id}
+                type="button"
+                className={`bank-item ${selectedBank === bank.id ? 'active' : ''}`}
+                onClick={() => setSelectedBank(bank.id)}
+              >
+                <span className="bank-icon" style={{ backgroundColor: '#1a3b6b' }}>
+                  {bank.bankName.charAt(0).toUpperCase()}
+                </span>
+                <span className="bank-info">
+                  <strong>{bank.bankName}</strong>
+                  <small>{bank.accountOwner}</small>
+                  <small>{bank.accountNumber}</small>
+                </span>
+                <span className="bank-radio" aria-hidden="true" />
+              </button>
             ))}
 
             <button type="button" className="bank-item bank-item-add" onClick={() => setIsAddBankOpen(true)}>
@@ -242,26 +205,22 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
               <span>đ</span>
             </div>
             <div className="amount-helpers">
-              <span>Hạn mức khả dụng: <strong>{balance.toLocaleString('vi-VN')}đ</strong></span>
+              <span>Hạn mức khả dụng: <strong>{isLoading ? 'Đang tải...' : `${balance.toLocaleString('vi-VN')}đ`}</strong></span>
               <button type="button" onClick={() => setWithdrawAmount(balance.toString())}>Rút tất cả</button>
             </div>
           </div>
 
           <div className="support-note">
             <FaShieldHalved />
-            <p>Yêu cầu rút tiền chỉ áp dụng cho ví cá nhân. Phí giao dịch cố định là 5.000đ cho mỗi lần rút.</p>
+            <p>Yêu cầu rút tiền được kiểm tra bảo mật trước khi xử lý. Vui lòng xác nhận đúng số tài khoản.</p>
           </div>
         </section>
 
         <aside className="withdraw-summary">
           <p className="summary-kicker">Tóm tắt giao dịch</p>
           <div className="summary-row">
-            <span>Số dư ví cá nhân</span>
+            <span>Số dư hiện tại</span>
             <strong>{balance.toLocaleString('vi-VN')}đ</strong>
-          </div>
-          <div className="summary-row">
-            <span>Đang chờ xử lý</span>
-            <strong>{pendingBalance.toLocaleString('vi-VN')}đ</strong>
           </div>
           <div className="summary-row">
             <span>Số tiền rút</span>
@@ -271,30 +230,22 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
             <span>Phí giao dịch</span>
             <strong>{fee.toLocaleString('vi-VN')}đ</strong>
           </div>
-          <div className="summary-row">
-            <span>Thực nhận</span>
-            <strong>{netAmount.toLocaleString('vi-VN')}đ</strong>
-          </div>
           <div className="summary-row final">
             <span>Số dư còn lại</span>
             <strong>{remaining.toLocaleString('vi-VN')}đ</strong>
           </div>
 
-          <button className="withdraw-submit" type="button" onClick={handleWithdraw} disabled={isSubmitting || !selectedBankAccount}>
+          <button className="withdraw-submit" type="button" onClick={handleWithdraw} disabled={isSubmitting || isLoading}>
             <FaArrowRight />
-            {isSubmitting ? 'Đang tạo yêu cầu...' : 'Tạo yêu cầu rút tiền'}
+            {isSubmitting ? 'Đang gửi yêu cầu...' : 'Tạo yêu cầu rút tiền'}
           </button>
           <p className="withdraw-hint">Yêu cầu sẽ được xử lý trong vòng 2 - 4 giờ làm việc.</p>
 
           <div className="withdraw-help">
             <span>
-              <FaCircleCheck /> Tài khoản đang chọn
+              <FaCircleCheck /> Hỗ trợ nhanh
             </span>
-            <p>
-              {selectedBankAccount
-                ? `${selectedBankAccount.bankName} - ${selectedBankAccount.accountNumber}`
-                : 'Chưa có tài khoản ngân hàng được chọn.'}
-            </p>
+            <p>Bạn gặp khó khăn khi rút tiền? Hãy liên hệ đội ngũ chăm sóc khách hàng GlowUp.</p>
           </div>
         </aside>
       </div>
@@ -334,9 +285,9 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
                 <span>Chủ tài khoản</span>
                 <input
                   type="text"
-                  placeholder="Nhập tên chủ tài khoản in hoa"
+                  placeholder="Nhập tên chủ tài khoản"
                   value={newAccountOwner}
-                  onChange={(event) => setNewAccountOwner(event.target.value.toUpperCase())}
+                  onChange={(event) => setNewAccountOwner(event.target.value)}
                 />
               </label>
 
@@ -355,8 +306,8 @@ const TechnicianWalletWithdrawPage: React.FC = () => {
               <button type="button" className="bank-modal-secondary" onClick={() => setIsAddBankOpen(false)}>
                 Hủy
               </button>
-              <button type="button" className="bank-modal-primary" onClick={handleAddBank} disabled={isAddingBank}>
-                {isAddingBank ? 'Đang thêm...' : 'Thêm ngân hàng'}
+              <button type="button" className="bank-modal-primary" onClick={handleAddBank} disabled={isCreatingBank}>
+                {isCreatingBank ? 'Đang thêm...' : 'Thêm ngân hàng'}
               </button>
             </div>
           </div>

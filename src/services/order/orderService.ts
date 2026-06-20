@@ -1,5 +1,5 @@
 import apiClient from '../../api/config';
-import type { OrderListQuery, OrderPageResponse, OrderResponse } from '../../types/order/order';
+import type { OrderListQuery, OrderPageResponse, OrderResponse, CreateOrderPayload } from '../../types/order/order';
 
 type ApiPageLike = {
     content?: OrderResponse[];
@@ -106,6 +106,23 @@ export const orderService = {
 
     rejectPriceAdjustment: async (orderId: string, reason: string): Promise<OrderResponse> => {
         const response = await apiClient.post(`/api/orders/${orderId}/price/reject`, { reason });
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
+
+    createOrder: async (payload: CreateOrderPayload): Promise<OrderResponse> => {
+        const response = await apiClient.post('/api/orders', payload);
+        return normalizeOrder(response.data);
+    },
+
+    acceptOrder: async (orderId: string): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/accept`);
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
+
+    cancelOrder: async (orderId: string, reason: string): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/cancel`, { reason });
         unwrap(response.data);
         return orderService.getOrderById(orderId);
     },

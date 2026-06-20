@@ -38,9 +38,25 @@ const AdminCategoriesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
-  const openNew = () => { setEditing(null); setIsModalOpen(true); };
-  const openEdit = (cat: Category) => { setEditing(cat); setIsModalOpen(true); };
+  const openNew = () => {
+    setEditing(null);
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (cat: Category) => {
+    setEditing(cat);
+    setIsModalOpen(true);
+  };
+
+  const openDeleteConfirm = (cat: Category) => {
+    setDeleteTarget(cat);
+  };
+
+  const closeDeleteConfirm = () => {
+    setDeleteTarget(null);
+  };
 
   useEffect(() => {
     let active = true;
@@ -107,7 +123,7 @@ const AdminCategoriesPage: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const save = async () => {
+  const submitCategory = async () => {
     try {
       setSaving(true);
       setError(null);
@@ -144,12 +160,15 @@ const AdminCategoriesPage: React.FC = () => {
     }
   };
 
-  const remove = async (id: string) => {
+  const submitDeleteCategory = async () => {
+    if (!deleteTarget) return;
+
     try {
-      setDeletingId(id);
+      setDeletingId(deleteTarget.id);
       setError(null);
-      await deleteCategory(id);
-      setCategories((cur) => cur.filter((c) => c.id !== id));
+      await deleteCategory(deleteTarget.id);
+      setCategories((cur) => cur.filter((c) => c.id !== deleteTarget.id));
+      setDeleteTarget(null);
     } catch (deleteError: any) {
       setError(deleteError?.message || 'Xóa danh mục thất bại');
     } finally {
@@ -226,13 +245,13 @@ const AdminCategoriesPage: React.FC = () => {
                   <small>Ưu tiên: {cat.priority === 'high' ? 'Cao' : cat.priority === 'normal' ? 'Bình thường' : 'Thấp'}</small>
                 </div>
                 <div className="acp-card-actions">
-                  <button onClick={() => openEdit(cat)} aria-label="Sửa"><FaPencil /></button>
-                    <button onClick={() => toggleStatus(cat)} aria-label="Đổi trạng thái" disabled={saving}>
-                      {cat.status === 'active' ? 'Ẩn' : 'Hiện'}
-                    </button>
-                    <button onClick={() => remove(cat.id)} aria-label="Xóa" disabled={deletingId === cat.id}>
-                      <FaTrash />
-                    </button>
+                  <button type="button" onClick={() => openEdit(cat)} aria-label="Sửa"><FaPencil /></button>
+                  <button type="button" onClick={() => toggleStatus(cat)} aria-label="Đổi trạng thái" disabled={saving}>
+                    {cat.status === 'active' ? 'Ẩn' : 'Hiện'}
+                  </button>
+                  <button type="button" onClick={() => openDeleteConfirm(cat)} aria-label="Xóa" disabled={deletingId === cat.id}>
+                    <FaTrash />
+                  </button>
                 </div>
               </div>
             </article>
@@ -303,10 +322,31 @@ const AdminCategoriesPage: React.FC = () => {
                   <button className="acp-btn-ghost" onClick={() => setIsModalOpen(false)}>Hủy bỏ</button>
                 </div>
                 <div>
-                  <button className="acp-btn-primary" onClick={() => save()} disabled={saving}>
+                  <button className="acp-btn-primary" onClick={() => submitCategory()} disabled={saving}>
                     {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
                   </button>
                 </div>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {deleteTarget && (
+          <div className="acp-confirm-overlay" role="presentation" onClick={closeDeleteConfirm}>
+            <aside className="acp-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-category-title" onClick={(event) => event.stopPropagation()}>
+              <h2 id="delete-category-title">Xác nhận xóa dịch vụ</h2>
+              <p>
+                Bạn có chắc chắn muốn xóa dịch vụ <strong>{deleteTarget.title}</strong> không?
+                Hành động này sẽ ẩn danh mục khỏi hệ thống.
+              </p>
+
+              <div className="acp-confirm-actions">
+                <button type="button" className="acp-btn-ghost" onClick={closeDeleteConfirm}>
+                  Hủy bỏ
+                </button>
+                <button type="button" className="acp-btn-danger" onClick={submitDeleteCategory} disabled={deletingId === deleteTarget.id}>
+                  {deletingId === deleteTarget.id ? 'Đang xóa...' : 'Xác nhận xóa'}
+                </button>
               </div>
             </aside>
           </div>

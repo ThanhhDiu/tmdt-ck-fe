@@ -1,26 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import Modal from "../common/Modal";
 import "./css/repairRequestModal.css";
-import {
-    AlertTriangle,
-    Bolt,
-    CalendarDays,
-    Camera,
-    CheckCircle2,
-    Circle,
-    Fan,
-    MapPin,
-    Phone,
-    Refrigerator,
-    Shirt,
-    Upload,
-    Video,
-    Wrench,
-    X,
-    Zap,
-} from "lucide-react";
-import {useNavigate} from "react-router-dom";
+import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { navigateToChat } from "../../utils/chatNavigation";
+import { orderService } from "../../services/order/orderService";
+import { chatService } from "../../services/chat/chatService";
 
 interface RepairRequestModalProps {
     open: boolean;
@@ -28,124 +13,87 @@ interface RepairRequestModalProps {
     technicianId?: string;
 }
 
-const RepairRequestModal: React.FC<RepairRequestModalProps> = ({open, onClose, technicianId}) => {
+const RepairRequestModal: React.FC<RepairRequestModalProps> = ({ open, onClose, technicianId }) => {
     const navigate = useNavigate();
-    const [service, setService] = useState<ServiceId>("aircon");
-    const [airconType, setAirconType] = useState(airconTypes[0]);
-    const [brand, setBrand] = useState("Daikin");
+    const [deviceName, setDeviceName] = useState("");
     const [description, setDescription] = useState("");
-    const [uploads, setUploads] = useState<UploadedAsset[]>([]);
-    const [urgency, setUrgency] = useState<UrgencyId>("normal");
-    const [timeSlot, setTimeSlot] = useState("Sáng");
-    const [date, setDate] = useState("");
     const [address, setAddress] = useState("123 Nguyễn Hữu Cảnh, Bình Thạnh");
-    const [phone, setPhone] = useState("0901234567");
-
-    const summaryError = useMemo(() => {
-        if (!description.trim()) return "Chưa có mô tả lỗi";
-        if (!address.trim()) return "Chưa có địa chỉ";
-        return null;
-    }, [address, description]);
-
-    const appendIssueChip = (chip: string) => {
-        setDescription((prev) => {
-            if (!prev.trim()) return chip;
-            if (prev.toLowerCase().includes(chip.toLowerCase())) return prev;
-            return `${prev.trim()}\n- ${chip}`;
-        });
-    };
-
-    const onFileSelected: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-        const selectedFiles = Array.from(event.target.files ?? []);
-        if (!selectedFiles.length) return;
-
-        const nextUploads = selectedFiles.map((file, index) => ({
-            id: `${file.name}-${Date.now()}-${index}`,
-            file,
-            previewUrl: URL.createObjectURL(file),
-        }));
-
-        setUploads((prev) => [...prev, ...nextUploads].slice(0, 8));
-        event.target.value = "";
-    };
-
-    const removeUpload = (id: string) => {
-        setUploads((prev) => {
-            const target = prev.find((item) => item.id === id);
-            if (target) {
-                URL.revokeObjectURL(target.previewUrl);
-            }
-            return prev.filter((item) => item.id !== id);
-        });
-    };
-
-    useEffect(() => {
-        return () => {
-            uploads.forEach((item) => URL.revokeObjectURL(item.previewUrl));
-        };
-    }, [uploads]);
-
-    const onSubmit = () => {
-        const payload = {
-            provider: {
-                name: providerName,
-                avatar: providerAvatar,
-                rating: providerRating,
-            },
-            request: {
-                service,
-                serviceLabel: selectedServiceLabel(service),
-                deviceType: service === "aircon" ? airconType : "Khác",
-                brand,
-                description,
-                urgency,
-                timeSlot,
-                date,
-                address,
-                phone,
-                attachments: uploads.map((item) => ({
-                    name: item.file.name,
-                    type: item.file.type,
-                    previewUrl: item.previewUrl,
-                })),
-            },
-        };
-
-        navigate("/customer/chat", {
-            state: {
-                prefillRepairRequest: payload,
-            },
-        });
-        onClose();
-    };
-
-    const severityText = urgencyOptions.find((item) => item.id === urgency)?.label ?? "Không gấp";
-    const providerName = provider?.name ?? "Thợ kỹ thuật";
-    const providerAvatar = provider?.avatar ?? "https://placehold.co/80x80";
-    const providerRating = provider?.rating ?? 4.8;
-    const providerResponseEta = provider?.responseEta ?? "Phản hồi trong ~5 phút";
+    const [phone, setPhone] = useState("090 123 4567");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     return (
         <Modal open={open} onClose={onClose}>
             <div className="repair-modal">
-                <button className="repair-close" onClick={onClose} aria-label="Close modal">
-                    <X size={20}/>
+                {/* CLOSE */}
+                <button
+                    className="repair-close"
+                    onClick={onClose}
+                    aria-label="Close modal"
+                >
+                    <X size={24} />
                 </button>
 
-                <div className="repair-headline">
-                    <div>
-                        <h2>Yêu cầu sửa chữa</h2>
-                        <p>Mô tả nhanh sự cố để thợ tư vấn và báo giá chính xác hơn</p>
+                {/* HEADER */}
+                <header className="repair-header">
+                    Gửi yêu cầu sửa chữa
+                </header>
+
+                {/* BODY */}
+                <div className="repair-body">
+                    {/* DEVICE NAME */}
+                    <div className="form-group">
+                        <label htmlFor="repair-device">TÊN THIẾT BỊ</label>
+                        <input
+                            id="repair-device"
+                            type="text"
+                            placeholder="Ví dụ: Máy lạnh Daikin, Máy giặt LG..."
+                            value={deviceName}
+                            onChange={(e) => setDeviceName(e.target.value)}
+                        />
                     </div>
-                    <div className="provider-mini-card">
-                        <img src={providerAvatar} alt={providerName} />
-                        <div>
-                            <strong>{providerName}</strong>
-                            <span>
-                                <Bolt size={14}/> {providerRating.toFixed(1)}
-                            </span>
-                            <small>{providerResponseEta}</small>
+
+                    {/* DESCRIPTION */}
+                    <div className="form-group">
+                        <label htmlFor="repair-desc">MÔ TẢ TÌNH TRẠNG LỖI</label>
+                        <textarea
+                            id="repair-desc"
+                            placeholder="Mô tả tình trạng hỏng hóc thực tế của máy..."
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                        />
+                    </div>
+
+                    {/* IMAGE */}
+                    <div className="form-group">
+                        <label>HÌNH ẢNH THỰC TẾ</label>
+                        <div className="upload-box">
+                            <div className="upload-icon" />
+                            <p>
+                                Tải lên ảnh để thợ chẩn đoán chính xác hơn (tối đa 3 ảnh)
+                            </p>
                         </div>
+                    </div>
+
+                    {/* ADDRESS */}
+                    <div className="form-group">
+                        <label htmlFor="repair-address">ĐỊA CHỈ SỬA CHỮA</label>
+                        <input
+                            id="repair-address"
+                            type="text"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                        />
+                    </div>
+
+                    {/* PHONE */}
+                    <div className="form-group">
+                        <label htmlFor="repair-phone">SỐ ĐIỆN THOẠI LIÊN HỆ</label>
+                        <input
+                            id="repair-phone"
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                        />
                     </div>
                 </div>
 
@@ -153,22 +101,49 @@ const RepairRequestModal: React.FC<RepairRequestModalProps> = ({open, onClose, t
                 <footer className="repair-footer">
                     <button
                         className="btn-submit"
-                        onClick={() => {
-                            onClose();
-                            if (technicianId) {
-                                navigateToChat(navigate, "customer", { technicianId });
-                                return;
+                        disabled={isSubmitting || !deviceName.trim() || !description.trim()}
+                        onClick={async () => {
+                            if (!technicianId) return;
+                            setIsSubmitting(true);
+                            try {
+                                // 1. Create order directly assigned to this technician
+                                const order = await orderService.createOrder({
+                                    deviceName,
+                                    description,
+                                    address,
+                                    estimatedPrice: 0,
+                                    expectedTime: new Date().toISOString(),
+                                    serviceCategory: "Khác", // Default category
+                                    images: [],
+                                    technicianId
+                                });
+
+                                // 2. Create or find conversation linked to this order
+                                const conv = await chatService.createConversation({
+                                    technicianId,
+                                    orderId: order.id
+                                });
+
+                                onClose();
+                                // 3. Navigate to chat with linked order ID and conversation ID
+                                navigateToChat(navigate, "customer", {
+                                    conversationId: conv.id,
+                                    orderId: order.id,
+                                    technicianId
+                                });
+                            } catch (err) {
+                                alert(err instanceof Error ? err.message : "Có lỗi xảy ra khi gửi yêu cầu");
+                            } finally {
+                                setIsSubmitting(false);
                             }
-                            navigate("/customer/chat");
                         }}
                     >
-                            Gửi yêu cầu & Chat ngay
-                </button>
-            </footer>
-        </div>
-</Modal>
-)
-    ;
+                        {isSubmitting ? "Đang xử lý..." : "Gửi yêu cầu & Chat ngay"}
+                    </button>
+                </footer>
+            </div>
+        </Modal>
+    );
 };
 
 export default RepairRequestModal;

@@ -84,3 +84,16 @@ export interface OrderPageResponse {
     first: boolean;
     last: boolean;
 }
+
+export interface CreateOrderPayload {
+    deviceName: string;
+    description: string;
+    address: string;
+    estimatedPrice?: number;
+    expectedTime?: string;
+    serviceCategory?: string;
+    serviceName?: string;
+    subService?: string;
+    images?: string[];
+    technicianId?: string;
+}

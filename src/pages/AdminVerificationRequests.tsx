@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AdminHeader } from '../components/admin/AdminHeader'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
@@ -26,7 +26,20 @@ export default function AdminVerificationRequests() {
   const navigate = useNavigate()
   const [keyword, setKeyword] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | VerificationStatus>('pending')
-  const [requests] = useState<VerificationRequest[]>(() => getVerificationRequests())
+  const [requests, setRequests] = useState<VerificationRequest[]>([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getVerificationRequests()
+        // Axios interceptor của bạn đang trả về response.data. Do đó response có thể là mảng trực tiếp hoặc có bọc data tuỳ thuộc API BE.
+        setRequests(Array.isArray(response) ? response : (response.data || []))
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách yêu cầu xác minh:', error)
+      }
+    }
+    fetchData()
+  }, [])
 
   const filtered = useMemo(() => {
     const normalized = keyword.trim().toLowerCase()

@@ -151,6 +151,14 @@
   margin: 0;
 }
 
+.ad-time-filter {
+  display: flex;
+  gap: 8px;
+  background: var(--border-default);
+  padding: 4px;
+  border-radius: 10px;
+}
+
 .ad-filter-btn {
   padding: 8px 14px;
   background: transparent;

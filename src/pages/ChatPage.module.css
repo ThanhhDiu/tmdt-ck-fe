@@ -99,6 +99,215 @@
     border-bottom-right-radius: 4px;
 }
 
+.repairMessageContent {
+    max-width: min(620px, 100%);
+}
+
+.repairSummaryCard {
+    width: 100%;
+    padding: 18px;
+    border-radius: 20px;
+    border: 1px solid #e5e9f2;
+    background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    color: #0f172a;
+    text-align: left;
+    animation: repairSummarySlideUp 0.28s ease;
+}
+
+.repairSummaryHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.repairSummaryTitleGroup {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.repairSummaryTitleGroup h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0b1f5f;
+}
+
+.repairSummaryIconWrap {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e9efff;
+    color: #0b1f5f;
+}
+
+.repairStatusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.repairStatusBadge.pending {
+    background: #eef2f7;
+    color: #4b5563;
+}
+
+.repairStatusBadge.sent {
+    background: #e8f7ef;
+    color: #0f6d3f;
+}
+
+.repairStatusBadge.sent svg {
+    animation: statusCheckPop 0.35s ease;
+}
+
+.repairInfoRows {
+    display: grid;
+    gap: 16px;
+}
+
+.repairInfoRow {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.repairInfoIcon {
+    color: #5068a8;
+    margin-top: 1px;
+}
+
+.repairInfoLabel {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #7b8190;
+}
+
+.repairInfoValue {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.45;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: pre-line;
+}
+
+.repairMediaGrid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.repairMediaItem {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #dde4f3;
+    aspect-ratio: 1;
+}
+
+.repairMediaItem img,
+.repairMediaItem video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.28s ease;
+}
+
+.repairMediaItem:hover img,
+.repairMediaItem:hover video {
+    transform: scale(1.04);
+}
+
+.repairMediaPlay {
+    position: absolute;
+    inset: auto auto 8px 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.75);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.repairSummaryFooter {
+    margin-top: 14px;
+    border-top: 1px solid #e8ebf3;
+    padding-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.repairSummaryFooter span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #5b6478;
+    font-size: 12px;
+}
+
+.repairSummaryFooter small {
+    color: #7b8190;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+@keyframes repairSummarySlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes statusCheckPop {
+    0% {
+        transform: scale(0.65);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .repairSummaryCard {
+        padding: 14px;
+    }
+
+    .repairSummaryHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .repairSummaryFooter {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
 .messageTime {
     font-size: var(--fs-xs);
     color: var(--blueberry-skin);

@@ -34,6 +34,16 @@
   font-weight: 800;
 }
 
+.wallet-online-pill {
+  align-self: center;
+  background: var(--primary);
+  color: var(--white);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+  box-shadow: 0 10px 24px rgba(26, 43, 99, 0.18);
+}
 .wallet-home-subtitle {
   margin: 10px 0 0;
   max-width: 860px;

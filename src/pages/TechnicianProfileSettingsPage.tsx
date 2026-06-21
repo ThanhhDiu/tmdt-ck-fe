@@ -1,7 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { userService } from '../services/userService';
+import { technicianService } from '../services/technician/technicianService';
+import { authService } from '../services/auth/authService';
+
+import { uploadService } from '../services/technician/uploadTechnical';
+import { useUserProfile } from '../contexts/UserProfileContext';
+import { useToast } from '../components/common/Toast';
+import { resolveMediaUrl } from '../utils/mediaUrl';
+import { ChangePasswordTab } from '../components/provider-profile/ChangePasswordTab';
 import {
   BadgeCheck,
+  Camera,
   Clock3,
+  LogOut,
   MapPinned,
   Save,
   Sparkles,
@@ -30,12 +42,208 @@ export default function TechnicianProfileSettingsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [profile, setProfile] = useState({
-    name: 'Nguyễn Văn Minh',
-    phone: '098 765 4321',
-    bio: 'Kỹ thuật viên hơn 10 năm kinh nghiệm trong lĩnh vực điện lạnh và thiết bị gia dụng. Chuyên sửa chữa máy điều hòa, máy giặt và tủ lạnh với quy trình minh bạch, đúng hẹn.',
+    name: '',
+    phone: '',
+    bio: '',
   });
-  const [skills, setSkills] = useState(['Máy lạnh', 'Máy giặt', 'Tủ lạnh']);
-  const [areas, setAreas] = useState(['Quận Bình Thạnh', 'Quận 1', 'Quận 3']);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string>('');
+  const [userCode, setUserCode] = useState<string>('');
+
+  const navigate = useNavigate();
+  const { profile: userProfileContext, setAvatar, updateProfile } = useUserProfile();
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  // State quản lý trạng thái lưu hồ sơ — tránh double-submit
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/auth/login');
+  };
+
+  const resolvedAvatarUrl = resolveMediaUrl(userProfileContext.avatar);
+  const displayAvatar = previewUrl || resolvedAvatarUrl || 'https://segayanime.com/wp-content/uploads/2026/01/avatar-fb-mac-dinh-1.jpg';
+
+  // Cleanup object URL on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  useEffect(() => {
+    userService.getMe()
+      .then((res) => {
+        const u = res.data;
+        setUserId(u.id?.toString() || '');
+        if (u.code) setUserCode(u.code);
+        setProfile({
+          name: u.fullName || '',
+          phone: u.phone || '',
+          bio: '', // Might want to fetch from technician profile API specifically if backend splits it
+        });
+
+        if (u.code) {
+          // If the backend has a specific getTechnicianById that returns these
+          technicianService.getTechnician(u.code)
+            .then(techRes => {
+              if (techRes) {
+                const t = techRes;
+                setIsAvailable(t.isAvailable ?? true);
+                setSkills(t.skills || []);
+                setAreas(t.district ? [t.district] : []); // Just using district as an example, maybe multiple areas later
+                setProfile(current => ({ ...current, bio: t.bio || '' }));
+              }
+            })
+            .catch(err => console.log('Could not load technician specific profile, maybe not initialized yet', err));
+        }
+      })
+      .catch((err) => {
+        console.error('Lỗi khi tải thông tin user:', err);
+      });
+  }, []);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // ─── Tính năng 2: Upload Avatar ──────────────────────────────────────────
+  // Xử lý khi user chọn file ảnh: validate → preview → upload → đồng bộ context
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Kiểm tra định dạng file: chỉ cho phép ảnh (.jpg, .png, ...)
+    if (!file.type.startsWith('image/')) {
+      showToast('Vui lòng chọn file ảnh hợp lệ (.jpg, .png).', 'warning');
+      return;
+    }
+    // Giới hạn kích thước file: tối đa 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('Ảnh không được vượt quá 10MB.', 'warning');
+      return;
+    }
+
+    // Tạo URL tạm để hiển thị preview ngay lập tức (UX tốt hơn)
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+
+    setIsUploading(true);
+    try {
+      // Gọi API upload ảnh lên server (Multipart/form-data)
+      const res = await uploadService.uploadImage(file);
+      if (res.success && res.data?.url) {
+        const newAvatarUrl = res.data.url;
+        // Cập nhật avatar URL vào database thông qua API user
+        if (userId) {
+          await userService.updateUserProfile(userId, { avatar: newAvatarUrl });
+        }
+        // Tính năng 3: Đồng bộ avatar mới vào Global State (UserProfileContext)
+        // → Sidebar và Header tự động re-render hiển thị avatar mới
+        const newResolved = resolveMediaUrl(newAvatarUrl);
+        setAvatar(newResolved);
+        updateProfile({ avatar: newResolved });
+
+        // Xóa previewUrl sau khi upload thành công để dùng URL từ server
+        URL.revokeObjectURL(objectUrl);
+        setPreviewUrl(null);
+
+        showToast('Cập nhật ảnh đại diện thành công!', 'success');
+      } else {
+        throw new Error(res.message || 'Upload thất bại');
+      }
+    } catch (error: unknown) {
+      console.error('Lỗi upload avatar:', error);
+      // Xóa preview khi upload thất bại
+      URL.revokeObjectURL(objectUrl);
+      setPreviewUrl(null);
+      // Xử lý lỗi mạng hoặc server
+      const errorMessage =
+        error instanceof Error && error.message
+          ? error.message
+          : 'Tải ảnh lên thất bại. Vui lòng kiểm tra kết nối mạng và thử lại.';
+      showToast(errorMessage, 'error');
+    } finally {
+      setIsUploading(false);
+      // Reset input file để cho phép chọn lại cùng file
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // ─── Tính năng 4: Lưu thông tin chỉnh sửa hồ sơ thợ ────────────────────
+  // Gom toàn bộ thông tin đã chỉnh sửa và gửi API cập nhật
+  const handleSave = async () => {
+    if (!userId) {
+      showToast('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
+      return;
+    }
+
+    // Validate cơ bản trước khi gửi
+    if (!profile.name.trim()) {
+      showToast('Tên không được để trống.', 'warning');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Bước 1: Cập nhật thông tin cơ bản (Tên, SĐT) qua PATCH /api/users/:id
+      await userService.updateUserProfile(userId, {
+        fullName: profile.name,
+        phone: profile.phone,
+      });
+
+      // Đồng bộ thông tin mới vào Global State để Header/Sidebar cập nhật ngay
+      updateProfile({
+        fullName: profile.name,
+        phone: profile.phone,
+      });
+
+      // Bước 2: Cập nhật thông tin kỹ thuật viên (Kỹ năng, khu vực) qua PATCH /api/technicians/:code/profile
+      if (userCode) {
+        await technicianService.updateTechnicianProfile(userCode, {
+          skills,
+          district: areas[0] || '',
+          bio: profile.bio,
+        });
+      }
+
+      showToast('Lưu thay đổi thành công!', 'success');
+    } catch (err: unknown) {
+      console.error('Lỗi khi lưu hồ sơ:', err);
+      // Phân biệt lỗi mạng và lỗi server để hiển thị thông báo phù hợp
+      const errorMessage =
+        err instanceof Error && err.message
+          ? err.message
+          : 'Lưu thay đổi thất bại. Vui lòng kiểm tra kết nối mạng và thử lại.';
+      showToast(errorMessage, 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggleAvailable = async () => {
+    const newState = !isAvailable;
+    setIsAvailable(newState);
+    if (userCode) {
+      try {
+        await technicianService.updateTechnicianAvailability(userCode, newState);
+        showToast(
+          newState ? 'Đã bật nhận đơn. Bạn sẽ nhận được đơn hàng mới.' : 'Đã tạm dừng nhận đơn.',
+          'info',
+        );
+      } catch (err) {
+        console.error('Error updating availability', err);
+        setIsAvailable(!newState); // Hoàn tác nếu API thất bại (optimistic UI)
+        showToast('Cập nhật trạng thái thất bại. Vui lòng thử lại.', 'error');
+      }
+    }
+  };
 
   const toggleSelection = (
     value: string,
@@ -64,15 +272,33 @@ export default function TechnicianProfileSettingsPage() {
           <section className="tech-settings-overview">
             <article className="tech-settings-hero">
               <div className="tech-settings-hero__identity">
-                <img
-                  src="https://i.pravatar.cc/160?img=12"
-                  alt={profile.name}
-                  className="tech-settings-hero__avatar"
+                <div className="profile-avatar-wrapper" onClick={handleAvatarClick} title="Nhấp để đổi ảnh đại diện"
+                  style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden' }}>
+                  <img
+                    src={displayAvatar}
+                    alt={profile.name}
+                    className="tech-settings-hero__avatar"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                  />
+                  <div className="profile-avatar-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.2s', color: 'white', borderRadius: '50%', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0'}>
+                    {isUploading ? (
+                      <div className="profile-avatar-spinner" />
+                    ) : (
+                      <Camera size={24} />
+                    )}
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
                 />
                 <div className="tech-settings-hero__copy">
                   <span className="tech-settings-hero__eyebrow">Hồ sơ kỹ thuật viên</span>
                   <h2 className="tech-settings-hero__name">{profile.name}</h2>
-                  <p className="tech-settings-hero__meta">ID: TECH-8842 · Đã xác minh bởi GlowUp</p>
+                  <p className="tech-settings-hero__meta">ID: {userCode || 'TECH-...'} · Đã xác minh bởi GlowUp</p>
                   <div className="tech-settings-hero__chips">
                     <span className={`tech-settings-chip ${isAvailable ? 'is-online' : 'is-offline'}`}>
                       {isAvailable ? 'Đang nhận đơn' : 'Tạm dừng nhận đơn'}
@@ -142,7 +368,7 @@ export default function TechnicianProfileSettingsPage() {
               title="Sẵn sàng nhận đơn"
               description="Bật để hệ thống ưu tiên hiển thị bạn trong luồng đề xuất và điều phối đơn gần khu vực."
               checked={isAvailable}
-              onToggle={() => setIsAvailable((current) => !current)}
+              onToggle={handleToggleAvailable}
             />
 
             <div className="settings-grid settings-grid--two">
@@ -177,13 +403,22 @@ export default function TechnicianProfileSettingsPage() {
               />
             </div>
 
+            {/* Tính năng 4: Nút Lưu thay đổi với trạng thái loading */}
             <SettingsActionBar>
-              <button type="button" className="settings-primary-button">
+              <button
+                type="button"
+                className="settings-primary-button"
+                onClick={handleSave}
+                disabled={isSaving}
+                style={{ opacity: isSaving ? 0.7 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
+              >
                 <Save size={18} />
-                Lưu thay đổi
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
               </button>
             </SettingsActionBar>
           </SettingsCard>
+
+          <ChangePasswordTab />
 
           <SettingsDangerZone
             title="Xóa tài khoản"
@@ -195,6 +430,15 @@ export default function TechnicianProfileSettingsPage() {
               </button>
             }
           />
+
+          <SettingsCard title="Đăng xuất khỏi thiết bị" subtitle="Đăng xuất tài khoản của bạn khỏi phiên làm việc hiện tại.">
+            <SettingsActionBar>
+              <button type="button" className="settings-danger-button" onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <LogOut size={18} />
+                Đăng xuất
+              </button>
+            </SettingsActionBar>
+          </SettingsCard>
 
           <div className="settings-insights">
             <SettingsInsightCard

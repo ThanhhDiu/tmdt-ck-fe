@@ -295,3 +295,4 @@ export const verificationStatusColor: Record<VerificationStatus, { color: string
 }
 
 export { formatDate }
+export { getVerificationRequestById as getVerificationById };

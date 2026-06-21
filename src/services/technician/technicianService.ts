@@ -6,6 +6,23 @@ import type {
   TechnicianListParams,
 } from '../../types/technician';
 
+export interface Technician {
+  id: string;
+  fullName: string;
+  avatar: string;
+  rating: number;
+  reviewCount: number;
+  location: string;
+  district: string;
+  skills: string[];
+  pricePerHour: number;
+  isAvailable: boolean;
+  timeAvailable?: string;
+  type?: 'normal' | 'premium';
+  titleBadge?: string;
+  completedJobs: number;
+  bio?: string;
+}
 type PagedData<T> = {
   items: T[];
   pagination?: {
@@ -15,6 +32,7 @@ type PagedData<T> = {
     totalPages: number;
   };
 };
+
 
 const unwrap = <T,>(payload: unknown): T => {
   if (
@@ -75,5 +93,27 @@ export const technicianService = {
       throw new Error('Không thể tải hồ sơ thợ');
     }
     return unwrap<TechnicianDetail>(response.data);
+  },
+
+  updateTechnicianProfile: async (
+    technicianId: string,
+    data: { skills?: string[]; district?: string; bio?: string }
+  ): Promise<void> => {
+    const response = await apiClient.patch(`/api/technicians/${encodeURIComponent(technicianId)}/profile`, data);
+    if (!response.data || (response.data as { success?: boolean }).success === false) {
+      throw new Error('Không thể cập nhật hồ sơ hành nghề');
+    }
+  },
+
+  updateTechnicianAvailability: async (
+    technicianId: string,
+    isAvailable: boolean
+  ): Promise<void> => {
+    const response = await apiClient.patch(`/api/technicians/${encodeURIComponent(technicianId)}/availability`, {
+      isAvailable
+    });
+    if (!response.data || (response.data as { success?: boolean }).success === false) {
+      throw new Error('Không thể cập nhật trạng thái hoạt động');
+    }
   },
 };

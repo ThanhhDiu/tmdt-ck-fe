@@ -439,9 +439,17 @@
   font-weight: 700;
 }
 
-.afp-td-status.normal { color: #16a34a; }
-.afp-td-status.low { color: #f97316; }
-.afp-td-status.locked { color: #dc2626; }
+.afp-td-status.normal {
+  color: #16a34a;
+}
+
+.afp-td-status.low {
+  color: #f97316;
+}
+
+.afp-td-status.locked {
+  color: #dc2626;
+}
 
 .afp-table-wrap {
   background: #fff;
@@ -644,4 +652,3 @@
     grid-template-columns: 1fr;
   }
 }
-

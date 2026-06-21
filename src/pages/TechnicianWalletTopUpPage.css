@@ -48,7 +48,7 @@
 }
 
 .topup-card {
-  background: #f5f1e8;
+  background: var(--bg-page);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 22px;
@@ -188,7 +188,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid #c8c7c9;
+  border: 2px solid var(--border-dark);
 }
 
 .method-card.active .method-radio {
@@ -215,7 +215,7 @@
 
 .qr-card {
   --qr-accent: var(--blueberry-skin);
-  background: #f2ede5;
+  background: var(--bg-page);
   border-radius: 14px;
   padding: 16px;
   border: 1px solid rgba(47, 58, 85, 0.1);

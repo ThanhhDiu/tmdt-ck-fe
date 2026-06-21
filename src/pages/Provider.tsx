@@ -11,6 +11,7 @@ const pageMap: Record<string, string> = {
   'home': '/',
   'provider': '/provider',
   'services': '/services',
+  'rewards': '/rewards',
   'provider-profile': '/provider-profile',
   'provider-dashboard': '/provider-dashboard',
   'customer-settings': '/customer/account-settings',
@@ -44,18 +45,18 @@ export const Provider: React.FC = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#f4f3ec', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: 'var(--bg-page)', minHeight: '100vh' }}>
       <Header onNavigate={onNavigate} />
       <main className="fp-main-container">
         <div className="fp-layout">
-          <FilterSidebar 
+          <FilterSidebar
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
-          <ProviderList 
-            onNavigate={onNavigate} 
-            selectedService={selectedService} 
+          <ProviderList
+            onNavigate={onNavigate}
+            selectedService={selectedService}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             setTotalPages={setTotalPages}

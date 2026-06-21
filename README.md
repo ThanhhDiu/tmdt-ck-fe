@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+# ThuongMaiDienTu
+
+=======
+>>>>>>> 0b1013b57a58a3a90fe1a21c38f50c39b0231130
 # GlowUp FE 
 
 Frontend project built with **React + TypeScript + Vite**

@@ -9,13 +9,15 @@
 .widget-title {
   font-size: 16px;
   font-weight: 700;
-  color: #000C33;
+  color: var(--primary);
   margin: 0 0 20px 0;
   display: flex;
   align-items: center;
 }
 
-.mr-2 { margin-right: 8px; }
+.mr-2 {
+  margin-right: 8px;
+}
 
 .schedule-grid {
   display: grid;
@@ -25,7 +27,7 @@
 
 .schedule-box {
   background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 12px;
   text-align: center;
@@ -51,7 +53,7 @@
 .sc-time {
   font-size: 13px;
   font-weight: 600;
-  color: #000C33;
+  color: var(--primary);
 }
 
 .schedule-box.full .sc-time {
@@ -73,7 +75,7 @@
   align-items: center;
   gap: 12px;
   font-size: 14px;
-  color: #4A5E8B;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
@@ -88,11 +90,11 @@
 }
 
 .orange-bg {
-  background-color: rgba(249, 115, 22, 0.1);
+  background-color: var(--accent-bg);
 }
 
 .text-orange-500 {
-  color: #f97316;
+  color: var(--accent);
 }
 
 /* Map Card */
@@ -109,8 +111,10 @@
 .map-overlay {
   position: absolute;
   top: 0;
-  left: 0; right: 0; bottom: 0;
-  background: linear-gradient(to top, rgba(74, 94, 139, 0.4), rgba(255,255,255,0.1));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(74, 94, 139, 0.4), rgba(255, 255, 255, 0.1));
 }
 
 .map-pin {
@@ -124,5 +128,5 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

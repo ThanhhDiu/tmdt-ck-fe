@@ -9,6 +9,8 @@ export interface AuthUser {
     role: UserRole;
     avatar: string | null;
     status: UserStatus;
+    code?: string;
+    address?: string;
 }
 
 export interface AuthTokenData {

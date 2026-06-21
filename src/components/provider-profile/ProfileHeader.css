@@ -7,7 +7,7 @@
   position: absolute;
   top: 24px;
   left: 24px;
-  background: white;
+  background: var(--white);
   border: none;
   border-radius: 50%;
   width: 44px;
@@ -17,7 +17,7 @@
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  color: #000C33;
+  color: var(--primary);
   z-index: 20;
   transition: all 0.2s;
 }
@@ -32,7 +32,7 @@
   border-radius: 24px;
   overflow: hidden;
   position: relative;
-  background-color: #4A5E8B;
+  background-color: var(--primary);
   /* Fallback */
 }
 
@@ -78,7 +78,7 @@
   height: 100%;
   border-radius: 20px;
   object-fit: cover;
-  border: 4px solid #f4f3ec;
+  border: 4px solid var(--white);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -88,12 +88,12 @@
   left: 50%;
   transform: translateX(-50%);
   background-color: #22c55e;
-  color: white;
+  color: var(--white);
   font-size: 11px;
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 12px;
-  border: 2px solid #f4f3ec;
+  border: 2px solid var(--white);
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -125,13 +125,13 @@
 .ph-name {
   font-size: 28px;
   font-weight: 700;
-  color: #000C33;
+  color: var(--primary);
   margin: 0;
 }
 
 .ph-premium-badge {
-  background-color: #DEC38D;
-  color: #000C33;
+  background-color: var(--accent);
+  color: var(--white);
   display: inline-block;
   padding: 3px 10px;
   border-radius: 20px;
@@ -156,7 +156,7 @@
 
 .ph-stat-val {
   font-weight: 600;
-  color: #4A5E8B;
+  color: var(--text-secondary);
 }
 
 .ph-stat-desc {
@@ -185,8 +185,8 @@
 }
 
 .ph-primary-btn {
-  background-color: #000C33;
-  color: white;
+  background-color: var(--primary);
+  color: var(--white);
   border: none;
   border-radius: 12px;
   padding: 14px 28px;
@@ -201,7 +201,7 @@
 }
 
 .ph-primary-btn:hover {
-  background-color: #1a2350;
+  background-color: var(--primary-light);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 12, 51, 0.25);
 }

@@ -8,37 +8,30 @@ interface RegisterUserData {
   accountType: 'customer' | 'technician'
 }
 
-export const registerUser = async (userData: RegisterUserData, setSuccessMessage: (message: string) => void) => {
-    setSuccessMessage('')
-    const { fullName, email, phone, password, accountType } = userData
-    try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone,
-          password,
-          role: accountType,
-        }),
-      })
-  
-      const data = await response.json()
-  
-      if (!response.ok) {
-        throw new Error(data.message || 'Đăng ký thất bại')
-      }
-  
-      setSuccessMessage('Đăng ký thành công')
-      console.log(data)
-    } catch (error) {
-      console.error(error)
-      setSuccessMessage('Có lỗi xảy ra')
-    }
+export const registerUser = async (userData: RegisterUserData): Promise<void> => {
+  const { fullName, email, phone, password, accountType } = userData
+
+  // Dòng fetch phát đi yêu cầu
+  const response = await fetch(`${API_URL}/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fullName,
+      email,
+      phone,
+      password,
+      role: accountType === 'customer' ? 'CUSTOMER' : 'TECHNICIAN',
+    }),
+  })
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Đăng ký thất bại')
   }
+}
 
 export interface LoginUserData {
   identifier: string
@@ -97,14 +90,14 @@ export const loginUser = async (
   })
 
   const data: LoginResponse = await response.json()
-  
+
   if (!response.ok) {
     throw new Error('Đăng nhập thất bại')
   }
   const { user, accessToken, refreshToken } = data.data
-    localStorage.setItem('user', JSON.stringify({ user }))
-    localStorage.setItem('accessToken',  accessToken )
-    localStorage.setItem('refreshToken', refreshToken )
+  localStorage.setItem('user', JSON.stringify({ user }))
+  localStorage.setItem('accessToken', accessToken)
+  localStorage.setItem('refreshToken', refreshToken)
   return data
 }
 
@@ -188,9 +181,9 @@ export const isAuthenticated = (): boolean => {
   return !!accessToken
 }
 export const getAccessToken = (): string | null => {
-    if (!isAuthenticated()) {
-        return null
-    }
+  if (!isAuthenticated()) {
+    return null
+  }
   return localStorage.getItem('accessToken')
 }
 
@@ -198,6 +191,21 @@ export const getRefreshToken = (): string | null => {
   return localStorage.getItem('refreshToken')
 }
 
+export const verifyEmail = async (data: { token: string }): Promise<void> => {
+  const response = await fetch(`${API_URL}/auth/verify-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+
+  const responseData = await response.json()
+
+  if (!response.ok) {
+    throw new Error(responseData.message || 'Xác nhận email thất bại')
+  }
+}
 export const getStoredUser = (): User | null => {
   const raw = localStorage.getItem('user')
   if (!raw) {

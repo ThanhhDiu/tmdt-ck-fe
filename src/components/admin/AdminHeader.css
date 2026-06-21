@@ -41,8 +41,8 @@
   color: #94a3b8;
 }
 .adm-search-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(229, 115, 58, 0.1);
 }
 .adm-header-actions {
   display: flex;

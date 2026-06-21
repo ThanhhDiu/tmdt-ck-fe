@@ -26,6 +26,7 @@ const pageMap: Record<string, string> = {
     home: '/',
     provider: '/provider',
     services: '/services',
+    rewards: '/rewards',
     'provider-profile': '/provider-profile',
     'provider-dashboard': '/provider-dashboard',
     'customer-settings': '/customer/account-settings',
@@ -480,6 +481,13 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
               time: '',
               avatar: 'https://placehold.co/48x48',
           };
+
+    useEffect(() => {
+        if (!repairPrefill) return;
+        setRequestStatus('creating');
+        const timer = window.setTimeout(() => setRequestStatus('sent'), 700);
+        return () => window.clearTimeout(timer);
+    }, [repairPrefill]);
 
     return (
         <div className={styles.container}>

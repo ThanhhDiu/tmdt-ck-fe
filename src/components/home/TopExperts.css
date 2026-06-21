@@ -2,7 +2,7 @@
   max-width: 1200px;
   margin: 0 auto 80px;
   padding: 80px 24px;
-  background-color: #f8fafc;
+  background-color: var(--bg-page);
   border-radius: 40px;
 }
 
@@ -83,7 +83,7 @@
   height: 100%;
   border-radius: 16px;
   object-fit: cover;
-  border: 2px solid #DEC38D;
+  border: 2px solid var(--accent);
   padding: 2px;
   background-color: #fff;
 }
@@ -92,7 +92,7 @@
   position: absolute;
   bottom: -4px;
   right: -4px;
-  background-color: #3b82f6;
+  background-color: var(--accent);
   color: white;
   width: 20px;
   height: 20px;
@@ -106,13 +106,13 @@
 .expert-name {
   font-size: 18px;
   font-weight: 700;
-  color: #000C33;
+  color: var(--primary);
   margin: 0 0 4px 0;
 }
 
 .expert-title {
   font-size: 13px;
-  color: #4A5E8B;
+  color: var(--text-secondary);
   margin: 0 0 8px 0;
 }
 
@@ -147,12 +147,12 @@
 }
 
 .stat-icon {
-  color: #3b82f6;
+  color: var(--accent);
 }
 
 .btn-request {
   width: 100%;
-  background-color: #000C33;
+  background-color: var(--accent);
   color: white;
   border: none;
   border-radius: 12px;
@@ -164,7 +164,7 @@
 }
 
 .btn-request:hover {
-  background-color: #2a315e;
+  background-color: var(--accent-hover);
 }
 
 @media (max-width: 968px) {

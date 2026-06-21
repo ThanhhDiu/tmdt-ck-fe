@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -17,9 +17,9 @@ import {
   Sparkles,
   UserRound,
 } from 'lucide-react'
-import './AuthScreens.css'
 import { loginUser, registerUser } from '../services/auth'
-
+import { authService } from '../services/auth/authService'
+import './AuthScreens.css'
 type AccountType = 'customer' | 'technician'
 
 type FieldError = Record<string, string>
@@ -31,14 +31,14 @@ type InfoItem = {
 }
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const phoneRegex = /^(?:\+84|84|0)(?:\d{9}|\d{10})$/
+const phoneRegex = /^(0|\+84)[3-9][0-9]{8}$/
 
 function isEmailOrPhone(value: string) {
   return emailRegex.test(value) || phoneRegex.test(value)
 }
 
 function isStrongPassword(value: string) {
-  return /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}/.test(value)
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value)
 }
 
 function getPasswordScore(value: string) {
@@ -334,8 +334,11 @@ function loginSideItems(): InfoItem[] {
   ]
 }
 
+import { useUserProfile } from '../contexts/UserProfileContext'
+
 export function LoginPage() {
   const navigate = useNavigate()
+  const { refreshProfile } = useUserProfile()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
@@ -374,12 +377,20 @@ export function LoginPage() {
 
     try {
       const loginResponse = await loginUser({
-        identifier: identifier,
+        identifier: identifier.trim(),
         password: password
       })
-      const redirectPath = loginResponse.data.user.role.toLowerCase() === 'admin'
-        ? '/admin/dashboard'
-        : '/'
+      
+      // Gọi refreshProfile để update context sau khi đăng nhập thành công
+      await refreshProfile()
+
+      const role = loginResponse.data.user.role.toLowerCase()
+      let redirectPath = '/'
+      if (role === 'admin') {
+        redirectPath = '/admin/dashboard'
+      } else if (role === 'technician') {
+        redirectPath = '/technician/provider-dashboard'
+      }
 
       window.setTimeout(() => {
         setIsSubmitting(false)
@@ -551,18 +562,50 @@ export function RegisterPage() {
     return Object.keys(nextErrors).length === 0
   }
 
+  const navigate = useNavigate()
+
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault()
+    event.preventDefault()
 
-  if (!validate()) {
+    if (!validate()) {
+      setSuccessMessage('')
+      return
+    }
+
+    setIsSubmitting(true)
     setSuccessMessage('')
-    return
-  }
+    setErrors({})
 
-  setIsSubmitting(true)
-  await registerUser({ fullName, email, phone, password, accountType }, setSuccessMessage)
-  
-}
+    try {
+      await registerUser({ fullName, email, phone, password, accountType })
+      setIsSubmitting(false)
+
+      // Lưu email vào sessionStorage để sử dụng ở trang pending verification
+      sessionStorage.setItem('registerEmail', email)
+
+      // Redirect đến trang chờ xác nhận email
+      window.setTimeout(() => {
+        navigate('/auth/pending-email-verification')
+      }, 500)
+    } catch (error: any) {
+      setIsSubmitting(false)
+
+      const errorMessage =
+        error.message || 'Đăng ký thất bại, vui lòng thử lại sau.'
+
+      // Hiển thị đúng field bị lỗi
+      if (errorMessage.toLowerCase().includes('email')) {
+        setErrors({ email: errorMessage })
+      } else if (
+        errorMessage.toLowerCase().includes('phone') ||
+        errorMessage.toLowerCase().includes('số điện thoại')
+      ) {
+        setErrors({ phone: errorMessage })
+      } else {
+        setErrors({ fullName: errorMessage })
+      }
+    }
+  }
 
   return (
     <AuthShell
@@ -745,7 +788,7 @@ export function ForgotPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!identifier.trim()) {
@@ -764,10 +807,38 @@ export function ForgotPasswordPage() {
     setIsSubmitting(true)
     setSuccessMessage('')
 
-    window.setTimeout(() => {
+    try {
+      // Gọi API gửi yêu cầu forgot password
+      const response = await authService.forgotPassword(identifier.trim())
       setIsSubmitting(false)
-      setSuccessMessage('Yêu cầu đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư hoặc tin nhắn của bạn.')
-    }, 1000)
+
+      // Kiểm tra nếu Backend trả về mã HTTP 200 nhưng success = false
+      if (response && response.success === false) {
+        setError(response.message || 'Yêu cầu không thành công. Vui lòng thử lại.');
+        return;
+      }
+
+      // Nếu mọi thứ thành công thực sự
+      setSuccessMessage(
+        response.message || 'Yêu cầu đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư hoặc tin nhắn của bạn.'
+      )
+    } catch (err: any) {
+      setIsSubmitting(false)
+
+      // Xử lý lỗi chi tiết theo status code
+      const status = err?.response?.status
+      const message = err?.response?.data?.message
+
+      if (status === 404) {
+        setError('Email hoặc số điện thoại này không tồn tại trong hệ thống. Vui lòng kiểm tra lại hoặc đăng ký tài khoản mới.')
+      } else if (status === 400) {
+        setError(message || 'Thông tin không hợp lệ. Vui lòng kiểm tra lại.')
+      } else if (status === 500) {
+        setError('Lỗi hệ thống. Vui lòng thử lại sau vài phút.')
+      } else {
+        setError(message || err?.message || 'Có lỗi xảy ra, vui lòng thử lại sau.')
+      }
+    }
   }
 
   return (
@@ -839,6 +910,9 @@ function changeSideItems(): InfoItem[] {
 }
 
 export function ChangePasswordPage() {
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token') || ''
+
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -849,6 +923,10 @@ export function ChangePasswordPage() {
 
   const validate = () => {
     const nextErrors: FieldError = {}
+
+    if (!token) {
+      nextErrors.newPassword = 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'
+    }
 
     if (!newPassword.trim()) {
       nextErrors.newPassword = 'Vui lòng nhập mật khẩu mới.'
@@ -866,7 +944,7 @@ export function ChangePasswordPage() {
     return Object.keys(nextErrors).length === 0
   }
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!validate()) {
@@ -877,10 +955,14 @@ export function ChangePasswordPage() {
     setIsSubmitting(true)
     setSuccessMessage('')
 
-    window.setTimeout(() => {
+    try {
+      const response = await authService.resetPassword(token, newPassword, confirmPassword)
       setIsSubmitting(false)
-      setSuccessMessage('Đổi mật khẩu thành công. Bạn có thể dùng mật khẩu mới để đăng nhập ngay bây giờ.')
-    }, 1100)
+      setSuccessMessage(response.message || 'Đổi mật khẩu thành công. Bạn có thể dùng mật khẩu mới để đăng nhập ngay bây giờ.')
+    } catch (err: any) {
+      setIsSubmitting(false)
+      setErrors({ confirmPassword: err?.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại.' })
+    }
   }
 
   return (

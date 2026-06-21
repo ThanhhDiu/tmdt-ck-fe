@@ -48,10 +48,12 @@ export const authController = {
 
             if (!res.success) {
                 // Response 401: INVALID_CREDENTIALS
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const errorRes = res as any;
                 return {
                     success: false,
-                    code: res.error.code,
-                    message: res.error.message,
+                    code: errorRes.code || 'INVALID_CREDENTIALS',
+                    message: errorRes.message || 'Đăng nhập thất bại',
                 };
             }
 
@@ -93,16 +95,17 @@ export const authController = {
 
             if (!res.success) {
                 // Response 422: VALIDATION_ERROR (email/phone đã tồn tại, ...)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const errorRes = res as any;
                 return {
                     success: false,
-                    code: res.error.code,
-                    message: res.error.message,
-                    fields: res.error.fields as Record<string, string> | undefined,
+                    code: errorRes.code || 'VALIDATION_ERROR',
+                    message: errorRes.message || 'Đăng ký thất bại',
+                    fields: errorRes.fields as Record<string, string> | undefined,
                 };
             }
 
             const { accessToken, refreshToken, user } = res.data;
-            saveRememberMe(remember);
             saveToken(accessToken);
             saveRefreshToken(refreshToken);
 

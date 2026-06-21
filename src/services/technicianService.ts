@@ -1,4 +1,4 @@
-import axiosClient from '../api/axiosClient';
+import axiosClient from '../api/config';
 
 export const getTechnicians = async (params?: Record<string, any>) => {
   return await axiosClient.get('/technicians', { params });

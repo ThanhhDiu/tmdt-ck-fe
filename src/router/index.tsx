@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import TechnicianLayout from '../components/layout/TechnicianLayout'
+import CustomerLayout from '../components/layout/CustomerLayout'
 import {
   ChangePasswordPage,
   ForgotPasswordPage,
@@ -23,7 +24,10 @@ import ServicesPage from '../pages/ServicesPage'
 import TechnicianProfileSettingsPage from '../pages/TechnicianProfileSettingsPage'
 import VoucherRewardsPage from '../pages/VoucherRewardsPage'
 import TechnicianVerificationPage from '../pages/TechnicianVerificationPage'
-
+import CustomerSecurityPage from '../pages/CustomerSecurityPage';
+import { VerifyEmailPage } from '../pages/VerifyEmailPage'
+import { PendingEmailVerificationPage } from '../pages/PendingEmailVerificationPage'
+import { ChatPage } from '../pages/ChatPage'
 export default function AppRouter() {
   return (
     <Routes>
@@ -52,10 +56,34 @@ export default function AppRouter() {
             </TechnicianLayout>
           }
         />
+        <Route
+          path="provider-dashboard"
+          element={
+            <TechnicianLayout activeItem="dashboard">
+              <ProviderDashboard />
+            </TechnicianLayout>
+          }
+        />
       </Route>
 
       <Route path="/customer">
-        <Route path="settings" element={<CustomerAccountSettingsPage />} />
+        <Route path="account-settings" element={
+          <CustomerLayout activeNavKey="account" activeSidebarItem="personal" searchPlaceholder="Tìm kiếm dịch vụ...">
+            <CustomerAccountSettingsPage />
+          </CustomerLayout>
+        } />
+        <Route path='order-management' element={
+          <CustomerLayout activeNavKey="account" activeSidebarItem="wallet" searchPlaceholder="Tìm kiếm dịch vụ...">
+            <OrderManagementPage role="customer" />
+          </CustomerLayout>
+        } />
+        <Route path="change-password" element={
+          <CustomerLayout activeNavKey="account" activeSidebarItem="security" searchPlaceholder="Tìm kiếm dịch vụ...">
+
+            <CustomerSecurityPage />
+          </CustomerLayout>
+        } />
+        <Route path="chat" element={<ChatPage />} />
       </Route>
 
       <Route path="/admin">
@@ -68,6 +96,8 @@ export default function AppRouter() {
         <Route path="register" element={<RegisterPage />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
         <Route path="change-password" element={<ChangePasswordPage />} />
+        <Route path="verify-email" element={<VerifyEmailPage />} />
+        <Route path="pending-email-verification" element={<PendingEmailVerificationPage />} />
       </Route>
 
       <Route path="/" element={<HomePage />} />
@@ -82,7 +112,6 @@ export default function AppRouter() {
           <OrderManagementPage role="technician" />
         </TechnicianLayout>
       } />
-      <Route path="/provider-dashboard" element={<ProviderDashboard />} />
       <Route path="/admin/orders" element={<AdminOrdersPage />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUserManagement />} />

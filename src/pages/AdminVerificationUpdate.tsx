@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AdminHeader } from '../components/admin/AdminHeader'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import {
   getTechnicianVerificationStatus,
-  getVerificationRequestById,
+  getVerificationById,
   updateVerificationRequestStatus,
   verificationStatusLabel,
 } from '../services/verificationService'
-import type { VerificationStatus } from '../types/VerificationRequest'
+import type { VerificationRequest, VerificationStatus } from '../types/VerificationRequest'
 import './AdminVerificationUpdate.css'
 
 export default function AdminVerificationUpdate() {
@@ -16,7 +16,21 @@ export default function AdminVerificationUpdate() {
   const { requestId } = useParams()
   const [params] = useSearchParams()
 
-  const request = useMemo(() => (requestId ? getVerificationRequestById(requestId) : undefined), [requestId])
+  const [request, setRequest] = useState<VerificationRequest | null>(null)
+
+  useEffect(() => {
+    if (requestId) {
+      const fetchDetail = async () => {
+        try {
+          const response = await getVerificationById(requestId)
+          setRequest(response.data || response)
+        } catch (error) {
+          console.error('Lỗi khi lấy chi tiết hồ sơ xác minh:', error)
+        }
+      }
+      fetchDetail()
+    }
+  }, [requestId])
 
   const initialDecision = (params.get('decision') as VerificationStatus | null) || 'approved'
   const [status, setStatus] = useState<VerificationStatus>(initialDecision)
@@ -34,17 +48,22 @@ export default function AdminVerificationUpdate() {
     )
   }
 
-  const handleSubmit = () => {
-    const updated = updateVerificationRequestStatus(request.id, {
-      status,
-      note,
-      reviewedBy: 'Admin AD-9902',
-    })
+  const handleSubmit = async () => {
+    try {
+      if (!request) return
+      
+      await updateVerificationRequestStatus(request.id, {
+        status,
+        note,
+        reviewedBy: 'Admin AD-9902',
+      })
 
-    if (!updated) return
-
-    setSavedStatus(getTechnicianVerificationStatus(request.technicianId))
-    setIsDone(true)
+      const techStatusRes = await getTechnicianVerificationStatus(request.technicianId)
+      setSavedStatus(techStatusRes?.status || techStatusRes?.data?.status || status)
+      setIsDone(true)
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái:', error)
+    }
   }
 
   return (

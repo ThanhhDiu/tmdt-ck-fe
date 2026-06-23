@@ -41,6 +41,7 @@
   grid-template-columns: 288px minmax(0, 1fr);
   gap: 24px;
   box-sizing: border-box;
+  background-color: var(--plate-white);
 }
 
 .settings-frame--single {

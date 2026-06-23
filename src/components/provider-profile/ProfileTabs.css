@@ -15,7 +15,7 @@
   border: none;
   font-size: 15px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-secondary);
   padding: 0 0 16px 0;
   cursor: pointer;
   position: relative;
@@ -23,11 +23,11 @@
 }
 
 .tab-btn:hover {
-  color: #000C33;
+  color: var(--primary);
 }
 
 .tab-btn.active {
-  color: #000C33;
+  color: var(--primary);
 }
 
 .tab-btn.active::after {
@@ -37,7 +37,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #000C33;
+  background-color: var(--primary);
   border-radius: 2px 2px 0 0;
 }
 

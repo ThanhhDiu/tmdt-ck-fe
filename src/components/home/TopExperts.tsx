@@ -1,69 +1,78 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './TopExperts.css';
 import { StarIcon, BadgeCheckIcon, CheckCircleIcon, ClockIcon } from '../common/Icons';
+import { technicianService } from '../../services/technician/technicianService';
+import { toNumber } from '../../utils/technicianMappers';
 
-interface Expert {
+type ExpertCard = {
   id: string;
   name: string;
   title: string;
   rating: number;
   experience: string;
   completedJobs: string;
-  badge: 'DIAMOND' | 'PLATINUM' | 'GOLD';
+  badge: string;
   imageUrl: string;
-}
-
-const experts: Expert[] = [
-  {
-    id: '1',
-    name: 'Nguyễn Văn Minh',
-    title: 'Chuyên gia Máy lạnh',
-    rating: 5.0,
-    experience: '8 năm',
-    completedJobs: '1.450 đơn',
-    badge: 'DIAMOND',
-    imageUrl: 'https://i.pravatar.cc/150?img=11'
-  },
-  {
-    id: '2',
-    name: 'Lê Thị Tuyết',
-    title: 'Chuyên gia Vệ sinh',
-    rating: 4.9,
-    experience: '5 năm',
-    completedJobs: '900 đơn',
-    badge: 'PLATINUM',
-    imageUrl: 'https://i.pravatar.cc/150?img=5'
-  },
-  {
-    id: '3',
-    name: 'Phạm Hoàng Nam',
-    title: 'Kỹ thuật viên Điện nước',
-    rating: 5.0,
-    experience: '6 năm',
-    completedJobs: '1.120 đơn',
-    badge: 'GOLD',
-    imageUrl: 'https://i.pravatar.cc/150?img=8'
-  }
-];
-
-const badgeLabels: Record<string, string> = {
-  DIAMOND: 'CHUYÊN GIA KIM CƯƠNG',
-  PLATINUM: 'CHUYÊN GIA BẠCH KIM',
-  GOLD: 'CHUYÊN GIA VÀNG',
 };
 
-export const TopExperts: React.FC<{ onNavigate?: (page: string, data?: any) => void }> = ({ onNavigate }) => {
-  const handleExpertClick = (expert: Expert) => {
+export const TopExperts: React.FC<{ onNavigate?: (page: string, data?: Record<string, unknown>) => void }> = ({
+  onNavigate,
+}) => {
+  const [experts, setExperts] = useState<ExpertCard[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const data = await technicianService.listTechnicians({ page: 1, limit: 6 });
+        const premium = data.items
+          .filter((item) => item.type === 'premium')
+          .slice(0, 3)
+          .map((item) => ({
+            id: item.id,
+            name: item.fullName,
+            title: item.titleBadge || item.skills?.[0] || 'Kỹ thuật viên',
+            rating: toNumber(item.rating, 0),
+            experience: 'Chuyên nghiệp',
+            completedJobs: `${item.completedJobs ?? 0} đơn`,
+            badge: item.titleBadge || 'CHUYÊN GIA',
+            imageUrl: item.avatar || 'https://placehold.co/150x150',
+          }));
+
+        if (!cancelled) {
+          setExperts(premium);
+        }
+      } catch {
+        if (!cancelled) {
+          setExperts([]);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleExpertClick = (expert: ExpertCard) => {
     onNavigate?.('provider-profile', {
+      id: expert.id,
       name: expert.name,
       avatar: expert.imageUrl,
       rating: expert.rating,
-      reviewCount: parseInt(expert.completedJobs.replace(/[^0-9]/g, '')) || 0,
       location: 'TP. Hồ Chí Minh',
       type: 'premium',
-      titleBadge: badgeLabels[expert.badge] || 'CHUYÊN GIA CỦA THÁNG',
+      titleBadge: expert.badge,
     });
   };
+
+  if (experts.length === 0) {
+    return null;
+  }
+
   return (
     <section className="experts-section">
       <div className="experts-header">
@@ -74,16 +83,23 @@ export const TopExperts: React.FC<{ onNavigate?: (page: string, data?: any) => v
       </div>
 
       <div className="experts-grid">
-        {experts.map(expert => (
-          <div key={expert.id} className="expert-card" onClick={() => handleExpertClick(expert)} style={{ cursor: 'pointer' }}>
-            <div className={`badge-tier badge-${expert.badge.toLowerCase()}`}>
+        {experts.map((expert) => (
+          <div
+            key={expert.id}
+            className="expert-card"
+            onClick={() => handleExpertClick(expert)}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="badge-tier badge-diamond">
               {expert.badge}
             </div>
 
             <div className="expert-info-top">
               <div className="expert-avatar-wrapper">
                 <img src={expert.imageUrl} alt={expert.name} className="expert-avatar" />
-                <div className="verified-badge"><BadgeCheckIcon size={12} /></div>
+                <div className="verified-badge">
+                  <BadgeCheckIcon size={12} />
+                </div>
               </div>
               <div className="expert-name-title">
                 <h3 className="expert-name">{expert.name}</h3>
@@ -106,7 +122,9 @@ export const TopExperts: React.FC<{ onNavigate?: (page: string, data?: any) => v
               </div>
             </div>
 
-            <button className="btn-request">Gửi yêu cầu →</button>
+            <button type="button" className="btn-request">
+              Gửi yêu cầu →
+            </button>
           </div>
         ))}
       </div>

@@ -5,11 +5,13 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { FilterSidebar } from '../components/provider/FilterSidebar';
 import { ProviderList } from '../components/provider/ProviderList';
+import { buildProviderProfilePath } from '../utils/providerNavigation';
 
 const pageMap: Record<string, string> = {
   'home': '/',
   'provider': '/provider',
   'services': '/services',
+  'rewards': '/rewards',
   'provider-profile': '/provider-profile',
   'provider-dashboard': '/provider-dashboard',
   'customer-settings': '/customer/account-settings',
@@ -25,23 +27,36 @@ export const Provider: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const onNavigate = (page: string, data?: unknown) => {
+    const record = data && typeof data === 'object' ? (data as Record<string, unknown>) : null;
+    const technicianId =
+      typeof record?.id === 'string'
+        ? record.id
+        : typeof record?.technicianId === 'string'
+          ? record.technicianId
+          : null;
+
+    if (page === 'provider-profile' && technicianId) {
+      nav(buildProviderProfilePath(technicianId), { state: { ...record, id: technicianId } });
+      return;
+    }
+
     const path = pageMap[page] || '/';
     nav(path, { state: data });
   };
 
   return (
-    <div style={{ backgroundColor: '#f4f3ec', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: 'var(--bg-page)', minHeight: '100vh' }}>
       <Header onNavigate={onNavigate} />
       <main className="fp-main-container">
         <div className="fp-layout">
-          <FilterSidebar 
+          <FilterSidebar
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
-          <ProviderList 
-            onNavigate={onNavigate} 
-            selectedService={selectedService} 
+          <ProviderList
+            onNavigate={onNavigate}
+            selectedService={selectedService}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             setTotalPages={setTotalPages}

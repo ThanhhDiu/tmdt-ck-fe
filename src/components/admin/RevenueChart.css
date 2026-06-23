@@ -130,6 +130,13 @@
   background-color: #cbd5e1;
 }
 
+.rc-no-data {
+  margin-top: 8px;
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+}
+
 @media (max-width: 768px) {
   .rc-chart {
     min-height: 250px;

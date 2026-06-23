@@ -5,4 +5,5 @@ export interface Quote {
     time: string;
     price: number;
     notes?: string;
+    scheduledAt?: string;
 }

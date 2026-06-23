@@ -1,15 +1,14 @@
-import React, { useState } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import React from 'react';
 import styles from './Chat.module.css';
 
 interface QuotationCardProps {
     serviceName?: string;
     description?: string;
     price?: number;
-    isTechnician?: boolean;
-    isBooked?: boolean;
-    previewMode?: boolean; // New prop for static preview
+    scheduledAt?: string;
+    status?: string;
+    isCustomer?: boolean;
+    previewMode?: boolean;
     onAccept?: () => void;
     onReject?: () => void;
 }
@@ -18,148 +17,97 @@ export const QuotationCard: React.FC<QuotationCardProps> = ({
     serviceName = "Dịch vụ sửa chữa",
     description = "Chưa có mô tả chi tiết.",
     price = 0,
-    isTechnician = true,
-    isBooked = false,
+    scheduledAt,
+    status = 'pending',
+    isCustomer = false,
     previewMode = false,
     onAccept,
     onReject
 }) => {
-    const [showPicker, setShowPicker] = useState(false);
-    const [dateTime, setDateTime] = useState<Date | null>(new Date());
-    const [locked, setLocked] = useState(isBooked || previewMode);
+    const formatPrice = (value: number) =>
+        new Intl.NumberFormat('vi-VN').format(value);
 
-    const formatPrice = (value: number) => {
-        return new Intl.NumberFormat('vi-VN').format(value);
+    const formatSchedule = () => {
+        if (!scheduledAt) return "Chưa có lịch hẹn";
+        const date = new Date(scheduledAt);
+        if (Number.isNaN(date.getTime())) return scheduledAt;
+        const time = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const day = date.toLocaleDateString('vi-VN');
+        return `${time} - ${day}`;
     };
 
-    const formatDisplay = () => {
-        if (!dateTime) return "Chọn lịch";
-        const time = dateTime.toLocaleTimeString('vi-VN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        const date = dateTime.toLocaleDateString('vi-VN');
-        return `${time} - ${date}`;
-    };
-
-    const canEdit = isTechnician && !locked;
+    const normalizedStatus = status.toLowerCase();
+    const isPending = normalizedStatus === 'pending';
+    const isAccepted = normalizedStatus === 'accepted';
+    const isRejected = normalizedStatus === 'rejected';
 
     return (
-        <>
-            <div className={styles.quotationCard}>
-                <div className={styles.quotationHeaderLine} />
-
-                <div className={styles.quotationBody}>
-
-                    {/* HEADER */}
-                    <div className={styles.quotationTop}>
-                        <div>
-                            <p className={styles.labelCaps}>BÁO GIÁ DỊCH VỤ</p>
-                            <h3 className={styles.serviceTitle}>{serviceName}</h3>
-                        </div>
-                        <div>🛠️</div>
+        <div className={styles.quotationCard}>
+            <div className={styles.quotationHeaderLine} />
+            <div className={styles.quotationBody}>
+                <div className={styles.quotationTop}>
+                    <div>
+                        <p className={styles.labelCaps}>BÁO GIÁ DỊCH VỤ</p>
+                        <h3 className={styles.serviceTitle}>{serviceName}</h3>
                     </div>
+                    <div>🛠️</div>
+                </div>
 
-                    {/* DESCRIPTION */}
-                    <div className={styles.descriptionSection}>
-                        <p className={styles.labelCaps}>MÔ TẢ TÌNH TRẠNG</p>
-                        <p className={styles.descriptionText}>{description}</p>
-                    </div>
+                <div className={styles.descriptionSection}>
+                    <p className={styles.labelCaps}>MÔ TẢ TÌNH TRẠNG</p>
+                    <p className={styles.descriptionText}>{description}</p>
+                </div>
 
-                    {/* SCHEDULE */}
-                    <div
-                        className={`${styles.scheduleBox} ${!canEdit ? styles.disabled : ''
-                            }`}
-                        onClick={() => {
-                            if (canEdit) setShowPicker(true);
-                        }}
-                    >
-                        <div className={styles.scheduleIcon}></div>
-
-                        <div className={styles.scheduleContent}>
-                            <p className={styles.scheduleLabel}>
-                                Lịch hẹn dự kiến
-                            </p>
-                            <p className={styles.scheduleValue}>
-                                {formatDisplay()}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* FOOTER */}
-                    <div className={styles.quotationFooter}>
-                        <div>
-                            <p className={styles.labelCaps}>CHI PHÍ DỰ KIẾN</p>
-                            <div>
-                                <p className={styles.priceDisplay}>
-                                    <span className={styles.currency}>{formatPrice(price)} VNĐ</span>
-                                    <span className={styles.note}> * Đã bao gồm vật tư</span>
-                                </p>
-                            </div>
-
-                        </div>
-
-                        {!previewMode && (
-                            <div className={styles.actionGroup}>
-                                <button
-                                    className={styles.btnSecondary}
-                                    onClick={onReject}
-                                    disabled={locked}
-                                >
-                                    Từ chối
-                                </button>
-
-                                <button
-                                    className={styles.btnPrimary}
-                                    onClick={() => {
-                                        setLocked(true); // LOCK
-                                        onAccept?.();
-                                    }}
-                                    disabled={locked}
-                                >
-                                    Đồng ý & Đặt đơn
-                                </button>
-                            </div>
-                        )}
+                <div className={`${styles.scheduleBox} ${styles.disabled}`}>
+                    <div className={styles.scheduleContent}>
+                        <p className={styles.scheduleLabel}>Lịch hẹn dự kiến</p>
+                        <p className={styles.scheduleValue}>{formatSchedule()}</p>
                     </div>
                 </div>
-            </div>
 
-            {/* 🔥 POPUP OVERLAY */}
-            {showPicker && (
-                <div
-                    className={styles.overlay}
-                    onClick={() => setShowPicker(false)}
-                >
-                    <div
-                        className={styles.popup}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <DatePicker
-                            selected={dateTime}
-                            onChange={(date: Date | null) => setDateTime(date)}
-                            showTimeSelect
-                            timeFormat="HH:mm"
-                            timeIntervals={30}
-                            dateFormat="dd/MM/yyyy HH:mm"
-                            inline
-                            minDate={new Date()} // không chọn ngày quá khứ
-                        />
+                <div className={styles.quotationFooter}>
+                    <div>
+                        <p className={styles.labelCaps}>CHI PHÍ DỰ KIẾN</p>
+                        <p className={styles.priceDisplay}>
+                            <span className={styles.currency}>{formatPrice(price)} VNĐ</span>
+                            <span className={styles.note}> * Đã bao gồm vật tư</span>
+                        </p>
+                    </div>
 
-                        <div className={styles.popupActions}>
-                            <button onClick={() => setShowPicker(false)}>
-                                Huỷ
+                    {previewMode && null}
+
+                    {!previewMode && isCustomer && isPending && (
+                        <div className={styles.actionGroup}>
+                            <button
+                                type="button"
+                                className={styles.btnSecondary}
+                                onClick={onReject}
+                            >
+                                Từ chối
                             </button>
                             <button
+                                type="button"
                                 className={styles.btnPrimary}
-                                onClick={() => setShowPicker(false)}
+                                onClick={onAccept}
                             >
-                                Xác nhận
+                                Đồng ý & Đặt đơn
                             </button>
                         </div>
-                    </div>
+                    )}
+
+                    {!previewMode && isAccepted && (
+                        <p className={styles.chatStatusRejected}>Đã chấp nhận — đơn hàng đã được tạo</p>
+                    )}
+
+                    {!previewMode && isRejected && (
+                        <p className={styles.chatStatusRejected}>Báo giá đã bị từ chối</p>
+                    )}
+
+                    {!previewMode && !isCustomer && isPending && (
+                        <p className={styles.chatStatusRejected}>Đang chờ khách xác nhận</p>
+                    )}
                 </div>
-            )}
-        </>
+            </div>
+        </div>
     );
 };

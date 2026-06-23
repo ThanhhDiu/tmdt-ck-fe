@@ -1,7 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
 import { FaPencil, FaPlus, FaTrash, FaImage } from 'react-icons/fa6';
+import {
+  createCategory,
+  deleteCategory,
+  getCategories,
+  updateCategory,
+  updateCategoryStatus,
+  type Category as CategoryItem,
+} from '../services/categoryService';
 import './AdminCategoriesPage.css';
 
 type Category = {
@@ -13,19 +21,70 @@ type Category = {
   iconUrl?: string | null;
 };
 
-const initialCategories: Category[] = [
-  { id: 'svc-1', title: 'Máy lạnh', short: 'Vệ sinh, bơm gas, sửa chữa board mạch', priority: 'high', status: 'active', iconUrl: null },
-  { id: 'svc-2', title: 'Máy giặt', short: 'Xử lý board mạch, không ra nước, rung lắc', priority: 'normal', status: 'active', iconUrl: null },
-  { id: 'svc-3', title: 'Tủ lạnh', short: 'Sửa block, nạp gas, hàn ống đồng', priority: 'normal', status: 'inactive', iconUrl: null },
-];
+const mapApiCategory = (category: CategoryItem): Category => ({
+  id: category.id,
+  title: category.title,
+  short: category.description,
+  priority: (category.priority?.toLowerCase() as Category['priority']) || 'normal',
+  status: (category.status?.toLowerCase() as Category['status']) || 'active',
+  iconUrl: category.iconUrl ?? null,
+});
 
 const AdminCategoriesPage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
 
-  const openNew = () => { setEditing(null); setIsModalOpen(true); };
-  const openEdit = (cat: Category) => { setEditing(cat); setIsModalOpen(true); };
+  const openNew = () => {
+    setEditing(null);
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (cat: Category) => {
+    setEditing(cat);
+    setIsModalOpen(true);
+  };
+
+  const openDeleteConfirm = (cat: Category) => {
+    setDeleteTarget(cat);
+  };
+
+  const closeDeleteConfirm = () => {
+    setDeleteTarget(null);
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const items = await getCategories();
+        if (!active) return;
+        setCategories(items.map(mapApiCategory));
+      } catch (loadError: any) {
+        if (!active) return;
+        setError(loadError?.message || 'Không thể tải danh mục dịch vụ');
+        setCategories([]);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // modal controlled fields
   const [mTitle, setMTitle] = useState('');
@@ -34,6 +93,7 @@ const AdminCategoriesPage: React.FC = () => {
   const [mStatus, setMStatus] = useState<Category['status']>('active');
   
   const [mIconUrl, setMIconUrl] = useState<string | null>(null);
+  const [mIconFile, setMIconFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // when opening modal populate fields
@@ -45,14 +105,17 @@ const AdminCategoriesPage: React.FC = () => {
       setMStatus(editing.status ?? 'active');
       
       setMIconUrl(editing.iconUrl ?? null);
+      setMIconFile(null);
     } else if (isModalOpen && !editing) {
       setMTitle(''); setMShort(''); setMPriority('normal'); setMStatus('active');
       setMIconUrl(null);
+      setMIconFile(null);
     }
   }, [isModalOpen, editing]);
 
   const handleIconFile = (file?: File) => {
     if (!file) return;
+    setMIconFile(file);
     const reader = new FileReader();
     reader.onload = () => {
       setMIconUrl(String(reader.result));
@@ -60,22 +123,72 @@ const AdminCategoriesPage: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
-    const id = editing?.id ?? `svc-${Date.now()}`;
-    const payload: Category = { id, title: mTitle || 'Không tên', short: mShort || '', priority: mPriority, status: mStatus, iconUrl: mIconUrl ?? null };
+  const submitCategory = async () => {
+    try {
+      setSaving(true);
+      setError(null);
 
-    setCategories((cur) => {
-      const i = cur.findIndex(c => c.id === payload.id);
-      if (i >= 0) {
-        const next = [...cur]; next[i] = payload; return next;
-      }
-      return [payload, ...cur];
-    });
-    setIsModalOpen(false);
+      const payload = {
+        title: mTitle.trim(),
+        description: mShort.trim(),
+        priority: mPriority || 'normal',
+        status: mStatus || 'active',
+        icon: mIconFile,
+      };
+
+      const saved = editing
+        ? await updateCategory(editing.id, payload)
+        : await createCategory(payload);
+
+      const mapped = mapApiCategory(saved);
+
+      setCategories((cur) => {
+        const index = cur.findIndex((item) => item.id === mapped.id);
+        if (index >= 0) {
+          const next = [...cur];
+          next[index] = mapped;
+          return next;
+        }
+        return [mapped, ...cur];
+      });
+
+      setIsModalOpen(false);
+    } catch (saveError: any) {
+      setError(saveError?.message || 'Lưu danh mục thất bại');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const remove = (id: string) => {
-    setCategories((cur) => cur.filter(c => c.id !== id));
+  const submitDeleteCategory = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      setDeletingId(deleteTarget.id);
+      setError(null);
+      await deleteCategory(deleteTarget.id);
+      setCategories((cur) => cur.filter((c) => c.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (deleteError: any) {
+      setError(deleteError?.message || 'Xóa danh mục thất bại');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const toggleStatus = async (category: Category) => {
+    try {
+      setSaving(true);
+      setError(null);
+      const nextStatus = category.status === 'active' ? 'inactive' : 'active';
+      const updated = await updateCategoryStatus(category.id, nextStatus);
+      const mapped = mapApiCategory(updated);
+      setCategories((cur) => cur.map((item) => (item.id === mapped.id ? mapped : item)));
+    } catch (statusError: any) {
+      setError(statusError?.message || 'Cập nhật trạng thái thất bại');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -93,6 +206,18 @@ const AdminCategoriesPage: React.FC = () => {
             <button className="acp-btn-primary" onClick={openNew}><FaPlus /> Thêm dịch vụ</button>
           </div>
         </div>
+
+        {error && (
+          <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: '#fee2e2', color: '#991b1b' }}>
+            {error}
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: '#e0f2fe', color: '#075985' }}>
+            Đang tải danh mục dịch vụ...
+          </div>
+        )}
 
         <section className="acp-grid">
           {categories.map(cat => (
@@ -120,12 +245,23 @@ const AdminCategoriesPage: React.FC = () => {
                   <small>Ưu tiên: {cat.priority === 'high' ? 'Cao' : cat.priority === 'normal' ? 'Bình thường' : 'Thấp'}</small>
                 </div>
                 <div className="acp-card-actions">
-                  <button onClick={() => openEdit(cat)} aria-label="Sửa"><FaPencil /></button>
-                  <button onClick={() => remove(cat.id)} aria-label="Xóa"><FaTrash /></button>
+                  <button type="button" onClick={() => openEdit(cat)} aria-label="Sửa"><FaPencil /></button>
+                  <button type="button" onClick={() => toggleStatus(cat)} aria-label="Đổi trạng thái" disabled={saving}>
+                    {cat.status === 'active' ? 'Ẩn' : 'Hiện'}
+                  </button>
+                  <button type="button" onClick={() => openDeleteConfirm(cat)} aria-label="Xóa" disabled={deletingId === cat.id}>
+                    <FaTrash />
+                  </button>
                 </div>
               </div>
             </article>
           ))}
+
+          {!loading && !error && categories.length === 0 && (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '32px 16px', color: '#64748b' }}>
+              Chưa có danh mục dịch vụ nào.
+            </div>
+          )}
         </section>
 
               {isModalOpen && (
@@ -186,8 +322,31 @@ const AdminCategoriesPage: React.FC = () => {
                   <button className="acp-btn-ghost" onClick={() => setIsModalOpen(false)}>Hủy bỏ</button>
                 </div>
                 <div>
-                  <button className="acp-btn-primary" onClick={() => save()}>{editing ? 'Lưu thay đổi' : 'Lưu thay đổi'}</button>
+                  <button className="acp-btn-primary" onClick={() => submitCategory()} disabled={saving}>
+                    {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  </button>
                 </div>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {deleteTarget && (
+          <div className="acp-confirm-overlay" role="presentation" onClick={closeDeleteConfirm}>
+            <aside className="acp-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-category-title" onClick={(event) => event.stopPropagation()}>
+              <h2 id="delete-category-title">Xác nhận xóa dịch vụ</h2>
+              <p>
+                Bạn có chắc chắn muốn xóa dịch vụ <strong>{deleteTarget.title}</strong> không?
+                Hành động này sẽ ẩn danh mục khỏi hệ thống.
+              </p>
+
+              <div className="acp-confirm-actions">
+                <button type="button" className="acp-btn-ghost" onClick={closeDeleteConfirm}>
+                  Hủy bỏ
+                </button>
+                <button type="button" className="acp-btn-danger" onClick={submitDeleteCategory} disabled={deletingId === deleteTarget.id}>
+                  {deletingId === deleteTarget.id ? 'Đang xóa...' : 'Xác nhận xóa'}
+                </button>
               </div>
             </aside>
           </div>

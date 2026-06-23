@@ -9,6 +9,7 @@ const pageMap: Record<string, string> = {
   'home': '/',
   'provider': '/provider',
   'services': '/services',
+  'rewards': '/rewards',
   'provider-profile': '/provider-profile',
   'provider-dashboard': '/technician/dashboard',
   'customer-settings': '/customer/account-settings',
@@ -22,13 +23,13 @@ export const ServicesPage: React.FC = () => {
     navigate(`/provider?service=${encodeURIComponent(service.name)}`);
   };
 
-  const onNavigate = (page: string, data?: any) => {
+  const onNavigate = (page: string, data?: unknown) => {
     const path = pageMap[page] || '/';
     navigate(path, { state: data });
   };
 
   return (
-    <div style={{ backgroundColor: '#f4f3ec', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ backgroundColor: 'var(--bg-page)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header onNavigate={onNavigate} />
 
       <main style={{ flexGrow: 1, padding: '40px 0' }}>

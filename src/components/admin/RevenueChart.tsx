@@ -1,33 +1,14 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import './RevenueChart.css';
+import type { RevenueChartDataPoint } from '../../services/adminDashboardService.ts';
 
 interface RevenueChartProps {
-  timeRange: '7days' | '30days';
+  chartData: RevenueChartDataPoint[];
+  isLoading?: boolean;
 }
 
-export const RevenueChart: React.FC<RevenueChartProps> = ({ timeRange }) => {
-  const chartData = useMemo(() => {
-    if (timeRange === '7days') {
-      return [
-        { day: 'Thứ 2', value: 45, max: 100 },
-        { day: 'Thứ 3', value: 55, max: 100 },
-        { day: 'Thứ 4', value: 65, max: 100 },
-        { day: 'Thứ 5', value: 50, max: 100 },
-        { day: 'Thứ 6', value: 75, max: 100 },
-        { day: 'Thứ 7', value: 90, max: 100 },
-        { day: 'CN', value: 70, max: 100 },
-      ];
-    } else {
-      return [
-        { day: '1-5', value: 30, max: 100 },
-        { day: '6-10', value: 45, max: 100 },
-        { day: '11-15', value: 60, max: 100 },
-        { day: '16-20', value: 55, max: 100 },
-        { day: '21-25', value: 75, max: 100 },
-        { day: '26-31', value: 80, max: 100 },
-      ];
-    }
-  }, [timeRange]);
+export const RevenueChart: React.FC<RevenueChartProps> = ({ chartData, isLoading = false }) => {
+  const data = chartData.length > 0 ? chartData : [{ day: '--', value: 0, max: 100 }];
 
   return (
     <div className="rc-chart-container">
@@ -65,10 +46,10 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ timeRange }) => {
             {/* Line path */}
             <polyline
               className="rc-line"
-              points={chartData
+              points={data
                 .map(
                   (d, i) =>
-                    `${((i / (chartData.length - 1)) * 100).toFixed(2)},${(100 - d.value).toFixed(2)}`
+                    `${((i / (data.length - 1 || 1)) * 100).toFixed(2)},${(100 - d.value).toFixed(2)}`
                 )
                 .join(' ')}
               fill="none"
@@ -77,20 +58,20 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ timeRange }) => {
             {/* Area fill path */}
             <polygon
               className="rc-area"
-              points={`0,100 ${chartData
+              points={`0,100 ${data
                 .map(
                   (d, i) =>
-                    `${((i / (chartData.length - 1)) * 100).toFixed(2)},${(100 - d.value).toFixed(2)}`
+                    `${((i / (data.length - 1 || 1)) * 100).toFixed(2)},${(100 - d.value).toFixed(2)}`
                 )
                 .join(' ')} ${100},100`}
               fill="url(#areaGradient)"
             />
 
             {/* Data points */}
-            {chartData.map((d, i) => (
+            {data.map((d, i) => (
               <circle
                 key={`point-${i}`}
-                cx={`${((i / (chartData.length - 1)) * 100).toFixed(2)}%`}
+                cx={`${((i / (data.length - 1 || 1)) * 100).toFixed(2)}%`}
                 cy={`${(100 - d.value).toFixed(2)}%`}
                 r="4"
                 className="rc-point"
@@ -99,7 +80,7 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ timeRange }) => {
           </svg>
 
           <div className="rc-x-axis">
-            {chartData.map((d, i) => (
+            {data.map((d, i) => (
               <div key={`label-${i}`} className="rc-x-label">
                 {d.day}
               </div>
@@ -107,6 +88,10 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ timeRange }) => {
           </div>
         </div>
       </div>
+
+      {!isLoading && chartData.length === 0 && (
+        <div className="rc-no-data">Chưa có dữ liệu doanh thu cho bộ lọc đã chọn.</div>
+      )}
 
       <div className="rc-chart-legend">
         <div className="rc-legend-item rc-legend-current">

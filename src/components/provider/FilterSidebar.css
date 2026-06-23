@@ -23,7 +23,7 @@
 .filter-title {
   font-size: 16px;
   font-weight: 700;
-  color: #000C33;
+  color: var(--primary);
   margin-bottom: 16px;
 }
 
@@ -68,12 +68,12 @@
 }
 
 .filter-checkbox:hover input ~ .checkmark {
-  border-color: #000C33;
+  border-color: var(--primary);
 }
 
 .filter-checkbox input:checked ~ .checkmark {
-  background-color: #000C33;
-  border-color: #000C33;
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
 
 .checkmark:after {
@@ -109,7 +109,7 @@
 
 .filter-text {
   font-size: 14px;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .filter-rating {
@@ -128,7 +128,7 @@
 
 .rating-text {
   font-size: 14px;
-  color: #475569;
+  color: var(--text-secondary);
   margin-left: 6px;
 }
 
@@ -141,7 +141,7 @@
 .filter-text-bold {
   font-size: 15px;
   font-weight: 600;
-  color: #000C33;
+  color: var(--primary);
 }
 
 /* Toggle Switch */
@@ -181,7 +181,7 @@
 }
 
 input:checked + .slider {
-  background-color: #000C33;
+  background-color: var(--primary);
 }
 
 input:checked + .slider:before {

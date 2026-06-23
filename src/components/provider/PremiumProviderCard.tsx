@@ -25,7 +25,7 @@ export const PremiumProviderCard: React.FC<{ provider: PremiumProviderProps; onN
           </div>
           <h3 className="ppc-name">{provider.name}</h3>
           <p className="ppc-desc">{provider.description}</p>
-          <button className="ppc-btn" onClick={() => onNavigate?.('provider-profile', provider)}>Xem hồ sơ đặc biệt</button>
+          <button className="ppc-btn" onClick={() => onNavigate?.('provider-profile', { id: provider.id, name: provider.name, avatar: provider.avatar })}>Xem hồ sơ đặc biệt</button>
         </div>
       </div>
     </div>

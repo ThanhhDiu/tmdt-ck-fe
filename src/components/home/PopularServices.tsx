@@ -8,7 +8,7 @@ import {
   BroomIcon, 
   WrenchIcon, 
   BugIcon, 
-  LeafIcon, 
+  MicrowaveIcon, 
   CarIcon 
 } from '../common/Icons';
 
@@ -26,7 +26,7 @@ export const services: ServiceItem[] = [
   { id: '4', name: 'Dọn dẹp', description: 'Theo giờ / Định kỳ', icon: <BroomIcon /> },
   { id: '5', name: 'Điện nước', description: 'Sửa chữa 24/7', icon: <WrenchIcon /> },
   { id: '6', name: 'Côn trùng', description: 'Phun / Diệt triệt để', icon: <BugIcon /> },
-  { id: '7', name: 'Làm đẹp', description: 'Spa tại nhà', icon: <LeafIcon /> },
+  { id: '7', name: 'Lò vi sóng', description: 'Sửa chữa & Bảo trì', icon: <MicrowaveIcon /> },
   { id: '8', name: 'Xe hơi', description: 'Rửa & Chăm sóc', icon: <CarIcon /> },
 ];
 

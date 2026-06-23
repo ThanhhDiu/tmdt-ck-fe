@@ -1,9 +1,7 @@
 .avd-layout {
-  display: block;
+  display: flex;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 24%),
-    linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%);
+  background-color: var(--bg-page);
 }
 
 .avd-main {
@@ -50,7 +48,7 @@
   margin: 0;
   font-size: 32px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--primary);
 }
 
 .avd-status {
@@ -225,7 +223,7 @@
 }
 
 .avd-empty-page button {
-  background: #0f1f53;
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -253,10 +251,6 @@
 }
 
 @media (max-width: 900px) {
-  .avd-layout {
-    margin-left: 72px;
-  }
-
   .avd-main {
     width: calc(100% - var(--admin-sidebar-collapsed-width));
     max-width: calc(100% - var(--admin-sidebar-collapsed-width));

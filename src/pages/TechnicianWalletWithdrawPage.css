@@ -50,7 +50,7 @@
 
 .withdraw-card,
 .withdraw-summary {
-  background: #f5f1e8;
+  background: var(--bg-page);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 22px;
@@ -111,7 +111,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 2px solid #c8c7c9;
+  border: 2px solid var(--border-dark);
   justify-self: end;
 }
 
@@ -221,7 +221,7 @@
 }
 
 .withdraw-summary {
-  background: #1f2d65;
+  background: var(--primary);
   color: var(--white);
 }
 
@@ -350,7 +350,7 @@
   border-radius: 12px;
   border: 1px solid var(--border);
   padding: 0 14px;
-  background: #fff;
+  background: var(--white);
   color: var(--blueberry-skin);
   font: inherit;
   box-sizing: border-box;

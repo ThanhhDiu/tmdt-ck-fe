@@ -90,6 +90,11 @@
   color: #1a1e3b;
 }
 
+.sdc-no-data {
+  font-size: 13px;
+  color: #64748b;
+}
+
 @media (max-width: 768px) {
   .sdc-container {
     gap: 16px;

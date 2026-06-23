@@ -1,27 +1,42 @@
 :root {
-  /* --- BẢNG MÀU BLUEBERRY --- */
-  --blueberry-skin: #2f3a55;   /* Màu chính (Primary) - Nút, Header */
-  --berry-bloom: #5c6b8a;      /* Màu phụ (Secondary) - TechnicianSidebar, Icons */
-  --stem-grey: #6e6f73;        /* Màu xám (Grey) - Chữ phụ, Border */
-  --yogurt-tint: #a29f76;      /* Màu nhấn (Accent) - Tag trạng thái, Background nhẹ */
-  --plate-white: #f5f6f3;      /* Màu nền (Background) - Nền trang chính */
+  /* --- BẢNG MÀU HỆ THỐNG --- */
+  --blueberry-skin: var(--primary);
+  /* Màu chính (Primary) - Nút, Header */
+  --berry-bloom: var(--accent);
+  /* Màu phụ (Secondary) - Icon nhấn */
+  --stem-grey: var(--text-secondary);
+  /* Màu xám (Grey) - Chữ phụ, Border */
+  --yogurt-tint: var(--bg-muted);
+  /* Màu nền nhạt */
+  --plate-white: var(--white);
+  /* Màu nền (Background) - Nền trang chính */
 
   /* --- MÀU HỆ THỐNG (SYSTEM COLORS) --- */
-  --text-main: #1a1a1a;        /* Chữ chính */
-  --text-sub: var(--stem-grey);/* Chữ phụ */
-  --border: #dcdcdc;           /* Đường kẻ */
-  --white: #ffffff;            /* Màu trắng tinh */
+  --text-main: #1a1a1a;
+  /* Chữ chính */
+  --text-sub: var(--stem-grey);
+  /* Chữ phụ */
+  --border: #dcdcdc;
+  /* Đường kẻ */
+  --white: #ffffff;
+  /* Màu trắng tinh */
 
   /* --- TYPOGRAPHY (FONT & SIZE) --- */
   --font-family: 'Inter', 'Be Vietnam Pro', -apple-system, sans-serif;
 
   /* Cỡ chữ theo tỉ lệ (Typography Scale) */
-  --fs-xs: 12px;     /* Small tags, caption */
-  --fs-sm: 14px;     /* Text bình thường, label */
-  --fs-base: 16px;   /* Body text chính */
-  --fs-md: 18px;     /* Sub-heading, Card title */
-  --fs-lg: 24px;     /* Title trang */
-  --fs-xl: 32px;     /* Dashboard stats, Banner */
+  --fs-xs: 12px;
+  /* Small tags, caption */
+  --fs-sm: 14px;
+  /* Text bình thường, label */
+  --fs-base: 16px;
+  /* Body text chính */
+  --fs-md: 18px;
+  /* Sub-heading, Card title */
+  --fs-lg: 24px;
+  /* Title trang */
+  --fs-xl: 32px;
+  /* Dashboard stats, Banner */
 
   --fw-normal: 400;
   --fw-medium: 500;
@@ -30,17 +45,19 @@
 
   /* ===== GlowUp Design System Tokens (Moved from index.css) ===== */
   /* --- Primary Colors --- */
-  --primary: #1a1e3b;
-  --primary-light: #2a315e;
-  --primary-hover: #2a315e;
+  --primary: #68A877;
+  --primary-light: #8fca97;
+  --primary-hover: #45834D;
 
-  /* --- Accent / Gold (Overrides default) --- */
-  --accent: #e2af74;
-  --accent-hover: #d19f64;
-  --accent-bg: rgba(226, 175, 116, 0.15);
-  --accent-border: rgba(226, 175, 116, 0.3);
+  /* --- Accent / Orange --- */
+  --accent: #465A28;
+  --accent-hover: #8BA368;
+  /*--accent-bg: rgba(229, 115, 58, 0.15);*/
+  --accent-bg: #b5d5b9;
 
-  /* --- Royal Blue --- */
+  --accent-border: rgba(229, 115, 58, 0.3);
+
+  /* --- Royal Blue (Fallback) --- */
   --blue: #3b82f6;
   --blue-dark: #2563eb;
   --blue-darker: #1d4ed8;
@@ -48,22 +65,22 @@
   --blue-shadow: rgba(59, 130, 246, 0.35);
 
   /* --- Text Colors --- */
-  --text-primary: #1a1e3b;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --text-primary: #243353;
+  --text-secondary: #717B8C;
+  --text-muted: #717B8C;
+  --text-light: #caecce;
   --text-white: #ffffff;
 
   /* --- Background Colors --- */
-  --bg-page: #f0f2f5;
-  --bg-subtle: #f8fafc;
-  --bg-muted: #f1f5f9;
+  --bg-page: #F7F8FB;
+  --bg-subtle: #F7F8FB;
+  --bg-muted: #edf0f5;
   --bg-overlay: rgba(0, 0, 0, 0.5);
   --bg-overlay-dark: rgba(0, 0, 0, 0.85);
 
   /* --- Border Colors --- */
   --border-light: #f1f5f9;
-  --border-default: #e2e8f0;
+  --border-default: #E2E8F0;
   --border-dark: #cbd5e1;
 
   /* --- Status Colors --- */
@@ -96,10 +113,10 @@
   --radius-pill: 100px;
 
   /* --- Sidebar / Dashboard --- */
-  --sidebar-bg: #1a1e3b;
-  --sidebar-text: #94a3b8;
-  --sidebar-active-bg: linear-gradient(135deg, #3b82f6, #2563eb);
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-bg: var(--primary);
+  --sidebar-text: var(--text-light);
+  --sidebar-active-bg: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.1);
 
   /* --- Glass Effect --- */
   --glass-bg: rgba(255, 255, 255, 0.08);
@@ -114,7 +131,7 @@
   :root {
     --text-primary: #f3f4f6;
     --text-secondary: #d1d5db;
-    --text-muted: #9ca3af;
+    --text-muted: #5C6B89;
     --text-light: #6b7280;
     --bg-page: #16171d;
     --bg-subtle: #1f2028;
@@ -130,13 +147,15 @@
 body {
   font-family: var(--font-family);
   font-size: var(--fs-base);
-  color: var(--text-main);
-  background-color: var(--plate-white);
+  color: var(--text-primary);
+  background-color: var(--white);
   line-height: 1.5;
   margin: 0;
 }
 
-html { overflow-y: scroll; }
+html {
+  overflow-y: scroll;
+}
 
 .counter {
   font-size: 16px;
@@ -182,8 +201,7 @@ html { overflow-y: scroll; }
     z-index: 1;
     top: 34px;
     height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg) scale(1.4);
   }
 
   .vite {
@@ -191,8 +209,7 @@ html { overflow-y: scroll; }
     top: 107px;
     height: 26px;
     width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg) scale(0.8);
   }
 }
 
@@ -215,9 +232,10 @@ html { overflow-y: scroll; }
   border-top: 1px solid var(--border);
   text-align: left;
 
-  & > div {
+  &>div {
     flex: 1 1 0;
     padding: 32px;
+
     @media (max-width: 1024px) {
       padding: 24px 20px;
     }

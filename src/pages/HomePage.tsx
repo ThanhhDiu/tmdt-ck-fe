@@ -6,11 +6,13 @@ import { PopularServices } from '../components/home/PopularServices';
 import { TopExperts } from '../components/home/TopExperts';
 import { PremiumBanner } from '../components/home/PremiumBanner';
 import { Footer } from '../components/layout/Footer';
+import { buildProviderProfilePath } from '../utils/providerNavigation';
 
 const pageMap: Record<string, string> = {
   'home': '/',
   'provider': '/provider',
   'services': '/services',
+  'rewards': '/rewards',
   'provider-profile': '/provider-profile',
   'provider-dashboard': '/provider-dashboard',
   'customer-settings': '/customer/account-settings',
@@ -19,7 +21,19 @@ const pageMap: Record<string, string> = {
 
 export const HomePage: React.FC = () => {
   const nav = useNavigate();
-  const onNavigate = (page: string, data?: any) => {
+  const onNavigate = (page: string, data?: Record<string, unknown>) => {
+    const technicianId =
+      typeof data?.id === 'string'
+        ? data.id
+        : typeof data?.technicianId === 'string'
+          ? data.technicianId
+          : null;
+
+    if (page === 'provider-profile' && technicianId) {
+      nav(buildProviderProfilePath(technicianId), { state: { ...data, id: technicianId } });
+      return;
+    }
+
     const path = pageMap[page] || '/';
     nav(path, { state: data });
   };

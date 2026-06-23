@@ -1,5 +1,6 @@
 import React from 'react';
 import './Footer.css';
+import { FacebookIcon, InstagramIcon } from '../common/Icons';
 
 export const Footer: React.FC = () => {
   return (
@@ -20,9 +21,13 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="footer-social">
-            {/* Simple circles as placeholders for social icons */}
-            <div className="social-icon"></div>
-            <div className="social-icon"></div>
+            {/* Social icons */}
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
+              <FacebookIcon size={20} />
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
+              <InstagramIcon size={20} />
+            </a>
           </div>
         </div>
 

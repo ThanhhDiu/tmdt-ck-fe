@@ -3,6 +3,8 @@ import { Footer } from './Footer';
 import Header from './Header';
 import { SettingsFrame } from './SettingsFrame';
 import { CustomerSettingsSidebar } from '../settings/customer/CustomerSettingsSidebar';
+import { logoutUser } from '../../services/auth';
+import { useUserProfile } from '../../contexts/UserProfileContext';
 import '../settings/SettingsUI.css';
 import { useCustomerNavigate } from './useCustomerNavigate';
 import './layout.css';
@@ -22,9 +24,12 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
   searchPlaceholder = 'Tìm kiếm dịch vụ...',
 }) => {
   const onNavigate = useCustomerNavigate();
+  const { clearProfile } = useUserProfile();
 
   const handleSidebarSelect = (id: string) => {
     if (id === 'logout') {
+      logoutUser();
+      clearProfile();
       onNavigate('login');
       return;
     }

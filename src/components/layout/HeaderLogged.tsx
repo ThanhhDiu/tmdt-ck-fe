@@ -1,5 +1,6 @@
 import React from 'react';
 import './HeaderLogged.css';
+import { authController } from '../../controllers/auth/authController';
 import { SearchIcon, BellIcon, FileTextIcon } from '../common/Icons';
 
 interface HeaderNavItem {
@@ -30,7 +31,10 @@ export const HeaderLogged: React.FC<HeaderLoggedProps> = ({
   searchPlaceholder = 'Tìm kiếm thợ...',
 }) => {
   const goToProfile = () => onNavigate && onNavigate(profilePage);
-  const goToLogout = () => onNavigate && onNavigate('login');
+  const goToLogout = () => {
+    authController.handleLogout();
+    onNavigate && onNavigate('login');
+  };
 
   return (
     <header className="header-logged">

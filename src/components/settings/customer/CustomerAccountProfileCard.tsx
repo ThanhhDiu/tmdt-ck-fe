@@ -4,12 +4,15 @@ import { SettingsCard } from '../cards/SettingsCard';
 import { SettingsTextField } from '../fields/SettingsTextField';
 import { SettingsTextareaField } from '../fields/SettingsTextareaField';
 import type { CustomerAccountFormData } from './types';
+import { useRef } from 'react';
 
 interface CustomerAccountProfileCardProps {
   form: CustomerAccountFormData;
   onFieldChange: (field: keyof CustomerAccountFormData, value: string) => void;
   onSave?: () => void;
-  onUploadAvatar?: () => void;
+  onUploadAvatar?: (file: File) => void;
+  avatarUrl?: string | null;
+  isSaving?: boolean;
 }
 
 export function CustomerAccountProfileCard({
@@ -17,7 +20,26 @@ export function CustomerAccountProfileCard({
   onFieldChange,
   onSave,
   onUploadAvatar,
+  avatarUrl,
+  isSaving
 }: CustomerAccountProfileCardProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onUploadAvatar) {
+      onUploadAvatar(file);
+    }
+    // Reset input value to allow selecting the same file again
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
   return (
     <SettingsCard
       title="Cài đặt tài khoản"
@@ -29,10 +51,19 @@ export function CustomerAccountProfileCard({
         </>
       }
       actions={
-        <button type="button" className="settings-ghost-button" onClick={onUploadAvatar}>
-          <UploadCloud size={18} />
-          Tải ảnh lên
-        </button>
+        <>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept="image/*" 
+            style={{ display: 'none' }} 
+          />
+          <button type="button" className="settings-ghost-button" onClick={handleUploadClick}>
+            <UploadCloud size={18} />
+            Tải ảnh lên
+          </button>
+        </>
       }
     >
       <div className="settings-grid settings-grid--two">
@@ -61,9 +92,15 @@ export function CustomerAccountProfileCard({
       </div>
 
       <SettingsActionBar>
-        <button type="button" className="settings-primary-button" onClick={onSave}>
+        <button 
+          type="button" 
+          className="settings-primary-button" 
+          onClick={onSave}
+          disabled={isSaving}
+          style={{ opacity: isSaving ? 0.7 : 1, cursor: isSaving ? 'not-allowed' : 'pointer' }}
+        >
           <Save size={18} />
-          Lưu thay đổi
+          {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
         </button>
       </SettingsActionBar>
     </SettingsCard>

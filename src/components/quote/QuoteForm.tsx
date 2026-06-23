@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Quote } from "../../types/Quote";
 import "./css/quote-form.css";
 
@@ -6,18 +6,42 @@ interface Props {
     quote: Quote;
     setQuote: (q: Quote) => void;
     onClose: () => void;
+    onSubmit?: (quote: Quote) => Promise<void>;
 }
 
-const QuoteForm = ({ quote, setQuote, onClose }: Props) => {
+const QuoteForm = ({ quote, setQuote, onClose, onSubmit }: Props) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     const handleChange = (field: keyof Quote, value: string | number) => {
         setQuote({ ...quote, [field]: value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const buildScheduledAt = (): string => {
+        if (!quote.date || !quote.time) {
+            return new Date().toISOString();
+        }
+        return new Date(`${quote.date}T${quote.time}`).toISOString();
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Sending quote:", quote);
-        // Add submission logic here
-        onClose();
+        setError(null);
+        setIsSubmitting(true);
+        try {
+            const payload: Quote = {
+                ...quote,
+                scheduledAt: buildScheduledAt(),
+            };
+            if (onSubmit) {
+                await onSubmit(payload);
+            }
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Không thể gửi báo giá');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -58,12 +82,14 @@ const QuoteForm = ({ quote, setQuote, onClose }: Props) => {
                         className="input input-small"
                         value={quote.date}
                         onChange={(e) => handleChange("date", e.target.value)}
+                        required
                     />
                     <input
                         type="time"
                         className="input input-small"
                         value={quote.time}
                         onChange={(e) => handleChange("time", e.target.value)}
+                        required
                     />
                 </div>
             </div>
@@ -93,23 +119,18 @@ const QuoteForm = ({ quote, setQuote, onClose }: Props) => {
                 />
             </div>
 
+            {error && <p style={{ color: '#dc2626', fontSize: 13 }}>{error}</p>}
+
             <div className="quote-actions">
-                <button 
-                    type="button" 
-                    className="btn btn-cancel" 
-                    onClick={onClose}
-                >
+                <button type="button" className="btn btn-cancel" onClick={onClose} disabled={isSubmitting}>
                     Hủy
                 </button>
-                <button 
-                    type="submit" 
-                    className="btn btn-submit"
-                >
-                    Gửi báo giá
+                <button type="submit" className="btn btn-submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Đang gửi...' : 'Gửi báo giá'}
                 </button>
             </div>
         </form>
     );
 };
 
-export default QuoteForm;
+export default QuoteForm;

@@ -28,6 +28,7 @@ import CustomerSecurityPage from '../pages/CustomerSecurityPage';
 import { VerifyEmailPage } from '../pages/VerifyEmailPage'
 import { PendingEmailVerificationPage } from '../pages/PendingEmailVerificationPage'
 import { ChatPage } from '../pages/ChatPage'
+import PaymentResultPage from '../pages/PaymentResultPage'
 export default function AppRouter() {
   return (
     <Routes>
@@ -84,6 +85,7 @@ export default function AppRouter() {
           </CustomerLayout>
         } />
         <Route path="chat" element={<ChatPage />} />
+        <Route path="payment-result" element={<PaymentResultPage />} />
       </Route>
 
       <Route path="/admin">

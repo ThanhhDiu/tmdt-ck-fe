@@ -1,5 +1,6 @@
-import React, { createContext, useEffect, useMemo, useReducer } from 'react';
+import React, { createContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { orderController } from '../controllers/order/orderController';
+import { orderRealtimeClient } from '../services/order/orderRealtimeClient';
 import type { UserRole } from '../types/UserRole.ts';
 import type { OrderResponse } from '../types/order/order';
 import {
@@ -83,6 +84,35 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
         void refreshOrders();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.page, state.pageSize]);
+
+    // --- Realtime: refresh on order status changes (e.g. -> awaiting payment / completed)
+    const refreshRef = useRef(refreshOrders);
+    refreshRef.current = refreshOrders;
+    const selectRef = useRef(selectOrder);
+    selectRef.current = selectOrder;
+    const selectedIdRef = useRef(state.selectedOrderId);
+    selectedIdRef.current = state.selectedOrderId;
+
+    const orderIds = useMemo(() => state.orders.map((order) => order.id), [state.orders]);
+
+    useEffect(() => {
+        orderRealtimeClient.activate();
+        const off = orderRealtimeClient.onEvent((payload) => {
+            void refreshRef.current();
+            if (selectedIdRef.current && payload.orderId === selectedIdRef.current) {
+                void selectRef.current(payload.orderId);
+            }
+        });
+
+        return () => {
+            off();
+            orderRealtimeClient.deactivate();
+        };
+    }, []);
+
+    useEffect(() => {
+        orderRealtimeClient.syncSubscriptions(orderIds);
+    }, [orderIds]);
 
     const visibleOrders = useMemo(
         () => getMergedVisibleOrders(state.orders, state.optimisticOrdersById, state.activeTab, state.search),

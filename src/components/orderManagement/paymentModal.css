@@ -1,0 +1,198 @@
+.payment-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 24, 40, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 16px;
+}
+
+.payment-modal {
+    width: 460px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 24px 48px rgba(16, 24, 40, 0.24);
+    overflow: hidden;
+}
+
+.payment-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.payment-modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #1d2939;
+}
+
+.payment-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    color: #98a2b3;
+    cursor: pointer;
+}
+
+.payment-modal-body {
+    padding: 22px;
+}
+
+.payment-amount-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 18px;
+    background: #fbf3e8;
+    border-radius: 12px;
+    margin-bottom: 22px;
+}
+
+.payment-amount-label {
+    font-size: 13px;
+    color: #98681f;
+}
+
+.payment-amount-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #d98a3d;
+}
+
+.payment-order-code {
+    font-size: 12px;
+    color: #b48a55;
+}
+
+.payment-methods-title {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #344054;
+}
+
+.payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.payment-method-option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid #e4e7ec;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.payment-method-option:hover {
+    border-color: #e2af74;
+}
+
+.payment-method-option.selected {
+    border-color: #d98a3d;
+    background: #fffaf3;
+}
+
+.payment-method-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #fbf3e8;
+    color: #d98a3d;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.payment-method-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.payment-method-text strong {
+    font-size: 15px;
+    color: #1d2939;
+}
+
+.payment-method-text small {
+    font-size: 12px;
+    color: #667085;
+}
+
+.payment-method-radio {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #d0d5dd;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.payment-method-option.selected .payment-method-radio {
+    border-color: #d98a3d;
+}
+
+.payment-method-option.selected .payment-method-radio::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: #d98a3d;
+}
+
+.payment-modal-error {
+    margin-top: 16px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fef3f2;
+    color: #b42318;
+    font-size: 13px;
+}
+
+.payment-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 22px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.payment-confirm-btn {
+    background: #d98a3d;
+    color: #fff;
+}
+
+.payment-modal-footer button {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.payment-modal-footer button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.payment-modal-footer .btn-outline {
+    border: 1px solid #d0d5dd;
+    background: #fff;
+    color: #344054;
+}

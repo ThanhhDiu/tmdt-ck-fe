@@ -1,0 +1,116 @@
+.pay-list-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: #fff;
+    border: 1px solid #f0e6d8;
+    border-left: 4px solid #e2af74;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.pay-list-card:hover {
+    box-shadow: 0 8px 20px rgba(226, 175, 116, 0.18);
+    transform: translateY(-1px);
+}
+
+.pay-icon-box {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: #fbf3e8;
+    color: #d98a3d;
+    font-size: 20px;
+}
+
+.pay-card-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.pay-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.pay-status-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: #b9762a;
+    background: #fbf0df;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+
+.pay-id {
+    font-size: 12px;
+    color: #98a2b3;
+}
+
+.pay-person-name {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d2939;
+}
+
+.pay-service-name {
+    margin: 2px 0 6px;
+    font-size: 13px;
+    color: #667085;
+}
+
+.pay-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #98a2b3;
+}
+
+.pay-card-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.pay-price-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.pay-price-block .price-label {
+    font-size: 11px;
+    color: #98a2b3;
+    letter-spacing: 0.4px;
+}
+
+.pay-price-block .price-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #d98a3d;
+}
+
+.pay-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.pay-waiting-note {
+    font-size: 12px;
+    color: #98a2b3;
+    font-style: italic;
+}

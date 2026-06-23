@@ -10,6 +10,8 @@ import { ScheduledCard } from '../components/orderManagement/ScheduledCard.tsx';
 import { InProgressCard } from '../components/orderManagement/InProgressCard.tsx';
 import { CompletedCard } from '../components/orderManagement/CompletedCard.tsx';
 import { CancelledCard } from '../components/orderManagement/CancelledCard.tsx';
+import PaymentCard from '../components/orderManagement/PaymentCard.tsx';
+import PaymentModal from '../components/orderManagement/PaymentModal.tsx';
 import OrderDetailPanel from '../components/orderManagement/OrderDetailPanel.tsx';
 import { OrderManagementProvider } from '../contexts/OrderManagementContext';
 import { useOrderManagement } from '../hooks/useOrderManagement';
@@ -39,11 +41,23 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
         setCancelReason,
         confirmCancel,
         clearSelectedOrder,
+        refreshOrders,
     } = useOrderManagement();
+
+    const [payingOrder, setPayingOrder] = React.useState<{ id: string; amount: number } | null>(null);
 
     const handleTabChange = (tab: string) => {
         setActiveTab(tab as typeof state.activeTab);
         clearSelectedOrder();
+    };
+
+    const handlePay = (order: OrderResponse) => {
+        setPayingOrder({ id: order.id, amount: order.finalPrice ?? order.estimatedPrice ?? 0 });
+    };
+
+    const handlePaid = async () => {
+        setPayingOrder(null);
+        await refreshOrders();
     };
 
     const renderOrderCard = (order: OrderResponse) => {
@@ -76,6 +90,17 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
             case 'in-progress':
                 return <InProgressCard key={order.id} data={mapOrderToInProgressOrder(order)} onViewDetail={selectOrder} />;
 
+            case 'awaiting-payment':
+                return (
+                    <PaymentCard
+                        key={order.id}
+                        data={mapOrderToCompletedOrder(order)}
+                        role={role}
+                        onViewDetail={selectOrder}
+                        onPay={() => handlePay(order)}
+                    />
+                );
+
             case 'completed':
                 return <CompletedCard key={order.id} data={mapOrderToCompletedOrder(order)} role={role} onViewDetail={selectOrder} />;
 
@@ -103,6 +128,7 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                                     role={role}
                                     onBack={clearSelectedOrder}
                                     onCancel={openCancelModal}
+                                    onPay={handlePay}
                                 />
                             )
                         ) : (
@@ -162,6 +188,15 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                                     </button>
                                 </div>
                             </>
+                        )}
+
+                        {payingOrder && (
+                            <PaymentModal
+                                orderId={payingOrder.id}
+                                amount={payingOrder.amount}
+                                onClose={() => setPayingOrder(null)}
+                                onPaid={handlePaid}
+                            />
                         )}
 
                         {state.showCancelModal && (

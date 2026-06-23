@@ -6,7 +6,7 @@ import type { ScheduledOrder } from '../types/ScheduledOrder.ts';
 import type { UserRole } from '../types/UserRole.ts';
 import type { OrderResponse } from '../types/order/order';
 
-export type OrderTabId = 'new' | 'scheduled' | 'in-progress' | 'completed' | 'warranty' | 'cancelled';
+export type OrderTabId = 'new' | 'scheduled' | 'in-progress' | 'awaiting-payment' | 'completed' | 'warranty' | 'cancelled';
 
 export interface OrderManagementState {
     activeTab: OrderTabId;
@@ -283,6 +283,7 @@ export const getOrderTab = (order: OrderResponse): OrderTabId => {
     const normalized = normalizeStatus(order.status);
 
     if (normalized.includes('cancel')) return 'cancelled';
+    if (normalized.includes('await') || normalized.includes('payment')) return 'awaiting-payment';
     if (normalized.includes('complete')) return 'completed';
     if (normalized.includes('progress') || normalized.includes('working') || normalized.includes('repair')) return 'in-progress';
     if (normalized.includes('schedule') || normalized.includes('confirm') || normalized.includes('assigned')) return 'scheduled';
@@ -301,6 +302,8 @@ export const getOrderStatusLabel = (order: OrderResponse): string => {
             return 'Đã xác nhận';
         case 'in-progress':
             return 'Đang xử lý';
+        case 'awaiting-payment':
+            return 'Chờ thanh toán';
         case 'completed':
             return 'Hoàn thành';
         case 'cancelled':

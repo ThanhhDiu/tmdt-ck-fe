@@ -11,6 +11,7 @@ export const OrderTabs: React.FC<OrderTabsProps> = ({ activeTab, onChangeTab }) 
         { id: 'new', label: 'Yêu cầu mới' },
         { id: 'scheduled', label: 'Sắp hẹn' },
         { id: 'in-progress', label: 'Đang sửa' },
+        { id: 'awaiting-payment', label: 'Chờ thanh toán' },
         { id: 'completed', label: 'Hoàn thành' },
         { id: 'warranty', label: 'Bảo hành' },
         { id: 'cancelled', label: 'Đã hủy' }

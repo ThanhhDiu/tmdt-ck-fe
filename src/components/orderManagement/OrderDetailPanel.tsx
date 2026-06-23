@@ -9,6 +9,7 @@ interface OrderDetailPanelProps {
     role: UserRole;
     onBack: () => void;
     onCancel: (id: string) => void;
+    onPay?: (order: OrderResponse) => void;
 }
 
 const formatDateTime = (value?: string): string => {
@@ -28,9 +29,12 @@ const formatDateTime = (value?: string): string => {
 
 const formatMoney = (value?: number): string => (value ?? 0).toLocaleString('vi-VN');
 
-export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role, onBack, onCancel }) => {
+export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role, onBack, onCancel, onPay }) => {
     const partner = role === 'technician' ? order.customer : order.technician;
-    const canCancel = !['completed', 'cancelled'].includes(order.status.toLowerCase());
+    const normalizedStatus = order.status.toLowerCase();
+    const canCancel = !['completed', 'cancelled'].includes(normalizedStatus);
+    const awaitingPayment = normalizedStatus.includes('await') || normalizedStatus.includes('payment');
+    const canPay = role === 'customer' && awaitingPayment && Boolean(onPay);
     const hasImages = (order.images?.length ?? 0) > 0;
 
     return (
@@ -119,6 +123,11 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                 <button className="btn-large-secondary" onClick={onBack}>
                     Quay lại
                 </button>
+                {canPay && (
+                    <button className="btn-large-primary" onClick={() => onPay?.(order)}>
+                        Thanh toán {formatMoney(order.finalPrice ?? order.estimatedPrice)} VND
+                    </button>
+                )}
                 {canCancel && (
                     <button className="btn-large-primary danger-button" onClick={() => onCancel(order.id)}>
                         Hủy đơn

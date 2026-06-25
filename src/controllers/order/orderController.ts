@@ -65,4 +65,13 @@ export const orderController = {
             return resolveErrorMessage(error, 'Không thể xử lý thanh toán');
         }
     },
+
+    confirmCashPayment: async (id: string): Promise<OrderResult<OrderResponse>> => {
+        try {
+            const data = await orderService.confirmCashPayment(id);
+            return { success: true, data };
+        } catch (error) {
+            return resolveErrorMessage(error, 'Không thể xác nhận đã nhận tiền');
+        }
+    },
 };

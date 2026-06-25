@@ -15,6 +15,7 @@ import PaymentModal from '../components/orderManagement/PaymentModal.tsx';
 import OrderDetailPanel from '../components/orderManagement/OrderDetailPanel.tsx';
 import { OrderManagementProvider } from '../contexts/OrderManagementContext';
 import { useOrderManagement } from '../hooks/useOrderManagement';
+import { orderController } from '../controllers/order/orderController';
 import {
     getOrderTab,
     mapOrderToCancelledOrder,
@@ -60,6 +61,15 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
         await refreshOrders();
     };
 
+    const handleConfirmCash = async (orderId: string) => {
+        const result = await orderController.confirmCashPayment(orderId);
+        if (!result.success) {
+            window.alert(result.message);
+            return;
+        }
+        await refreshOrders();
+    };
+
     const renderOrderCard = (order: OrderResponse) => {
         const tab = getOrderTab(order);
 
@@ -96,8 +106,10 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                         key={order.id}
                         data={mapOrderToCompletedOrder(order)}
                         role={role}
+                        paymentMethod={order.paymentMethod}
                         onViewDetail={selectOrder}
                         onPay={() => handlePay(order)}
+                        onConfirmCash={() => handleConfirmCash(order.id)}
                     />
                 );
 
@@ -129,6 +141,7 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                                     onBack={clearSelectedOrder}
                                     onCancel={openCancelModal}
                                     onPay={handlePay}
+                                    onConfirmCash={handleConfirmCash}
                                 />
                             )
                         ) : (

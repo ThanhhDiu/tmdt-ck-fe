@@ -29,6 +29,9 @@ import { VerifyEmailPage } from '../pages/VerifyEmailPage'
 import { PendingEmailVerificationPage } from '../pages/PendingEmailVerificationPage'
 import { ChatPage } from '../pages/ChatPage'
 import PaymentResultPage from '../pages/PaymentResultPage'
+import TechnicianWalletPage from '../pages/TechnicianWalletPage'
+import TechnicianWalletTopUpPage from '../pages/TechnicianWalletTopUpPage'
+import TechnicianWalletWithdrawPage from '../pages/TechnicianWalletWithdrawPage'
 export default function AppRouter() {
   return (
     <Routes>
@@ -62,6 +65,30 @@ export default function AppRouter() {
           element={
             <TechnicianLayout activeItem="dashboard">
               <ProviderDashboard />
+            </TechnicianLayout>
+          }
+        />
+        <Route
+          path="wallet"
+          element={
+            <TechnicianLayout activeItem="wallet">
+              <TechnicianWalletPage />
+            </TechnicianLayout>
+          }
+        />
+        <Route
+          path="wallet/topup"
+          element={
+            <TechnicianLayout activeItem="wallet">
+              <TechnicianWalletTopUpPage />
+            </TechnicianLayout>
+          }
+        />
+        <Route
+          path="wallet/withdraw"
+          element={
+            <TechnicianLayout activeItem="wallet">
+              <TechnicianWalletWithdrawPage />
             </TechnicianLayout>
           }
         />

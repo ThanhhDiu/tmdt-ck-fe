@@ -242,12 +242,41 @@ export const getTechnicianWalletSummary = async (): Promise<TechnicianWalletSumm
   }
 }
 
-export const getTechnicianWalletHistory = async (): Promise<TechnicianWalletHistoryItem[]> => {
-  const payload = await requestApi<PagedResponseApi<WalletTransactionApi>>('/wallet/transactions?type=all&page=1&limit=50', {
+export type WalletTransactionType = 'all' | 'topup' | 'withdraw' | 'commission' | 'payment'
+
+export interface WalletHistoryQuery {
+  type?: WalletTransactionType
+  page?: number
+  limit?: number
+}
+
+export interface WalletHistoryPage {
+  items: TechnicianWalletHistoryItem[]
+  page: number
+  limit: number
+  totalElements: number
+  totalPages: number
+}
+
+const readPageMeta = <T>(payload: PagedResponseApi<T>, fallbackPage: number, fallbackLimit: number) => {
+  const page = payload.page ?? payload.pagination?.page ?? fallbackPage
+  const limit = payload.limit ?? payload.size ?? payload.pagination?.limit ?? fallbackLimit
+  const totalElements = payload.totalElements ?? payload.pagination?.total ?? readPagedItems(payload).length
+  const totalPages = payload.totalPages ?? payload.pagination?.totalPages ?? Math.max(1, Math.ceil(totalElements / Math.max(1, limit)))
+  return { page, limit, totalElements, totalPages }
+}
+
+export const getTechnicianWalletHistory = async (query: WalletHistoryQuery = {}): Promise<WalletHistoryPage> => {
+  const type = query.type ?? 'all'
+  const page = query.page ?? 1
+  const limit = query.limit ?? 10
+
+  const search = new URLSearchParams({ type, page: String(page), limit: String(limit) })
+  const payload = await requestApi<PagedResponseApi<WalletTransactionApi>>(`/wallet/transactions?${search.toString()}`, {
     method: 'GET',
   })
 
-  return readPagedItems(payload).map((item) => ({
+  const items = readPagedItems(payload).map((item) => ({
     id: item.id || '',
     type: item.type || '',
     title: item.title || 'Giao dịch ví',
@@ -261,6 +290,8 @@ export const getTechnicianWalletHistory = async (): Promise<TechnicianWalletHist
     createdAt: item.createdAt || '',
     walletGroup: mapWalletGroup(item),
   }))
+
+  return { items, ...readPageMeta(payload, page, limit) }
 }
 
 export const getTechnicianBankAccounts = async (): Promise<TechnicianBankAccount[]> => {

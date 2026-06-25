@@ -312,6 +312,18 @@
     display: flex;
     gap: 12px;
     margin-top: 20px;
+    align-items: center;
+}
+
+.detail-cash-note {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: #fbf0df;
+    color: #b9762a;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .mt-16 {

@@ -6,7 +6,6 @@ import {
   FaArrowTrendUp,
   FaClockRotateLeft,
   FaCreditCard,
-  FaMoneyBillTransfer,
   FaShieldHalved,
   FaWallet,
 } from 'react-icons/fa6'
@@ -15,14 +14,33 @@ import {
   getTechnicianWalletSummary,
   type TechnicianWalletHistoryItem,
   type TechnicianWalletSummary,
+  type WalletTransactionType,
 } from '../services/walletService'
 import './TechnicianWalletPage.css'
 
 type WalletType = 'all' | 'credit' | 'personal'
+type TimeRange = 'all' | '7d' | '30d'
+
+const TYPE_FILTERS: Array<{ id: WalletTransactionType; label: string }> = [
+  { id: 'all', label: 'Tất cả loại' },
+  { id: 'topup', label: 'Nạp tiền' },
+  { id: 'withdraw', label: 'Rút tiền' },
+  { id: 'commission', label: 'Hoa hồng / Đơn hàng' },
+  { id: 'payment', label: 'Thanh toán' },
+]
+
+const TIME_FILTERS: Array<{ id: TimeRange; label: string }> = [
+  { id: 'all', label: 'Mọi thời gian' },
+  { id: '7d', label: '7 ngày qua' },
+  { id: '30d', label: '30 ngày qua' },
+]
+
+const PAGE_SIZE = 10
 
 type HistoryRow = {
   id: string
   date: string
+  createdAt: string
   title: string
   category: string
   amount: number
@@ -56,6 +74,7 @@ const formatDateLabel = (value: string) => {
 const toHistoryRow = (item: TechnicianWalletHistoryItem): HistoryRow => ({
   id: item.id,
   date: formatDateLabel(item.createdAt),
+  createdAt: item.createdAt,
   title: item.title,
   category: item.category || item.type,
   amount: item.amount,
@@ -79,59 +98,79 @@ const defaultSummary: TechnicianWalletSummary = {
 const TechnicianWalletPage: React.FC = () => {
   const navigate = useNavigate()
   const [activeFilter, setActiveFilter] = useState<WalletType>('all')
+  const [typeFilter, setTypeFilter] = useState<WalletTransactionType>('all')
+  const [timeFilter, setTimeFilter] = useState<TimeRange>('all')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [summary, setSummary] = useState<TechnicianWalletSummary>(defaultSummary)
   const [historyItems, setHistoryItems] = useState<HistoryRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true)
   const [error, setError] = useState('')
 
+  // Wallet summary — loaded once.
   useEffect(() => {
     let mounted = true
 
-    const loadWalletData = async () => {
-      setIsLoading(true)
-      setError('')
-
-      try {
-        const [walletSummary, walletHistory] = await Promise.all([
-          getTechnicianWalletSummary(),
-          getTechnicianWalletHistory(),
-        ])
-
-        if (!mounted) {
-          return
-        }
-
-        setSummary(walletSummary)
-        setHistoryItems(walletHistory.map(toHistoryRow))
-      } catch (loadError) {
-        if (!mounted) {
-          return
-        }
-
-        setError(loadError instanceof Error ? loadError.message : 'Không thể tải dữ liệu ví')
-      } finally {
-        if (mounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    loadWalletData()
+    getTechnicianWalletSummary()
+      .then((walletSummary) => {
+        if (mounted) setSummary(walletSummary)
+      })
+      .catch((loadError) => {
+        if (mounted) setError(loadError instanceof Error ? loadError.message : 'Không thể tải dữ liệu ví')
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false)
+      })
 
     return () => {
       mounted = false
     }
   }, [])
 
-  const totalBalance = summary.creditBalance + summary.personalBalance
+  // Transaction history — reloads on type filter / page change (server-side).
+  useEffect(() => {
+    let mounted = true
+    setIsHistoryLoading(true)
+
+    getTechnicianWalletHistory({ type: typeFilter, page, limit: PAGE_SIZE })
+      .then((result) => {
+        if (!mounted) return
+        setHistoryItems(result.items.map(toHistoryRow))
+        setTotalPages(Math.max(1, result.totalPages))
+      })
+      .catch((loadError) => {
+        if (mounted) setError(loadError instanceof Error ? loadError.message : 'Không thể tải lịch sử giao dịch')
+      })
+      .finally(() => {
+        if (mounted) setIsHistoryLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [typeFilter, page])
+
+  const handleTypeFilter = (next: WalletTransactionType) => {
+    setTypeFilter(next)
+    setPage(1)
+  }
+
+  const withinTimeRange = (value: string): boolean => {
+    if (timeFilter === 'all' || !value) return true
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return true
+    const days = timeFilter === '7d' ? 7 : 30
+    const threshold = Date.now() - days * 24 * 60 * 60 * 1000
+    return date.getTime() >= threshold
+  }
 
   const visibleHistory = useMemo(() => {
-    if (activeFilter === 'all') {
-      return historyItems
-    }
-
-    return historyItems.filter((item) => item.walletType === activeFilter)
-  }, [activeFilter, historyItems])
+    return historyItems
+      .filter((item) => activeFilter === 'all' || item.walletType === activeFilter)
+      .filter((item) => withinTimeRange(item.createdAt))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFilter, timeFilter, historyItems])
 
   const walletFilterCounts: Record<WalletType, number> = useMemo(() => ({
     all: historyItems.length,
@@ -186,6 +225,25 @@ const TechnicianWalletPage: React.FC = () => {
             </div>
           </article>
         </div>
+      </section>
+
+      <section className="wallet-metrics-grid">
+        <article className="wallet-metric-card">
+          <span className="wallet-metric-label"><FaWallet /> Số dư khả dụng</span>
+          <strong>{isLoading ? '...' : formatMoney(summary.personalBalance)}</strong>
+        </article>
+        <article className="wallet-metric-card">
+          <span className="wallet-metric-label"><FaClockRotateLeft /> Đang chờ xử lý</span>
+          <strong>{isLoading ? '...' : formatMoney(summary.pendingBalance)}</strong>
+        </article>
+        <article className="wallet-metric-card">
+          <span className="wallet-metric-label"><FaArrowTrendUp /> Tổng thu nhập</span>
+          <strong>{isLoading ? '...' : formatMoney(summary.totalEarned)}</strong>
+        </article>
+        <article className="wallet-metric-card">
+          <span className="wallet-metric-label"><FaArrowTrendDown /> Tổng đã rút</span>
+          <strong>{isLoading ? '...' : formatMoney(summary.totalWithdrawn)}</strong>
+        </article>
       </section>
 
       <section className="wallet-dual-grid">
@@ -280,6 +338,30 @@ const TechnicianWalletPage: React.FC = () => {
           </div>
         </div>
 
+        <div className="wallet-history-filters">
+          <div className="wallet-type-filters">
+            {TYPE_FILTERS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={typeFilter === item.id ? 'active' : ''}
+                onClick={() => handleTypeFilter(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <label className="wallet-time-filter">
+            Thời gian:
+            <select value={timeFilter} onChange={(event) => setTimeFilter(event.target.value as TimeRange)}>
+              {TIME_FILTERS.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div className="wallet-history-table">
           <div className="wallet-history-head">
             <span>Ngày giao dịch</span>
@@ -311,7 +393,17 @@ const TechnicianWalletPage: React.FC = () => {
             </div>
           ))}
 
-          {!isLoading && visibleHistory.length === 0 ? (
+          {isHistoryLoading ? (
+            <div className="wallet-history-row">
+              <span>--</span>
+              <span><strong>Đang tải lịch sử giao dịch...</strong><small /><em /></span>
+              <span>--</span>
+              <span>--</span>
+              <span>--</span>
+            </div>
+          ) : null}
+
+          {!isHistoryLoading && visibleHistory.length === 0 ? (
             <div className="wallet-history-row">
               <span>--</span>
               <span>
@@ -328,11 +420,24 @@ const TechnicianWalletPage: React.FC = () => {
 
         <div className="wallet-history-footer">
           <span>
-            {isLoading ? 'Đang tải lịch sử giao dịch...' : `Đã tải ${historyItems.length} giao dịch gần nhất`}
+            {isHistoryLoading ? 'Đang tải lịch sử giao dịch...' : `Trang ${page} / ${totalPages}`}
           </span>
-          <button type="button" onClick={() => window.location.reload()}>
-            Tải lại <FaArrowRight />
-          </button>
+          <div className="wallet-pagination">
+            <button
+              type="button"
+              disabled={page <= 1 || isHistoryLoading}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
+              Trang trước
+            </button>
+            <button
+              type="button"
+              disabled={page >= totalPages || isHistoryLoading}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Trang sau <FaArrowRight />
+            </button>
+          </div>
         </div>
       </section>
     </div>

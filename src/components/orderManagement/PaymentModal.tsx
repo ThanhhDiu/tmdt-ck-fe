@@ -92,7 +92,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ orderId, amount, onC
                             ? 'Đang xử lý...'
                             : method === 'vnpay'
                                 ? 'Tiếp tục với VNPay'
-                                : 'Xác nhận thanh toán'}
+                                : 'Chọn tiền mặt'}
                     </button>
                 </div>
             </div>

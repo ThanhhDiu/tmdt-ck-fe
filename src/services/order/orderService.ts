@@ -138,4 +138,10 @@ export const orderService = {
         const response = await apiClient.post(`/api/orders/${orderId}/payment`, { method });
         return unwrap<OrderPaymentResult>(response.data);
     },
+
+    confirmCashPayment: async (orderId: string): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/payment/cash-confirm`);
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
 };

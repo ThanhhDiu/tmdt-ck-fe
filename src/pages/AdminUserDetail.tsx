@@ -5,6 +5,7 @@ import { AdminHeader } from '../components/admin/AdminHeader';
 import { UserProfileCard } from '../components/admin/UserProfileCard';
 import { UserPersonalInfo } from '../components/admin/UserPersonalInfo';
 import { InternalNotes, SystemStatus, SupportWidget } from '../components/admin/AdminSidebarWidgets';
+import { UserOrderHistory } from '../components/admin/UserOrderHistory';
 import './AdminUserDetail.css';
 
 const AdminUserDetail: React.FC = () => {
@@ -54,10 +55,7 @@ const AdminUserDetail: React.FC = () => {
           <div className="aud-content-left">
             {activeTab === 'personal' && <UserPersonalInfo user={user} isPending={isPendingTab} />}
             {activeTab === 'orders' && (
-              <div className="aud-placeholder-card">
-                <h3>Lịch sử đơn hàng</h3>
-                <p>Danh sách các đơn hàng đã thực hiện sẽ hiển thị tại đây.</p>
-              </div>
+              <UserOrderHistory userId={user?.id} role={user?.role} />
             )}
             {activeTab === 'wallet' && (
               <div className="aud-placeholder-card">

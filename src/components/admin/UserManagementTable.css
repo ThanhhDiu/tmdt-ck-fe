@@ -338,3 +338,34 @@
     width: 100%;
   }
 }
+
+/* Task-42: lock/unlock confirmation modal */
+.umt-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 24, 40, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
+}
+.umt-modal {
+  width: 420px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 24px 48px rgba(16, 24, 40, 0.24);
+}
+.umt-modal h3 { margin: 0 0 12px; font-size: 18px; }
+.umt-modal h3.lock { color: #dc2626; }
+.umt-modal h3.unlock { color: #027a48; }
+.umt-modal p { margin: 0 0 20px; font-size: 14px; color: #475467; line-height: 1.6; }
+.umt-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.umt-modal-actions button { padding: 10px 16px; border-radius: 9px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.umt-modal-cancel { border: 1px solid #d0d5dd; background: #fff; color: #344054; }
+.umt-modal-confirm { border: none; color: #fff; }
+.umt-modal-confirm.lock { background: #dc2626; }
+.umt-modal-confirm.unlock { background: #027a48; }
+.umt-modal-actions button:disabled { opacity: 0.6; cursor: not-allowed; }

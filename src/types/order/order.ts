@@ -70,6 +70,20 @@ export interface OrderResponse {
     updatedAt?: string;
 }
 
+export type OrderPaymentMethod = 'cash' | 'vnpay';
+
+export interface OrderPaymentResult {
+    orderId: string;
+    status: string;
+    paymentMethod: string;
+    amount: number;
+    /** True when payment is settled immediately (cash). */
+    completed: boolean;
+    /** VNPay checkout URL to redirect to; absent for cash. */
+    checkoutUrl?: string;
+    transactionId?: string;
+}
+
 export interface OrderListQuery {
     page?: number;
     size?: number;

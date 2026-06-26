@@ -9,6 +9,8 @@ interface OrderDetailPanelProps {
     role: UserRole;
     onBack: () => void;
     onCancel: (id: string) => void;
+    onPay?: (order: OrderResponse) => void;
+    onConfirmCash?: (id: string) => void;
 }
 
 const formatDateTime = (value?: string): string => {
@@ -28,9 +30,15 @@ const formatDateTime = (value?: string): string => {
 
 const formatMoney = (value?: number): string => (value ?? 0).toLocaleString('vi-VN');
 
-export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role, onBack, onCancel }) => {
+export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role, onBack, onCancel, onPay, onConfirmCash }) => {
     const partner = role === 'technician' ? order.customer : order.technician;
-    const canCancel = !['completed', 'cancelled'].includes(order.status.toLowerCase());
+    const normalizedStatus = order.status.toLowerCase();
+    const canCancel = !['completed', 'cancelled'].includes(normalizedStatus);
+    const awaitingPayment = normalizedStatus.includes('await') || normalizedStatus.includes('payment');
+    const isCash = (order.paymentMethod || '').toLowerCase() === 'cash';
+    const canPay = role === 'customer' && awaitingPayment && !isCash && Boolean(onPay);
+    const customerCashNote = role === 'customer' && awaitingPayment && isCash;
+    const canConfirmCash = role === 'technician' && awaitingPayment && isCash && Boolean(onConfirmCash);
     const hasImages = (order.images?.length ?? 0) > 0;
 
     return (
@@ -119,6 +127,19 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                 <button className="btn-large-secondary" onClick={onBack}>
                     Quay lại
                 </button>
+                {canPay && (
+                    <button className="btn-large-primary" onClick={() => onPay?.(order)}>
+                        Thanh toán {formatMoney(order.finalPrice ?? order.estimatedPrice)} VND
+                    </button>
+                )}
+                {customerCashNote && (
+                    <span className="detail-cash-note">Vui lòng thanh toán trực tiếp cho thợ</span>
+                )}
+                {canConfirmCash && (
+                    <button className="btn-large-primary" onClick={() => onConfirmCash?.(order.id)}>
+                        Đã nhận tiền
+                    </button>
+                )}
                 {canCancel && (
                     <button className="btn-large-primary danger-button" onClick={() => onCancel(order.id)}>
                         Hủy đơn

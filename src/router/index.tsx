@@ -28,6 +28,10 @@ import CustomerSecurityPage from '../pages/CustomerSecurityPage';
 import { VerifyEmailPage } from '../pages/VerifyEmailPage'
 import { PendingEmailVerificationPage } from '../pages/PendingEmailVerificationPage'
 import { ChatPage } from '../pages/ChatPage'
+import PaymentResultPage from '../pages/PaymentResultPage'
+import TechnicianWalletPage from '../pages/TechnicianWalletPage'
+import TechnicianWalletTopUpPage from '../pages/TechnicianWalletTopUpPage'
+import TechnicianWalletWithdrawPage from '../pages/TechnicianWalletWithdrawPage'
 export default function AppRouter() {
   return (
     <Routes>
@@ -64,6 +68,30 @@ export default function AppRouter() {
             </TechnicianLayout>
           }
         />
+        <Route
+          path="wallet"
+          element={
+            <TechnicianLayout activeItem="wallet">
+              <TechnicianWalletPage />
+            </TechnicianLayout>
+          }
+        />
+        <Route
+          path="wallet/topup"
+          element={
+            <TechnicianLayout activeItem="wallet">
+              <TechnicianWalletTopUpPage />
+            </TechnicianLayout>
+          }
+        />
+        <Route
+          path="wallet/withdraw"
+          element={
+            <TechnicianLayout activeItem="wallet">
+              <TechnicianWalletWithdrawPage />
+            </TechnicianLayout>
+          }
+        />
       </Route>
 
       <Route path="/customer">
@@ -84,6 +112,7 @@ export default function AppRouter() {
           </CustomerLayout>
         } />
         <Route path="chat" element={<ChatPage />} />
+        <Route path="payment-result" element={<PaymentResultPage />} />
       </Route>
 
       <Route path="/admin">

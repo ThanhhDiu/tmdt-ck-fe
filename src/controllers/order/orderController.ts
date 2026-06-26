@@ -1,5 +1,11 @@
 import { orderService } from '../../services/order/orderService';
-import type { OrderListQuery, OrderPageResponse, OrderResponse } from '../../types/order/order';
+import type {
+    OrderListQuery,
+    OrderPageResponse,
+    OrderResponse,
+    OrderPaymentMethod,
+    OrderPaymentResult,
+} from '../../types/order/order';
 
 export interface OrderSuccess<T> {
     success: true;
@@ -48,6 +54,24 @@ export const orderController = {
             return { success: true, data };
         } catch (error) {
             return resolveErrorMessage(error, 'Không tải được chi tiết đơn hàng');
+        }
+    },
+
+    selectPaymentMethod: async (id: string, method: OrderPaymentMethod): Promise<OrderResult<OrderPaymentResult>> => {
+        try {
+            const data = await orderService.selectPaymentMethod(id, method);
+            return { success: true, data };
+        } catch (error) {
+            return resolveErrorMessage(error, 'Không thể xử lý thanh toán');
+        }
+    },
+
+    confirmCashPayment: async (id: string): Promise<OrderResult<OrderResponse>> => {
+        try {
+            const data = await orderService.confirmCashPayment(id);
+            return { success: true, data };
+        } catch (error) {
+            return resolveErrorMessage(error, 'Không thể xác nhận đã nhận tiền');
         }
     },
 };

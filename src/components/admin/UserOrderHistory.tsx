@@ -1,0 +1,92 @@
+import React, { useEffect, useState } from 'react';
+import { getAdminOrders, type OrderTableRow } from '../../services/orderService';
+import './UserOrderHistory.css';
+
+interface UserOrderHistoryProps {
+  /** User code or numeric id used to scope the order list. */
+  userId?: string;
+  role?: string;
+}
+
+const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+  NEW: { label: 'Yêu cầu mới', cls: 'new' },
+  ASSIGNED: { label: 'Đã nhận', cls: 'progress' },
+  SCHEDULED: { label: 'Đã hẹn', cls: 'progress' },
+  IN_PROGRESS: { label: 'Đang xử lý', cls: 'progress' },
+  AWAITING_PAYMENT: { label: 'Chờ thanh toán', cls: 'await' },
+  COMPLETED: { label: 'Hoàn thành', cls: 'done' },
+  CANCELLED: { label: 'Đã hủy', cls: 'cancel' },
+};
+
+export const UserOrderHistory: React.FC<UserOrderHistoryProps> = ({ userId, role }) => {
+  const [orders, setOrders] = useState<OrderTableRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!userId) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const filter = role === 'technician' ? { technician: userId } : { customer: userId };
+        const result = await getAdminOrders({ ...filter, page: 1, limit: 100 });
+        if (!active) return;
+        setOrders(result.items);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'Không thể tải lịch sử đơn hàng');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [userId, role]);
+
+  return (
+    <div className="uoh-card">
+      <h3>Lịch sử đơn hàng</h3>
+
+      {loading && <div className="uoh-state">Đang tải lịch sử đơn hàng...</div>}
+      {error && <div className="uoh-state error">{error}</div>}
+      {!loading && !error && orders.length === 0 && (
+        <div className="uoh-state">Người dùng chưa có đơn hàng nào.</div>
+      )}
+
+      {!loading && !error && orders.length > 0 && (
+        <div className="uoh-table">
+          <div className="uoh-row uoh-head">
+            <span>Mã đơn</span>
+            <span>Dịch vụ</span>
+            <span>{role === 'technician' ? 'Khách hàng' : 'Thợ'}</span>
+            <span>Trạng thái</span>
+            <span>Chi phí</span>
+            <span>Ngày tạo</span>
+          </div>
+          {orders.map((o) => {
+            const st = STATUS_LABEL[o.status] ?? { label: o.status, cls: 'new' };
+            return (
+              <div className="uoh-row" key={o.id}>
+                <span className="uoh-code">#{o.code}</span>
+                <span>{o.service}</span>
+                <span>{role === 'technician' ? o.customer : o.technician}</span>
+                <span><b className={`uoh-status ${st.cls}`}>{st.label}</b></span>
+                <span>{o.price}</span>
+                <span>{o.createdAt}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserOrderHistory;

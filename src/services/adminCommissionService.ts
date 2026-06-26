@@ -406,3 +406,42 @@ export const getAdminCommissionTransactions = async (filters: AdminCommissionTra
     totalBalance: parseNumber((payload as PagedResponseApi<CommissionTransactionItemApi> & { totalBalance?: number | string }).totalBalance),
   }
 }
+
+interface WalletAdjustApi {
+  transactionId?: string | null
+  technicianId?: string | null
+  amount?: number | string | null
+  newBalance?: number | string | null
+  reason?: string | null
+  createdAt?: string | null
+}
+
+export interface AdminWalletAdjustResult {
+  transactionId: string
+  technicianId: string
+  amount: number
+  newBalance: number
+}
+
+/**
+ * Admin adjusts a technician's credit-wallet balance directly (Task-42).
+ * `amount` is signed: positive to add money, negative to deduct.
+ */
+export const adjustTechnicianWallet = async (input: {
+  technicianId: string
+  amount: number
+  type: string
+  reason: string
+}): Promise<AdminWalletAdjustResult> => {
+  const data = await requestApi<WalletAdjustApi>('/admin/wallet/adjust', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+
+  return {
+    transactionId: data.transactionId || '',
+    technicianId: data.technicianId || input.technicianId,
+    amount: parseNumber(data.amount),
+    newBalance: parseNumber(data.newBalance),
+  }
+}

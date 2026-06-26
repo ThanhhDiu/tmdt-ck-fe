@@ -652,3 +652,20 @@
     grid-template-columns: 1fr;
   }
 }
+/* Task-42: admin wallet adjust button */
+.afp-adjust-btn {
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.afp-adjust-btn:hover {
+  border-color: #d97706;
+  color: #b45309;
+  background: #fff7e8;
+}

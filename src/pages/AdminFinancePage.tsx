@@ -11,6 +11,7 @@ import {
   type AdminCommissionTransactionType,
   type AdminCommissionWalletItem,
 } from '../services/adminCommissionService';
+import { WalletAdjustModal } from '../components/admin/WalletAdjustModal';
 import './AdminFinancePage.css';
 
 type TxType = AdminCommissionTransactionType;
@@ -34,6 +35,8 @@ const AdminFinancePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [adjustTarget, setAdjustTarget] = useState<AdminCommissionWalletItem | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -110,7 +113,7 @@ const AdminFinancePage: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [techFilter, transactionPage, transactionLimit, txDateFilter, txTypeFilter]);
+  }, [techFilter, transactionPage, transactionLimit, txDateFilter, txTypeFilter, refreshKey]);
 
   const filteredWallets = useMemo(() => {
     if (techFilter === 'all') {
@@ -294,7 +297,15 @@ const AdminFinancePage: React.FC = () => {
                     <strong>{t.lastOrderAtLabel}</strong>
                     <small>{t.locked ? 'Ví đang khóa' : 'Ví đang hoạt động'}</small>
                   </span>
-                  <span><button className="afp-more-btn" type="button">...</button></span>
+                  <span>
+                    <button
+                      className="afp-adjust-btn"
+                      type="button"
+                      onClick={() => setAdjustTarget(t)}
+                    >
+                      Điều chỉnh
+                    </button>
+                  </span>
                 </div>
               ))}
           </div>
@@ -382,6 +393,17 @@ const AdminFinancePage: React.FC = () => {
             </div>
           </footer>
         </section>
+
+        {adjustTarget && (
+          <WalletAdjustModal
+            technician={adjustTarget}
+            onClose={() => setAdjustTarget(null)}
+            onAdjusted={() => {
+              setAdjustTarget(null);
+              setRefreshKey((key) => key + 1);
+            }}
+          />
+        )}
       </main>
     </div>
   );

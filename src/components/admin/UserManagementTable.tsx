@@ -57,6 +57,8 @@ export const UserManagementTable: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [lockTarget, setLockTarget] = useState<User | null>(null);
+  const [lockSubmitting, setLockSubmitting] = useState(false);
   const pageSize = 5;
 
   // ============================================================================
@@ -178,31 +180,29 @@ export const UserManagementTable: React.FC<Props> = ({
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
-  const toggleLockStatus = async (id: string) => {
+  // Locking a customer/technician is a sensitive action, so it goes through a
+  // confirmation modal (Task-42) instead of toggling directly.
+  const confirmLockToggle = async () => {
+    if (!lockTarget) return;
+
+    const newStatus = lockTarget.status === 'locked' ? 'active' : 'locked';
+    setLockSubmitting(true);
     try {
-      const user = users.find((u) => u.id === id);
-      if (!user) return;
-
-      const currentStatus = user.status;
-      const newStatus = currentStatus === 'locked' ? 'active' : 'locked';
-
-      // Call API to update status
-      const userId = parseInt(id, 10);
+      const userId = parseInt(lockTarget.id, 10);
       await updateAdminUserStatus(userId, {
         status: newStatus as any,
-        reason: `Thay đổi trạng thái từ admin`,
+        reason: newStatus === 'locked' ? 'Khóa tài khoản từ admin' : 'Mở khóa tài khoản từ admin',
       });
 
-      // Update local state
       setUsers((prev) =>
-        prev.map((u) => {
-          if (u.id !== id) return u;
-          return { ...u, status: newStatus as any };
-        })
+        prev.map((u) => (u.id === lockTarget.id ? { ...u, status: newStatus as any } : u))
       );
+      setLockTarget(null);
     } catch (err: any) {
       console.error('Error updating user status:', err);
       alert(`Lỗi: ${err.message || 'Cập nhật trạng thái thất bại'}`);
+    } finally {
+      setLockSubmitting(false);
     }
   };
 
@@ -393,7 +393,7 @@ export const UserManagementTable: React.FC<Props> = ({
                           Duyệt
                         </button>
                       :
-                        <button className="umt-btn-secondary" onClick={() => toggleLockStatus(user.id)} type="button">
+                        <button className="umt-btn-secondary" onClick={() => setLockTarget(user)} type="button">
                           {user.status === 'locked' ? 'Mở khóa' : 'Khóa'}
                         </button>
                       }
@@ -446,6 +446,33 @@ export const UserManagementTable: React.FC<Props> = ({
           </button>
         </div>
       </div>
+
+      {lockTarget && (
+        <div className="umt-modal-overlay" onClick={() => !lockSubmitting && setLockTarget(null)}>
+          <div className="umt-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className={lockTarget.status === 'locked' ? 'unlock' : 'lock'}>
+              {lockTarget.status === 'locked' ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+            </h3>
+            <p>
+              Bạn có chắc muốn {lockTarget.status === 'locked' ? 'mở khóa' : 'khóa'} tài khoản{' '}
+              <strong>{lockTarget.name}</strong> ({lockTarget.id})?
+              {lockTarget.status !== 'locked' && ' Người dùng sẽ không thể đăng nhập / hoạt động cho tới khi được mở khóa.'}
+            </p>
+            <div className="umt-modal-actions">
+              <button className="umt-modal-cancel" onClick={() => setLockTarget(null)} disabled={lockSubmitting}>
+                Hủy
+              </button>
+              <button
+                className={`umt-modal-confirm ${lockTarget.status === 'locked' ? 'unlock' : 'lock'}`}
+                onClick={confirmLockToggle}
+                disabled={lockSubmitting}
+              >
+                {lockSubmitting ? 'Đang xử lý...' : lockTarget.status === 'locked' ? 'Mở khóa' : 'Khóa tài khoản'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

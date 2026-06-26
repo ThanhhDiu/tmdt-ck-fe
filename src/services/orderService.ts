@@ -190,6 +190,10 @@ export interface OrderDetailViewModel {
 export interface OrderListFilters {
   status?: OrderStatusUi | 'TẤT CẢ';
   keyword?: string;
+  /** Admin-only: scope to a specific customer (user code or numeric id). */
+  customer?: string;
+  /** Admin-only: scope to a specific technician (user code or numeric id). */
+  technician?: string;
   page?: number;
   limit?: number;
 }
@@ -463,6 +467,14 @@ export const getAdminOrders = async (filters: OrderListFilters = {}): Promise<Or
 
   if (filters.keyword?.trim()) {
     query.set('keyword', filters.keyword.trim());
+  }
+
+  if (filters.customer?.trim()) {
+    query.set('customer', filters.customer.trim());
+  }
+
+  if (filters.technician?.trim()) {
+    query.set('technician', filters.technician.trim());
   }
 
   query.set('page', String(filters.page || 1));

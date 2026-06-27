@@ -161,8 +161,8 @@ export const ProviderList: React.FC<Props> = ({
 
       {!isLoading && !loadError && providers.length === 0 && (
         <div className="pl-empty">
-          <p>Hiện chưa có thợ nào{selectedService ? ` cho dịch vụ "${selectedService}"` : ''}.</p>
-          <p>Hãy thử tìm kiếm dịch vụ khác.</p>
+          <p>Hiện tại chưa có thợ nào sẵn sàng nhận đơn ở khu vực này.</p>
+          <p>Vui lòng thử lại sau hoặc tìm kiếm dịch vụ khác.</p>
         </div>
       )}
 

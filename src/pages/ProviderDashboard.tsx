@@ -1,48 +1,77 @@
-import React from 'react';
-// import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { StatsCards } from '../components/dashboard/StatsCards';
 import { EarningsChart } from '../components/dashboard/EarningsChart';
 import { AvailableTasks } from '../components/dashboard/AvailableTasks';
 import { TodaySchedule } from '../components/dashboard/TodaySchedule';
+import { useUserProfile } from '../contexts/UserProfileContext';
+import { technicianService } from '../services/technician/technicianService';
 import './ProviderDashboard.css';
 
-// const pageMap: Record<string, string> = {
-//   'home': '/',
-//   'find-provider': '/find-provider',
-//   'provider-profile': '/provider-profile',
-//   'provider-dashboard': '/provider-dashboard',
-//   'dashboard': '/provider-dashboard',
-//   'jobs': '/technician/jobs',
-//   'profile': '/technician/profile',
-//   'earnings': '/provider-dashboard',
-//   'wallet': '/technician/wallet',
-//   'services': '/services',
-// };
-
 const ProviderDashboard: React.FC = () => {
-  // const nav = useNavigate();
-  // const onNavigate = (page: string, data?: unknown) => {
-  //   const path = pageMap[page] || '/';
-  //   nav(path, { state: data });
-  // };
+  const { profile } = useUserProfile();
+  const [isAvailable, setIsAvailable] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [fetching, setFetching] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!profile.code) return;
+    const fetchAvailability = async () => {
+      try {
+        setFetching(true);
+        const data = await technicianService.getTechnician(profile.code);
+        setIsAvailable(data.isAvailable ?? true);
+      } catch (error) {
+        console.error('Lỗi khi lấy trạng thái hoạt động của thợ:', error);
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchAvailability();
+  }, [profile.code]);
+
+  const handleToggleAvailability = async () => {
+    if (!profile.code) return;
+    const nextVal = !isAvailable;
+    try {
+      setLoading(true);
+      await technicianService.updateTechnicianAvailability(profile.code, nextVal);
+      setIsAvailable(nextVal);
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Lỗi khi cập nhật trạng thái hoạt động.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const displayName = profile.fullName || 'Minh';
 
   return (
     <div className="pd-layout">
-      {/*<TechnicianSidebar activeItem="dashboard" onNavigate={onNavigate} />*/}
-
       <div className="pd-main">
         {/* Top Header Bar */}
         <div className="pd-top-bar">
           <div className="pd-greeting">
-            <span className="pd-greeting-text">CHÀO BUỔI SÁNG, MINH</span>
+            <span className="pd-greeting-text">CHÀO BUỔI SÁNG, {displayName.toUpperCase()}</span>
             <h1 className="pd-page-title">Overview Dashboard</h1>
           </div>
           <div className="pd-availability">
             <span className="pd-availability-label">AVAILABILITY</span>
-            <span className="pd-availability-status">
-              <span className="status-dot-green"></span>
-              Accepting Jobs
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+              <label className="pd-switch-wrapper">
+                <input 
+                  type="checkbox" 
+                  checked={isAvailable} 
+                  onChange={handleToggleAvailability}
+                  disabled={loading || fetching}
+                />
+                <span className="pd-switch-slider"></span>
+              </label>
+              <span className="pd-availability-status">
+                <span className={isAvailable ? "status-dot-green" : "status-dot-red"}></span>
+                {fetching ? 'Đang tải...' : (loading ? 'Đang cập nhật...' : (isAvailable ? 'Accepting Jobs' : 'Offline'))}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -74,3 +103,4 @@ const ProviderDashboard: React.FC = () => {
 };
 
 export default ProviderDashboard;
+

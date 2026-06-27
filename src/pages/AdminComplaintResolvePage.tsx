@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
-import type { AdminComplaintItem } from '../services/adminComplaintService';
+import { resolveAdminComplaint, type AdminComplaintItem } from '../services/adminComplaintService';
 import { ArrowLeft, Bell, CheckCircle2, CircleAlert, CircleCheckBig, MessageSquare, Phone, ThumbsDown, Wallet } from 'lucide-react';
 import './AdminComplaintResolvePage.css';
 
@@ -266,6 +266,7 @@ export default function AdminComplaintResolvePage() {
   const [warningForm, setWarningForm] = useState<WarningForm>(initialWarningForm);
   const [dismissForm, setDismissForm] = useState<DismissForm>(initialDismissForm);
   const [resolveForm, setResolveForm] = useState<ResolveForm>(initialResolveForm);
+  const [submitting, setSubmitting] = useState(false);
 
   const currentAction = actionMeta[activeAction];
   const isLocked = statusLocked(complaintStatus);
@@ -353,11 +354,13 @@ export default function AdminComplaintResolvePage() {
     return '';
   };
 
-  const handleSubmit = (action: ActionKey) => {
-    if (isLocked) {
-      handleLockedActionAttempt();
+  const handleSubmit = async (action: ActionKey) => {
+    if (isLocked || submitting || !complaint) {
+      if (isLocked) handleLockedActionAttempt();
       return;
     }
+
+    let payload: { status: string; note: string; lockTechnician?: boolean; lockReason?: string } | null = null;
 
     if (action === 'contact-customer') {
       const error = validateContactCustomer();
@@ -365,80 +368,99 @@ export default function AdminComplaintResolvePage() {
         setBanner('error', error);
         return;
       }
-
-      setComplaintStatus('investigating');
-      setBanner('success', 'Đã lưu nhật ký liên hệ khách hàng và chuyển trạng thái sang Đang xử lý.');
-      return;
-    }
-
-    if (action === 'contact-technician') {
+      payload = {
+        status: 'investigating',
+        note: `[Liên hệ Khách hàng - ${contactCustomerForm.method === 'call' ? 'Gọi điện' : 'Nhắn tin'}]: ${contactCustomerForm.content}. Ghi chú: ${contactCustomerForm.note}`
+      };
+    } else if (action === 'contact-technician') {
       const error = validateContactTechnician();
       if (error) {
         setBanner('error', error);
         return;
       }
-
-      setComplaintStatus('investigating');
-      setBanner('success', 'Đã lưu nhật ký liên hệ thợ và chuyển trạng thái sang Đang xử lý.');
-      return;
-    }
-
-    if (action === 'send-notification') {
+      payload = {
+        status: 'investigating',
+        note: `[Liên hệ Thợ - ${contactTechnicianForm.method}]: Yêu cầu: ${contactTechnicianForm.requestContent}, Hạn phản hồi: ${contactTechnicianForm.deadline}. Kết quả: ${contactTechnicianForm.result}. Ghi chú: ${contactTechnicianForm.note}`
+      };
+    } else if (action === 'send-notification') {
       const error = validateNotification();
       if (error) {
         setBanner('error', error);
         return;
       }
-
-      setComplaintStatus('investigating');
-      setBanner('success', 'Đã lưu nhật ký hành động, gửi thông báo và giữ trạng thái Đang xử lý.');
-      return;
-    }
-
-    if (action === 'refund-customer') {
+      payload = {
+        status: 'investigating',
+        note: `[Gửi thông báo - Người nhận: ${notificationForm.receiver}]: Tiêu đề: ${notificationForm.title}, Nội dung: ${notificationForm.message}`
+      };
+    } else if (action === 'refund-customer') {
       const error = validateRefund();
       if (error) {
         setBanner('error', error);
         return;
       }
-
-      setComplaintStatus('investigating');
-      setBanner('success', 'Đã tạo giao dịch hoàn tiền và giữ trạng thái khiếu nại ở Đang xử lý.');
-      return;
-    }
-
-    if (action === 'warn-technician') {
+      payload = {
+        status: 'investigating',
+        note: `[Hoàn tiền Khách hàng]: Số tiền: ${refundForm.amount}, Phương thức: ${refundForm.method}, Lý do: ${refundForm.reason}`
+      };
+    } else if (action === 'warn-technician') {
       const error = validateWarning();
       if (error) {
         setBanner('error', error);
         return;
       }
-
-      setComplaintStatus('investigating');
-      setBanner('success', 'Đã tạo cảnh báo thợ và giữ trạng thái khiếu nại ở Đang xử lý.');
-      return;
-    }
-
-    if (action === 'dismiss-complaint') {
+      const isLock = warningForm.penalty === 'temporarily-suspend-account';
+      payload = {
+        status: 'investigating',
+        note: `[Cảnh báo Thợ - Mức độ: ${warningForm.level}]: Lý do vi phạm: ${warningForm.violationReason}, Hình phạt: ${warningForm.penalty}`,
+        lockTechnician: isLock,
+        lockReason: isLock ? warningForm.violationReason : undefined
+      };
+    } else if (action === 'dismiss-complaint') {
       const error = validateDismiss();
       if (error) {
         setBanner('error', error);
         return;
       }
-
-      setComplaintStatus('investigating');
-      setBanner('success', 'Đã bác bỏ khiếu nại, gửi phản hồi cho khách hàng và giữ trạng thái Đang xử lý.');
-      return;
+      payload = {
+        status: 'dismissed',
+        note: `[Bác bỏ khiếu nại - Lý do: ${dismissForm.reason}]: Giải thích: ${dismissForm.explanation}. Phản hồi khách hàng: ${dismissForm.customerReply}`
+      };
+    } else if (action === 'mark-done') {
+      const error = validateResolve();
+      if (error) {
+        setBanner('error', error);
+        return;
+      }
+      payload = {
+        status: 'resolved',
+        note: `[Hoàn tất khiếu nại]: Kết luận: ${resolveForm.finalResolution}. Các hành động đã thực hiện: ${resolveForm.completedActions.join(', ')}. Phản hồi khách hàng: ${resolveForm.customerReply}`
+      };
     }
 
-    const error = validateResolve();
-    if (error) {
-      setBanner('error', error);
-      return;
-    }
+    if (!payload) return;
 
-    setComplaintStatus('resolved');
-    setBanner('success', 'Đã đánh dấu khiếu nại là đã giải quyết và khóa hồ sơ.');
+    try {
+      setSubmitting(true);
+      setBanner('success', 'Đang cập nhật xử lý khiếu nại...');
+      const response = await resolveAdminComplaint(complaint.id, payload);
+      setComplaintStatus(response.status);
+      setBanner('success', 'Đã cập nhật xử lý khiếu nại lên hệ thống thành công!');
+      
+      if (payload.lockTechnician) {
+        alert('Đã cập nhật xử lý khiếu nại và tạm khóa tài khoản thợ thành công!');
+      } else {
+        alert('Đã cập nhật xử lý khiếu nại thành công!');
+      }
+
+      if (payload.status === 'resolved' || payload.status === 'dismissed') {
+        navigate('/admin/complaints');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setBanner('error', err.message || 'Lỗi khi cập nhật xử lý khiếu nại.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const toggleCompletedAction = (value: string) => {
@@ -534,11 +556,11 @@ export default function AdminComplaintResolvePage() {
             </label>
 
             <div className="crp-footer-actions">
-              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked}>
+              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked || submitting}>
                 Hủy
               </button>
-              <button type="submit" className="crp-primary-btn" disabled={isLocked}>
-                {currentAction.primaryLabel}
+              <button type="submit" className="crp-primary-btn" disabled={isLocked || submitting}>
+                {submitting ? 'Đang xử lý...' : currentAction.primaryLabel}
               </button>
             </div>
           </form>
@@ -638,11 +660,11 @@ export default function AdminComplaintResolvePage() {
             </label>
 
             <div className="crp-footer-actions">
-              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked}>
+              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked || submitting}>
                 Hủy
               </button>
-              <button type="submit" className="crp-primary-btn" disabled={isLocked}>
-                Gửi yêu cầu
+              <button type="submit" className="crp-primary-btn" disabled={isLocked || submitting}>
+                {submitting ? 'Đang gửi...' : 'Gửi yêu cầu'}
               </button>
             </div>
           </form>
@@ -712,11 +734,11 @@ export default function AdminComplaintResolvePage() {
             </label>
 
             <div className="crp-footer-actions">
-              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked}>
+              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked || submitting}>
                 Hủy
               </button>
-              <button type="submit" className="crp-primary-btn" disabled={isLocked}>
-                Gửi thông báo
+              <button type="submit" className="crp-primary-btn" disabled={isLocked || submitting}>
+                {submitting ? 'Đang gửi...' : 'Gửi thông báo'}
               </button>
             </div>
           </form>
@@ -790,11 +812,11 @@ export default function AdminComplaintResolvePage() {
             </div>
 
             <div className="crp-footer-actions">
-              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked}>
+              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked || submitting}>
                 Hủy
               </button>
-              <button type="submit" className="crp-primary-btn" disabled={isLocked}>
-                Xác nhận hoàn tiền
+              <button type="submit" className="crp-primary-btn" disabled={isLocked || submitting}>
+                {submitting ? 'Đang xử lý...' : 'Xác nhận hoàn tiền'}
               </button>
             </div>
           </form>
@@ -871,11 +893,11 @@ export default function AdminComplaintResolvePage() {
             </div>
 
             <div className="crp-footer-actions">
-              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked}>
+              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked || submitting}>
                 Hủy
               </button>
-              <button type="submit" className="crp-primary-btn" disabled={isLocked}>
-                Gửi cảnh báo
+              <button type="submit" className="crp-primary-btn" disabled={isLocked || submitting}>
+                {submitting ? 'Đang gửi...' : 'Gửi cảnh báo'}
               </button>
             </div>
           </form>
@@ -941,11 +963,11 @@ export default function AdminComplaintResolvePage() {
             </label>
 
             <div className="crp-footer-actions">
-              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked}>
+              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked || submitting}>
                 Hủy
               </button>
-              <button type="submit" className="crp-primary-btn" disabled={isLocked}>
-                Bác bỏ khiếu nại
+              <button type="submit" className="crp-primary-btn" disabled={isLocked || submitting}>
+                {submitting ? 'Đang xử lý...' : 'Bác bỏ khiếu nại'}
               </button>
             </div>
           </form>
@@ -1010,11 +1032,11 @@ export default function AdminComplaintResolvePage() {
             </label>
 
             <div className="crp-footer-actions">
-              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked}>
+              <button type="button" className="crp-secondary-btn" onClick={() => navigate('/admin/complaints')} disabled={isLocked || submitting}>
                 Hủy
               </button>
-              <button type="submit" className="crp-primary-btn" disabled={isLocked}>
-                Đánh dấu đã giải quyết
+              <button type="submit" className="crp-primary-btn" disabled={isLocked || submitting}>
+                {submitting ? 'Đang xử lý...' : 'Đánh dấu đã giải quyết'}
               </button>
             </div>
           </form>

@@ -42,11 +42,9 @@ export const RequestCard: React.FC<RequestCardProps> = ({data, role, onViewDetai
                     <span className="time-badge">{data.timeAgo}</span>
                 </div>
                 <p className="device-name">{data.deviceName}</p>
-                <p className="description-snippet">{data.description}</p>
 
                 <div className="card-meta">
                     <span><FaLocationDot/> {data.address}</span>
-                    <span><FaCreditCard/> Ước tính: {data.estPrice.toLocaleString('vi-VN')} VND</span>
                 </div>
             </div>
 

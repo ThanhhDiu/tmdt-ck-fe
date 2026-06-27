@@ -74,4 +74,20 @@ export const orderController = {
             return resolveErrorMessage(error, 'Không thể xác nhận đã nhận tiền');
         }
     },
+
+    cancelOrder: async (orderId: string, reason: string): Promise<{ success: boolean; message: string }> => {
+        try {
+            if (!reason.trim()) {
+                return { success: false, message: 'Vui lòng nhập lý do cụ thể.' };
+            }
+            await orderService.cancelOrder(orderId, reason);
+            return { success: true, message: 'Xử lý yêu cầu thành công.' };
+        } catch (error) {
+            console.error('[OrderController] Lỗi hủy đơn:', error);
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : 'Không thể kết nối đến máy chủ.',
+            };
+        }
+    },
 };

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { loadTokenFromStorage } from '../utils/token';
 
+export const BASE_URL = 'http://localhost:8080/';
 
 const apiClient = axios.create({
     // Đổi từ IP nội bộ sang localhost + thêm tiền tố /api

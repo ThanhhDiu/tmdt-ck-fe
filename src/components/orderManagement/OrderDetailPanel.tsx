@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaArrowLeft, FaCalendarCheck, FaClock, FaMoneyBillWave, FaUser, FaUsers, FaImage, FaLocationDot } from 'react-icons/fa6';
 import type { UserRole } from '../../types/UserRole.ts';
 import type { OrderResponse } from '../../types/order/order';
 import { getOrderStatusLabel } from '../../stores/orderStore';
+import { resolveMediaUrl } from '../../utils/mediaUrl.ts';
 
 interface OrderDetailPanelProps {
     order: OrderResponse;
@@ -40,6 +41,7 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
     const customerCashNote = role === 'customer' && awaitingPayment && isCash;
     const canConfirmCash = role === 'technician' && awaitingPayment && isCash && Boolean(onConfirmCash);
     const hasImages = (order.images?.length ?? 0) > 0;
+    const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
     return (
         <div className="order-detail-panel">
@@ -104,16 +106,35 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                 </div>
 
                 {hasImages ? (
-                    <div className="detail-image-grid">
-                        {order.images?.map((image, index) => (
-                            <img key={`${order.id}-${index}`} src={image} alt={`Order ${order.id} ${index + 1}`} />
-                        ))}
-                    </div>
+                    <div className="images-block">
+                        <div className="block-header">
+                            <span className="label">HÌNH ẢNH THỰC TẾ</span>
+                            <span className="img-count">{order.images?.length} Ảnh</span>
+                        </div>
+                        <div className="image-grid">
+                            {order.images?.map((img, idx) => (
+                                <img 
+                                    key={idx} 
+                                    src={resolveMediaUrl(img) || ""}
+                                    alt={`Ảnh thiết bị ${idx + 1}`} 
+                                    className="req-image" 
+                                    onClick={() => setFullScreenImage(resolveMediaUrl(img))} // THÊM SỰ KIỆN CLICK
+                                />
+                            ))}
+                        </div>
+                    </div>                
+
                 ) : (
                     <div className="detail-empty-state">
                         <FaImage /> Chưa có hình ảnh đính kèm.
                     </div>
                 )}
+
+                {fullScreenImage && (
+                    <div className="lightbox-overlay" onClick={() => setFullScreenImage(null)}>
+                        <img src={fullScreenImage} alt="Phóng to" className="lightbox-image" />
+                    </div>
+                )}    
             </div>
 
             {order.cancelReason && (

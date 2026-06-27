@@ -362,7 +362,7 @@ export const mapOrderToRequestData = (order: OrderResponse): RequestData => ({
     technicianName: order.technician?.fullName,
     timeAgo: formatTimeAgo(order.createdAt),
     deviceName: order.deviceName ?? order.serviceName ?? 'Chưa có tên dịch vụ',
-    description: order.description ?? 'Không có mô tả',
+    description: order.description ?? order.subService ?? order.serviceCategory ?? 'Không có mô tả',
     address: order.address ?? 'Chưa cập nhật địa chỉ',
     estPrice: formatMoney(order.estimatedPrice ?? order.finalPrice),
     expectedTime: formatDateTime(order.expectedTime ?? order.scheduledAt),

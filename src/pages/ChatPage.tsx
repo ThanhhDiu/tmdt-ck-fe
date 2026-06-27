@@ -482,13 +482,6 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
               avatar: 'https://placehold.co/48x48',
           };
 
-    useEffect(() => {
-        if (!repairPrefill) return;
-        setRequestStatus('creating');
-        const timer = window.setTimeout(() => setRequestStatus('sent'), 700);
-        return () => window.clearTimeout(timer);
-    }, [repairPrefill]);
-
     return (
         <div className={styles.container}>
             {role === 'customer' && <Header onNavigate={onNavigate} />}

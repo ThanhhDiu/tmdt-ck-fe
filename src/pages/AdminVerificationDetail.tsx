@@ -10,6 +10,7 @@ import {
   verificationStatusLabel,
 } from '../services/verificationService'
 import type { VerificationRequest } from '../types/VerificationRequest'
+import { resolveMediaUrl } from '../utils/mediaUrl'
 import './AdminVerificationDetail.css'
 
 export default function AdminVerificationDetail() {
@@ -71,20 +72,20 @@ export default function AdminVerificationDetail() {
 
             <div className="avd-doc-grid">
               <figure>
-                <img src={request.documents.idFront} alt="CCCD mặt trước" />
+                <img src={resolveMediaUrl(request.documents.idFront) || ''} alt="CCCD mặt trước" />
                 <figcaption>CCCD mặt trước</figcaption>
               </figure>
               <figure>
-                <img src={request.documents.idBack} alt="CCCD mặt sau" />
+                <img src={resolveMediaUrl(request.documents.idBack) || ''} alt="CCCD mặt sau" />
                 <figcaption>CCCD mặt sau</figcaption>
               </figure>
               <figure>
-                <img src={request.documents.portrait} alt="Ảnh chân dung" />
+                <img src={resolveMediaUrl(request.documents.portrait) || ''} alt="Ảnh chân dung" />
                 <figcaption>Ảnh chân dung</figcaption>
               </figure>
               {request.documents.certificate && (
                 <figure>
-                  <img src={request.documents.certificate} alt="Chứng chỉ nghề" />
+                  <img src={resolveMediaUrl(request.documents.certificate) || ''} alt="Chứng chỉ nghề" />
                   <figcaption>Chứng chỉ nghề</figcaption>
                 </figure>
               )}
@@ -93,7 +94,7 @@ export default function AdminVerificationDetail() {
 
           <aside className="avd-profile-card">
             <div className="avd-tech">
-              <img src={request.documents.portrait} alt={request.fullName} />
+              <img src={resolveMediaUrl(request.documents.portrait) || ''} alt={request.fullName} />
               <div>
                 <h3>{request.fullName}</h3>
                 <p>ID thợ: {request.technicianId}</p>

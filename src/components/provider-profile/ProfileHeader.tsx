@@ -25,6 +25,7 @@ export const ProfileHeader: React.FC<{
     onReviewsClick?: () => void
 }> = ({ profile, onBack, onReviewsClick }) => {
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     return (
         <div className="profile-header-container">
@@ -106,13 +107,7 @@ export const ProfileHeader: React.FC<{
             <RepairRequestModal
                 open={isRequestModalOpen}
                 onClose={() => setIsRequestModalOpen(false)}
-                provider={{
-                    name: profile.name,
-                    avatar: profile.avatar,
-                    rating: profile.rating,
-                    responseEta: 'Phản hồi trong ~5 phút',
-                    area: profile.location,
-                }}
+                technicianId={profile.technicianId}
             />
         </div>
     );

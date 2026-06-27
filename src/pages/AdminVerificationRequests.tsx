@@ -10,6 +10,7 @@ import {
   verificationStatusLabel,
 } from '../services/verificationService'
 import type { VerificationRequest, VerificationStatus } from '../types/VerificationRequest'
+import { resolveMediaUrl } from '../utils/mediaUrl'
 import './AdminVerificationRequests.css'
 
 const statusFilters: Array<'all' | VerificationStatus> = ['all', 'pending', 'approved', 'rejected', 'needs_resubmit']
@@ -32,8 +33,7 @@ export default function AdminVerificationRequests() {
     const fetchData = async () => {
       try {
         const response = await getVerificationRequests()
-        // Axios interceptor của bạn đang trả về response.data. Do đó response có thể là mảng trực tiếp hoặc có bọc data tuỳ thuộc API BE.
-        setRequests(Array.isArray(response) ? response : (response.data || []))
+        setRequests(response)
       } catch (error) {
         console.error('Lỗi khi lấy danh sách yêu cầu xác minh:', error)
       }
@@ -129,7 +129,7 @@ export default function AdminVerificationRequests() {
                       <td className="avr-id">{item.id}</td>
                       <td>
                         <div className="avr-user">
-                          <img src={item.documents.portrait} alt={item.fullName} className="avr-avatar" />
+                          <img src={resolveMediaUrl(item.documents.portrait) || ''} alt={item.fullName} className="avr-avatar" />
                           <div>
                             <div className="avr-name">{item.fullName}</div>
                             <div className="avr-phone">{item.phone}</div>

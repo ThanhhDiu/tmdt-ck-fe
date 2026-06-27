@@ -144,4 +144,10 @@ export const orderService = {
         unwrap(response.data);
         return orderService.getOrderById(orderId);
     },
+
+    updateOrderStatus: async (orderId: string, status: string): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/status`, { status });
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    }
 };

@@ -8,16 +8,21 @@ import './scheduledDetail.css';
 import type {ScheduledOrder} from "../../types/ScheduledOrder.ts";
 import { navigateToChat } from "../../utils/chatNavigation";
 import {useNavigate} from "react-router-dom";
+import { orderService } from '../../services/order/orderService.ts';
 
 interface ScheduledDetailProps {
     data: ScheduledOrder;
     role: UserRole;
     onBack: () => void;
     onCancel?: (id: string) => void;
+    isWarranty?: boolean;
 }
 
-export const ScheduledDetail: React.FC<ScheduledDetailProps> = ({ data, role, onBack, onCancel }) => {
+export const ScheduledDetail: React.FC<ScheduledDetailProps> = ({ 
+    data, role, onBack, onCancel, isWarranty = false 
+}) => {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
     const handleChatClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (role === 'customer' && data.technicianId) {
@@ -32,14 +37,27 @@ export const ScheduledDetail: React.FC<ScheduledDetailProps> = ({ data, role, on
             customerId: data.customerId,
         });
     };
+
+    const handleStartWork = async () => {
+        try {
+            setLoading(true);
+            await orderService.updateOrderStatus(data.id, 'IN_PROGRESS');
+            window.alert('Đã bắt đầu sửa chữa!');
+        } catch (error) {
+            console.error('Lỗi khi bắt đầu sửa:', error);
+            window.alert('Không thể cập nhật trạng thái đơn hàng.');
+        } finally {
+            setLoading(false);
+        }
+    };
     const [techStatus, setTechStatus] = useState<'moving' | 'arrived'>('moving');
 
     return (
         <div className="sched-detail">
-            {/* Header chi tiết */}
+            {/* Header động theo trạng thái */}
             <div className="detail-header">
                 <button className="back-btn" onClick={onBack}>
-                    <FaArrowLeft /> CHI TIẾT SẮP HẸN
+                    <FaArrowLeft /> {isWarranty ? 'CHI TIẾT BẢO HÀNH' : 'CHI TIẾT SẮP HẸN'}
                 </button>
                 <span className="req-id">#{data.id}</span>
             </div>
@@ -71,7 +89,11 @@ export const ScheduledDetail: React.FC<ScheduledDetailProps> = ({ data, role, on
             <div className="sched-box service-box">
                 <div className="box-header-row">
                     <span className="label">DỊCH VỤ SỬA CHỮA</span>
-                    <span className="premium-tag">⭐ PREMIUM</span>
+                    {isWarranty ? (
+                        <span className="warranty-tag" style={{ background: '#f59e0b' }}>🛡️ BẢO HÀNH</span>
+                    ) : (
+                        <span className="premium-tag">⭐ PREMIUM</span>
+                    )}
                 </div>
                 <h2>{data.serviceName}</h2>
                 <div className="service-meta">
@@ -128,15 +150,17 @@ export const ScheduledDetail: React.FC<ScheduledDetailProps> = ({ data, role, on
 
                 {role === 'technician' ? (
                     techStatus === 'moving' ? (
-                        <button
-                            className="btn-large-primary"
-                            onClick={() => setTechStatus('arrived')}
-                        >
+                        <button className="btn-large-primary" onClick={() => setTechStatus('arrived')}>
                             Tôi đã đến nơi
                         </button>
                     ) : (
-                        <button className="btn-large-primary" style={{ backgroundColor: '#10b981' }}>
-                            Bắt đầu sửa (Chuyển tab)
+                        <button 
+                            className="btn-large-primary" 
+                            style={{ backgroundColor: '#10b981' }}
+                            onClick={handleStartWork}
+                            disabled={loading}
+                        >
+                            {loading ? 'Đang xử lý...' : 'Bắt đầu sửa'}
                         </button>
                     )
                 ) : (

@@ -107,10 +107,6 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
 
                 {hasImages ? (
                     <div className="images-block">
-                        <div className="block-header">
-                            <span className="label">HÌNH ẢNH THỰC TẾ</span>
-                            <span className="img-count">{order.images?.length} Ảnh</span>
-                        </div>
                         <div className="image-grid">
                             {order.images?.map((img, idx) => (
                                 <img 

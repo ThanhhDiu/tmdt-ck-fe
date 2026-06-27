@@ -70,10 +70,6 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ role, onBack, 
                 <div className="header-info">
                     <p>Hoàn thành vào {orderData.completedAt}</p>
                 </div>
-                <div className="header-actions">
-                    {role === 'customer' && <button className="btn-outline-gray"><FaMessage /> Liên hệ thợ</button>}
-                    <button className="btn-solid-dark"><FaDownload /> Tải hóa đơn PDF</button>
-                </div>
             </div>
 
             <div className="cmp-grid-layout">

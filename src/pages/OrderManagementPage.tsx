@@ -132,12 +132,15 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
 
         switch (tab) {
             case 'in-progress':
-            case 'awaiting-payment':
                 return (
                     <InProgressDetail 
+                        order={order}
                         role={role} 
-                        onBack={clearSelectedOrder} 
-                        // order={order} 
+                        onBack={clearSelectedOrder}
+                        onRefreshOrder={() => {
+                            refreshOrders(); 
+                            selectOrder(order.id); 
+                        }}
                     />
                 );
             case 'completed':
@@ -164,6 +167,7 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
             // Mặc định: Yêu cầu mới, Đã hủy, Chờ thanh toán -> dùng chung OrderDetailPanel
             case 'new':
             case 'cancelled':
+            case 'awaiting-payment':
             default:
                 return (
                     <OrderDetailPanel

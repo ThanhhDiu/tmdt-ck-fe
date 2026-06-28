@@ -38,7 +38,7 @@ export const ScheduledCard: React.FC<ScheduledCardProps> = ({ data, role, onView
                 </div>
 
                 <h3 className="sched-title">{data.serviceName}</h3>
-                <p className="sched-subtitle">{data.subService}</p>
+                {/* <p className="sched-subtitle">{data.subService}</p> */}
 
                 <div className="sched-info-grid">
                     <div className="info-item">
@@ -59,11 +59,17 @@ export const ScheduledCard: React.FC<ScheduledCardProps> = ({ data, role, onView
             <div className="sched-card-actions" onClick={(e) => e.stopPropagation()}>
                 {role === 'technician' ? (
                     <>
-                        <button className="btn-primary">
-                            <FaPersonWalkingLuggage /> Tôi đang di chuyển
-                        </button>
                         <button className="btn-secondary" onClick={handleChatClick}>
                             <FaPhone /> Liên hệ khách
+                        </button>
+                        <button
+                            className="btn-secondary"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onCancel?.(data.id);
+                            }}
+                        >
+                            Hủy đơn
                         </button>
                     </>
                 ) : (

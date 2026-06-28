@@ -90,4 +90,34 @@ export const orderController = {
             };
         }
     },
+    requestPriceAdjustment: async (id: string, payload: any) => {
+        try {
+            const data = await orderService.requestPriceAdjustment(id, payload);
+            return { success: true, data };
+        } catch (e) { return { success: false, message: 'Lỗi gửi yêu cầu' }; }
+    },
+    approvePriceAdjustment: async (id: string) => {
+        try {
+            const data = await orderService.approvePriceAdjustment(id);
+            return { success: true, data };
+        } catch (e) { return { success: false, message: 'Lỗi xác nhận' }; }
+    },
+    rejectPriceAdjustment: async (id: string, reason: string) => {
+        try {
+            const data = await orderService.rejectPriceAdjustment(id, reason);
+            return { success: true, data };
+        } catch (e) { return { success: false, message: 'Lỗi từ chối' }; }
+    },
+
+    completeOrder: async (orderId: string, finalPrice?: number, images?: string[]) => {
+        try {
+            const data = await orderService.completeOrder(orderId, { 
+                finalPrice, 
+                images: images || [] 
+            });
+            return { success: true, data };
+        } catch (e) {
+            return { success: false, message: 'Lỗi khi hoàn thành đơn' };
+        }
+    }
 };

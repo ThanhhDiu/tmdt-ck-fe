@@ -146,8 +146,14 @@ export const orderService = {
     },
 
     updateOrderStatus: async (orderId: string, status: string): Promise<OrderResponse> => {
-        const response = await apiClient.post(`/api/orders/${orderId}/status`, { status });
+        const response = await apiClient.patch(`/api/orders/${orderId}/status`, { status });
         unwrap(response.data);
         return orderService.getOrderById(orderId);
-    }
+    },
+
+    completeOrder: async (orderId: string, payload: { finalPrice?: number; images: string[] }): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/complete`, payload);
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
 };

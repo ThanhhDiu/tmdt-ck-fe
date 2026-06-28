@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { FaXmark, FaPlus, FaCamera } from 'react-icons/fa6';
-import { uploadService } from '../../services/uploadService';
+import React, { useState } from 'react';
+import { FaXmark, FaPlus } from 'react-icons/fa6';
 import "./css/adjustmentModal.css";
+import { ImageUploader } from '../common/ImageUploader';
 
 export type AdjustmentPart = {
     name: string;
@@ -29,13 +29,12 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
 }) => {
     const [newPrice, setNewPrice] = useState(currentPrice);
     const [reason, setReason] = useState('');
-    const [parts, setParts] = useState<AdjustmentPart[]>([
-        { name: '', price: 0, partCode: '' },
-    ]);
+    const [parts, setParts] = useState<AdjustmentPart[]>([{ name: '', price: 0, partCode: '' }]);
+    
     const [evidenceUrls, setEvidenceUrls] = useState<string[]>([]);
+    
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const diff = newPrice - currentPrice;
 
@@ -49,33 +48,9 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
         );
     };
 
-    const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files?.length) return;
-
-        try {
-            const uploads = await Promise.all(
-                Array.from(files).map((file) => uploadService.uploadImage(file, 'evidence'))
-            );
-            setEvidenceUrls((prev) => [...prev, ...uploads].slice(0, 5));
-        } catch {
-            setError('Không thể tải ảnh lên');
-        } finally {
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        }
-    };
-
     const handleSubmit = async () => {
-        if (!reason.trim()) {
-            setError('Vui lòng nhập lý do điều chỉnh');
-            return;
-        }
-        if (newPrice <= 0) {
-            setError('Giá mới không hợp lệ');
-            return;
-        }
+        if (!reason.trim()) return setError('Vui lòng nhập lý do điều chỉnh');
+        if (newPrice <= 0) return setError('Giá mới không hợp lệ');
 
         const validParts = parts.filter((p) => p.name.trim() && p.price > 0);
 
@@ -86,7 +61,7 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
                 newPrice,
                 reason: reason.trim(),
                 parts: validParts,
-                evidenceImages: evidenceUrls,
+                evidenceImages: evidenceUrls, 
             });
             onClose();
         } catch (err) {
@@ -170,28 +145,13 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
                             <div className="section-head">
                                 <h3>Hình ảnh minh chứng</h3>
                             </div>
-                            <div className="photo-grid-mini">
-                                {evidenceUrls.map((url) => (
-                                    <img key={url} src={url} alt="Minh chứng" />
-                                ))}
-                                <div
-                                    className="upload-box-mini"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    role="button"
-                                    tabIndex={0}
-                                >
-                                    <FaCamera className="icon" />
-                                    <span>Tải ảnh lên</span>
-                                </div>
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    hidden
-                                    onChange={handleUpload}
-                                />
-                            </div>
+                            <ImageUploader 
+                                folder="orders" 
+                                urls={evidenceUrls} 
+                                onChange={setEvidenceUrls} 
+                                maxImages={5} 
+                                maxSizeMB={2}
+                            />
                         </div>
                     </div>
                     {error && <p style={{ color: '#dc2626', marginTop: 12 }}>{error}</p>}

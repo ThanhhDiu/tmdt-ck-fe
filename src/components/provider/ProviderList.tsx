@@ -5,6 +5,7 @@ import { PremiumProviderCard } from './PremiumProviderCard';
 import { ChevronDownIcon } from '../common/Icons';
 import RepairRequestModal from '../modal/RepairRequestModal.tsx';
 import { technicianService } from '../../services/technician/technicianService';
+import { SearchSortPagination } from '../common/SearchSortPagination';
 import {
   mapListItemToProviderEntry,
   type ProviderListEntry,
@@ -13,7 +14,19 @@ import {
 interface Props {
   onNavigate?: (page: string, data?: unknown) => void;
   selectedService?: string;
+  selectedCategoryId?: string;
+  keyword?: string;
+  onKeywordChange?: (value: string) => void;
+  district?: string;
+  minRating?: number;
+  isAvailable?: boolean;
+  lat?: number;
+  lng?: number;
+  sortValue?: string;
+  onSortChange?: (value: string) => void;
+  onSearchSubmit?: (keyword: string) => void | Promise<void>;
   currentPage?: number;
+  totalPages?: number;
   setCurrentPage?: (page: number) => void;
   setTotalPages?: (total: number) => void;
 }
@@ -21,12 +34,22 @@ interface Props {
 export const ProviderList: React.FC<Props> = ({
   onNavigate,
   selectedService,
+  selectedCategoryId,
+  keyword = '',
+  onKeywordChange,
+  district,
+  minRating,
+  isAvailable,
+  lat,
+  lng,
+  sortValue = '',
+  onSortChange,
+  onSearchSubmit,
   currentPage = 1,
+  totalPages = 1,
   setCurrentPage,
   setTotalPages,
 }) => {
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const [selectedSort, setSelectedSort] = useState('PHỔ BIẾN NHẤT');
   const ITEMS_PER_PAGE = 7;
   const [selectedProvider, setSelectedProvider] = useState<ProviderListEntry | null>(null);
   const [providers, setProviders] = useState<ProviderListEntry[]>([]);
@@ -47,17 +70,42 @@ export const ProviderList: React.FC<Props> = ({
     setLoadError(null);
 
     try {
-      const minRating = selectedSort === 'ĐÁNH GIÁ CAO NHẤT' ? 4.5 : undefined;
+      const [sortByRaw, sortDirectionRaw] = sortValue.split('_');
+      const sortBy = sortByRaw === 'rating' || sortByRaw === 'distance' || sortByRaw === 'price'
+        ? sortByRaw
+        : undefined;
+      const sortDirection = sortDirectionRaw === 'asc' || sortDirectionRaw === 'desc'
+        ? sortDirectionRaw
+        : undefined;
+      const normalizedKeyword = keyword.trim();
+      const normalizeText = (value?: string) =>
+        (value ?? '')
+          .trim()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+      const keywordParam =
+        normalizedKeyword && normalizeText(normalizedKeyword) !== normalizeText(selectedService)
+          ? normalizedKeyword
+          : undefined;
       const data = await technicianService.listTechnicians({
         service: selectedService,
+        categoryId: selectedCategoryId,
+        keyword: keywordParam,
+        district,
+        isAvailable,
+        lat,
+        lng,
         page: currentPage,
         limit: ITEMS_PER_PAGE,
         minRating,
+        sortBy,
+        sortDirection,
       });
 
       let items = data.items.map(mapListItemToProviderEntry);
 
-      if (selectedSort === 'GIÁ THẤP NHẤT') {
+      if (sortValue === 'price_asc') {
         items = [...items].sort((a, b) => {
           const priceA =
             a.kind === 'normal'
@@ -68,6 +116,36 @@ export const ProviderList: React.FC<Props> = ({
               ? Number.parseInt(b.price.replace(/\D/g, ''), 10) || Number.MAX_SAFE_INTEGER
               : Number.MAX_SAFE_INTEGER;
           return priceA - priceB;
+        });
+      }
+
+      if (sortValue === 'price_desc') {
+        items = [...items].sort((a, b) => {
+          const priceA =
+            a.kind === 'normal'
+              ? Number.parseInt(a.price.replace(/\D/g, ''), 10) || 0
+              : 0;
+          const priceB =
+            b.kind === 'normal'
+              ? Number.parseInt(b.price.replace(/\D/g, ''), 10) || 0
+              : 0;
+          return priceB - priceA;
+        });
+      }
+
+      if (sortValue === 'distance_asc') {
+        items = [...items].sort((a, b) => {
+          const distanceA = a.kind === 'normal' ? a.distanceKm ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+          const distanceB = b.kind === 'normal' ? b.distanceKm ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
+          return distanceA - distanceB;
+        });
+      }
+
+      if (sortValue === 'distance_desc') {
+        items = [...items].sort((a, b) => {
+          const distanceA = a.kind === 'normal' ? a.distanceKm ?? 0 : 0;
+          const distanceB = b.kind === 'normal' ? b.distanceKm ?? 0 : 0;
+          return distanceB - distanceA;
         });
       }
 
@@ -84,7 +162,7 @@ export const ProviderList: React.FC<Props> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, selectedService, selectedSort, setTotalPages]);
+  }, [currentPage, selectedService, selectedCategoryId, keyword, district, isAvailable, lat, lng, minRating, sortValue, setTotalPages]);
 
   useEffect(() => {
     loadProviders();
@@ -92,7 +170,7 @@ export const ProviderList: React.FC<Props> = ({
 
   useEffect(() => {
     setCurrentPage?.(1);
-  }, [selectedService, selectedSort, setCurrentPage]);
+  }, [selectedService, selectedCategoryId, keyword, district, isAvailable, minRating, sortValue, setCurrentPage]);
 
   const pageTitle = selectedService
     ? `Thợ chuyên ${selectedService}`
@@ -114,30 +192,28 @@ export const ProviderList: React.FC<Props> = ({
             tại khu vực TP.HCM
           </p>
         </div>
-        <div className="pl-sort" style={{ position: 'relative' }}>
-          <span className="sort-label">SẮP XẾP:</span>
-          <button className="sort-btn" type="button" onClick={() => setIsSortOpen(!isSortOpen)}>
-            {selectedSort} <ChevronDownIcon size={14} className="sort-icon" />
-          </button>
-
-          {isSortOpen && (
-            <div className="sort-dropdown">
-              {['PHỔ BIẾN NHẤT', 'ĐÁNH GIÁ CAO NHẤT', 'GIÁ THẤP NHẤT'].map((option) => (
-                <div
-                  key={option}
-                  className={`sort-option ${selectedSort === option ? 'active' : ''}`}
-                  onClick={() => {
-                    setSelectedSort(option);
-                    setIsSortOpen(false);
-                  }}
-                >
-                  {option}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
+
+      <SearchSortPagination
+        keyword={keyword}
+        onKeywordChange={onKeywordChange ?? (() => undefined)}
+        sortValue={sortValue}
+        onSortChange={onSortChange ?? (() => undefined)}
+        sortOptions={[
+          { label: 'Mặc định', value: '' },
+          { label: 'Đánh giá cao nhất', value: 'rating_desc' },
+          { label: 'Đánh giá thấp nhất', value: 'rating_asc' },
+          { label: 'Gần nhất', value: 'distance_asc' },
+          { label: 'Xa nhất', value: 'distance_desc' },
+          { label: 'Giá thấp nhất', value: 'price_asc' },
+          { label: 'Giá cao nhất', value: 'price_desc' },
+        ]}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage ?? (() => undefined)}
+        onSearchSubmit={onSearchSubmit}
+        placeholder="Tìm tên thợ hoặc dịch vụ..."
+      />
 
       <div className="pl-cards">
         {isLoading && <p className="pl-empty">Đang tải danh sách thợ...</p>}

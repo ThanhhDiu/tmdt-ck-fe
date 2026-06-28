@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
-import { services, type ServiceItem } from '../components/home/PopularServices';
+import { mapCategoryToService, type ServiceItem } from '../components/home/PopularServices';
 import '../components/home/PopularServices.css'; // Reusing the CSS
+import { getCategories } from '../services/categoryService';
 
 const pageMap: Record<string, string> = {
   'home': '/',
@@ -18,15 +19,47 @@ const pageMap: Record<string, string> = {
 
 export const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const handleServiceClick = (service: ServiceItem) => {
-    navigate(`/provider?service=${encodeURIComponent(service.name)}`);
+    navigate(`/provider?service=${encodeURIComponent(service.name)}&category=${encodeURIComponent(service.id)}`);
   };
 
   const onNavigate = (page: string, data?: unknown) => {
     const path = pageMap[page] || '/';
     navigate(path, { state: data });
   };
+
+  useEffect(() => {
+    let active = true;
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const categories = await getCategories('active');
+        if (active) {
+          setServices(categories.map(mapCategoryToService));
+        }
+      } catch (err) {
+        if (active) {
+          setServices([]);
+          setError(err instanceof Error ? err.message : 'Không thể tải danh mục dịch vụ');
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div style={{ backgroundColor: 'var(--bg-page)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -42,6 +75,11 @@ export const ServicesPage: React.FC = () => {
           </div>
 
           <div className="services-grid">
+            {loading && <div className="services-state">Đang tải danh mục dịch vụ...</div>}
+            {!loading && error && <div className="services-state services-state--error">{error}</div>}
+            {!loading && !error && services.length === 0 && (
+              <div className="services-state">Chưa có danh mục dịch vụ đang hoạt động.</div>
+            )}
             {services.map(service => (
               <div
                 key={service.id}
@@ -51,7 +89,7 @@ export const ServicesPage: React.FC = () => {
                 tabIndex={0}
               >
                 <div className="service-icon-container">
-                  {service.icon}
+                  {service.iconUrl ? <img src={service.iconUrl} alt={service.name} className="service-icon-img" /> : service.icon}
                 </div>
                 <h3 className="service-name">{service.name}</h3>
                 <p className="service-desc">{service.description}</p>

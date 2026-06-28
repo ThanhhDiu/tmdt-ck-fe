@@ -6,47 +6,93 @@ interface FilterSidebarProps {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  district?: string;
+  minRating?: number;
+  isAvailable?: boolean;
+  onDistrictChange?: (district?: string) => void;
+  onMinRatingChange?: (rating?: number) => void;
+  onAvailabilityChange?: (value?: boolean) => void;
 }
 
 export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   currentPage = 1,
   totalPages = 1,
-  onPageChange
+  onPageChange,
+  district,
+  minRating,
+  isAvailable,
+  onDistrictChange,
+  onMinRatingChange,
+  onAvailabilityChange,
 }) => {
+  const districts = ['Quận 1, HCMC', 'Quận 7, HCMC', 'Thủ Đức, HCMC', 'Quận Bình Thạnh, HCMC'];
+
   return (
     <aside className="filter-sidebar">
       <div className="filter-section">
         <h3 className="filter-title">Lọc theo khu vực</h3>
         <div className="filter-options">
           <label className="filter-checkbox">
-            <input type="checkbox" defaultChecked />
-            <span className="checkmark"></span>
-            <span className="filter-text">Quận 1, HCMC</span>
+            <input
+              type="radio"
+              name="district"
+              checked={!district}
+              onChange={() => onDistrictChange?.(undefined)}
+            />
+            <span className="checkmark border-circle"></span>
+            <span className="filter-text">Tất cả khu vực</span>
           </label>
-          <label className="filter-checkbox">
-            <input type="checkbox" />
-            <span className="checkmark"></span>
-            <span className="filter-text">Quận 7, HCMC</span>
-          </label>
-          <label className="filter-checkbox">
-            <input type="checkbox" />
-            <span className="checkmark"></span>
-            <span className="filter-text">Thủ Đức, HCMC</span>
-          </label>
-          <label className="filter-checkbox">
-            <input type="checkbox" />
-            <span className="checkmark"></span>
-            <span className="filter-text">Quận Bình Thạnh, HCMC</span>
-          </label>
+          {districts.map((item) => (
+            <label className="filter-checkbox" key={item}>
+              <input
+                type="radio"
+                name="district"
+                checked={district === item}
+                onChange={() => onDistrictChange?.(item)}
+              />
+              <span className="checkmark border-circle"></span>
+              <span className="filter-text">{item}</span>
+            </label>
+          ))}
         </div>
 
+      </div>
+
+      <div className="filter-section">
+        <h3 className="filter-title">Trạng thái</h3>
+        <div className="filter-options">
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={Boolean(isAvailable)}
+              onChange={(event) => onAvailabilityChange?.(event.target.checked ? true : undefined)}
+            />
+            <span className="checkmark"></span>
+            <span className="filter-text">Sẵn sàng nhận việc</span>
+          </label>
+        </div>
       </div>
 
       <div className="filter-section">
         <h3 className="filter-title">Đánh giá</h3>
         <div className="filter-options">
           <label className="filter-checkbox">
-            <input type="radio" name="rating" />
+            <input
+              type="radio"
+              name="rating"
+              checked={!minRating}
+              onChange={() => onMinRatingChange?.(undefined)}
+            />
+            <span className="checkmark border-circle"></span>
+            <span className="rating-text">Tất cả</span>
+          </label>
+          <label className="filter-checkbox">
+            <input
+              type="radio"
+              name="rating"
+              checked={minRating === 4}
+              onChange={() => onMinRatingChange?.(4)}
+            />
             <span className="checkmark border-circle"></span>
             <div className="filter-rating">
               <StarIcon size={14} className="star-icon text-yellow-500" />

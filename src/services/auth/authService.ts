@@ -6,6 +6,7 @@ import type {
     AuthUser,
     RegisterApiResponse,
 } from '../../types/auth/auth';
+import { clearAllTokens } from '../../utils/token';
 
 // ─── Auth Service ─────────────────────────────────────────────────────────────
 // Chịu trách nhiệm giao tiếp trực tiếp với REST API.
@@ -76,10 +77,8 @@ export const authService = {
      * Đăng xuất: xóa token khỏi storage
      */
     logout: (): void => {
-        // Có thể gọi clearAllTokens từ token.ts hoặc xóa thủ công
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        clearAllTokens();
         localStorage.removeItem('user');
-        localStorage.removeItem('auth_remember');
+        sessionStorage.removeItem('registerEmail');
     }
 };

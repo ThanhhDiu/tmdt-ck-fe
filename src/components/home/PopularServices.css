@@ -95,6 +95,36 @@
   margin: 0;
 }
 
+.service-icon-img {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.service-count {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.services-state {
+  grid-column: 1 / -1;
+  padding: 28px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  background: #fff;
+}
+
+.services-state--error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
 @media (max-width: 1024px) {
   .services-grid {
     grid-template-columns: repeat(3, 1fr);

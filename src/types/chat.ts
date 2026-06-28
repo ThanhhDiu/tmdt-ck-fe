@@ -15,6 +15,9 @@ export type ChatMessage = {
   senderId: string;
   type: ChatMessageType;
   content?: string | null;
+  imageUrl?: string | null;
+  mediaUrl?: string | null;
+  attachments?: Array<string | { url?: string | null; mediaUrl?: string | null; imageUrl?: string | null }> | null;
   quotation?: EmbeddedQuotation | null;
   sentAt: string;
   isRead?: boolean;

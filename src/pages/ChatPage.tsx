@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import styles from './ChatPage.module.css';
@@ -16,6 +16,7 @@ import { mapWsMessageToChatMessage } from '../services/chat/chatRealtimeClient';
 import { orderService } from '../services/order/orderService';
 import { getStoredUser } from '../services/auth';
 import { useChatRealtime } from '../hooks/useChatRealtime';
+import { mergeUniqueMessages, resolveMessageImageUrl } from '../utils/chatMessages';
 import type { Contact } from '../types/Message';
 import type { UserRole } from '../types/UserRole';
 import type { ChatLocationState, ChatMessage, ConversationItem } from '../types/chat';
@@ -65,7 +66,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     const routeCustomerId = locationState?.customerId;
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [isSidebarOpen, setIsSidebarOpen] = useState(role === 'customer');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [conversations, setConversations] = useState<ConversationItem[]>([]);
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -74,6 +75,8 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     const [loadError, setLoadError] = useState<string | null>(null);
     const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
     const [isPriceConfirmOpen, setIsPriceConfirmOpen] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
     const currentUser = getStoredUser();
     const currentUserCode = currentUser?.code ?? '';
@@ -104,7 +107,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
 
     const loadMessages = useCallback(async (conversationId: string) => {
         const items = await chatService.listMessages(conversationId);
-        setMessages(items);
+        setMessages(mergeUniqueMessages([], items));
     }, []);
 
     const refreshConversations = useCallback(async () => {
@@ -126,12 +129,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
             const isFromMe = incoming.senderId === currentUserCode;
 
             if (isActive) {
-                setMessages((prev) => {
-                    if (prev.some((m) => m.id === incoming.id)) {
-                        return prev;
-                    }
-                    return [...prev, incoming];
-                });
+                setMessages((prev) => mergeUniqueMessages(prev, incoming));
             }
 
             setConversations((prev) =>
@@ -140,6 +138,8 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                     const preview =
                         incoming.type === 'quotation'
                             ? 'Báo giá mới'
+                            : incoming.type === 'image'
+                                ? 'Ảnh mới'
                             : incoming.content ?? '';
                     return {
                         ...c,
@@ -179,7 +179,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     );
 
     useEffect(() => {
-        setIsSidebarOpen(role === 'customer');
+        setIsSidebarOpen(true);
     }, [role]);
 
     useEffect(() => {
@@ -356,9 +356,20 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     const handleSendMessage = async (text: string) => {
         if (!activeConversationId) return;
         const sent = await chatService.sendMessage(activeConversationId, text);
-        setMessages((prev) => [...prev, { ...sent, isRead: true }]);
+        setMessages((prev) => mergeUniqueMessages(prev, { ...sent, isRead: true }));
         await refreshConversations();
     };
+
+    const handleSendImage = async (imageUrl: string) => {
+        if (!activeConversationId) return;
+        const sent = await chatService.sendImageMessage(activeConversationId, imageUrl);
+        setMessages((prev) => mergeUniqueMessages(prev, { ...sent, isRead: true }));
+        await refreshConversations();
+    };
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, [messages.length, activeConversationId, linkedOrder?.id, linkedOrder?.priceAdjustment?.requestedAt]);
 
     const handleCreateQuote = async (quote: Quote) => {
         if (!activeConversationId) return;
@@ -483,7 +494,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
           };
 
     return (
-        <div className={styles.container}>
+        <div className={`${styles.container} ${role === 'technician' ? styles.technicianContainer : ''}`}>
             {role === 'customer' && <Header onNavigate={onNavigate} />}
 
             <div className={styles.mainLayout}>
@@ -515,7 +526,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                 <main className={styles.chatArea}>
                     <header className={styles.chatHeader}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            {role === 'technician' && (
+                            {false && (
                                 <button
                                     type="button"
                                     className={styles.toggleBtn}
@@ -537,7 +548,13 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                     </header>
 
                     <section className={styles.messageList}>
-                        {isLoading && <p className={styles.emptyChat}>Đang tải hội thoại...</p>}
+                        {isLoading && (
+                            <div className={styles.messageSkeletonStack}>
+                                <div className={styles.messageSkeleton} />
+                                <div className={`${styles.messageSkeleton} ${styles.messageSkeletonRight}`} />
+                                <div className={styles.messageSkeletonShort} />
+                            </div>
+                        )}
 
                         {!isLoading && loadError && (
                             <p className={styles.emptyChat}>{loadError}</p>
@@ -564,6 +581,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                             messages.map((message) => {
                                 const isMe = message.senderId === currentUserCode;
                                 const isQuotation = message.type === 'quotation' && message.quotation;
+                                const imageUrl = resolveMessageImageUrl(message);
 
                                 return (
                                     <div
@@ -589,6 +607,10 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                                                         handleRejectQuote(message.quotation!.id)
                                                     }
                                                 />
+                                            ) : imageUrl ? (
+                                                <a href={imageUrl} target="_blank" rel="noreferrer" className={styles.imageBubble}>
+                                                    <img src={imageUrl} alt="Ảnh trong hội thoại" />
+                                                </a>
                                             ) : (
                                                 <div
                                                     className={`${styles.bubble} ${
@@ -616,6 +638,11 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                                 </div>
                             </div>
                         )}
+
+                        {isTyping && (
+                            <div className={styles.typingIndicator}>Đang soạn tin nhắn...</div>
+                        )}
+                        <div ref={messagesEndRef} />
                     </section>
 
                     {activeConversationId && (
@@ -623,6 +650,8 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                             <MessageInput
                                 role={role}
                                 onSendMessage={handleSendMessage}
+                                onSendImage={handleSendImage}
+                                onTypingChange={setIsTyping}
                                 onCreateQuote={handleCreateQuote}
                                 showQuoteAction={role === 'technician'}
                                 showPriceAdjustAction={showPriceAdjustAction}

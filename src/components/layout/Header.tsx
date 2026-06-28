@@ -2,7 +2,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Header.css';
-import { SearchIcon } from '../common/Icons';
 import NotificationMenu from '../common/NotificationMenu';
 import { logoutUser, isAuthenticated } from '../../services/auth';
 import { customerPageMap } from './customerNavigation';
@@ -48,6 +47,11 @@ export const Header: React.FC<HeaderProps> = ({
       navigate(customerPageMap['customer-settings']);
     }
   };
+
+   const goToMessage = () => {
+      navigate('/customer/chat');
+  };
+
   const goToLogout = () => {
     logoutUser();
     clearProfile();
@@ -91,6 +95,15 @@ export const Header: React.FC<HeaderProps> = ({
           role="menuitem"
         >
           Hồ sơ của tôi
+        </button>
+
+        <button
+          className="profile-menu__item"
+          type="button"
+          onClick={goToMessage}
+          role="menuitem"
+        >
+          Tin nhắn
         </button>
 
         <button
@@ -169,18 +182,20 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
 
         <div className="header-actions">
-          <div
+          {/* <form
             className="search-box"
-            style={{ cursor: 'pointer' }}
-            onClick={() => onNavigate && onNavigate('provider')}
+            style={{ cursor: 'text' }}
+            onSubmit={handleSearchSubmit}
           >
             <SearchIcon className="search-icon" size={16} />
             <input
               type="text"
               placeholder={searchPlaceholder}
               className="search-input"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
             />
-          </div>
+          </form> */}
           <NotificationMenu badgeStyle="dot" />
           {/* Tính năng 1: Hiển thị dropdown profile nếu đã đăng nhập, nút "Đăng nhập" nếu chưa */}
           {loggedIn ? profileDropdown : loginButton}

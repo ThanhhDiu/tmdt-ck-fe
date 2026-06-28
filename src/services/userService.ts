@@ -40,6 +40,15 @@ export const userService = {
    */
   getMe: async (): Promise<{ success: boolean; data: AuthUser }> => {
     return await authService.getMe();
+  },
+
+  /**
+   * DELETE /api/users/me
+   * Xóa mềm tài khoản hiện tại.
+   */
+  deleteAccount: async (): Promise<{ success: boolean; message?: string }> => {
+    const response = await apiClient.delete<{ success: boolean; message?: string }>('/api/users/me');
+    return response.data;
   }
 };
 

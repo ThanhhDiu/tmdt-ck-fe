@@ -6,6 +6,8 @@ export interface CustomerHeaderNavItem {
 
 export const customerPageMap: Record<string, string> = {
   home: '/',
+  provider: '/provider',
+  services: '/services',
   'find-provider': '/find-provider',
   'rewards': '/rewards',
   'provider-profile': '/provider-profile',

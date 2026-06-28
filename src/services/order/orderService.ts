@@ -87,6 +87,21 @@ export const orderService = {
         return normalizePage(response.data, { page, size });
     },
 
+    listTechnicianOrders: async (technicianId: string, query: OrderListQuery = {}): Promise<OrderResponse[]> => {
+        const page = query.page ?? 0;
+        const size = query.size ?? 100;
+
+        const response = await apiClient.get('/api/orders', {
+            params: {
+                technician: technicianId,
+                page,
+                size,
+            },
+        });
+
+        return normalizePage(response.data, { page, size }).items;
+    },
+
     getOrderById: async (id: string): Promise<OrderResponse> => {
         const response = await apiClient.get(`/api/orders/${id}`);
         return normalizeOrder(response.data);

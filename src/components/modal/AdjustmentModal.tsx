@@ -55,7 +55,7 @@ export const AdjustmentModal: React.FC<AdjustmentModalProps> = ({
 
         try {
             const uploads = await Promise.all(
-                Array.from(files).map((file) => uploadService.uploadImage(file, 'evidence'))
+                Array.from(files).map((file) => uploadService.uploadOrderImage(file))
             );
             setEvidenceUrls((prev) => [...prev, ...uploads].slice(0, 5));
         } catch {

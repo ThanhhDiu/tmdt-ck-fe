@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
-import { uploadService } from '../services/technician/uploadTechnical';
+import { uploadService } from '../services/uploadService';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { resolveMediaUrl } from '../utils/mediaUrl';
 import { authService } from '../services/auth/authService';
@@ -108,9 +108,8 @@ export default function CustomerAccountSettingsPage() {
   };
 
   const handleUploadAvatar = async (file: File) => {
-    const res = await uploadService.uploadImage(file);
-    if (res.success && res.data?.url) {
-      const newAvatarUrl = res.data.url;
+    const newAvatarUrl = await uploadService.uploadAvatar(file);
+    if (newAvatarUrl) {
       if (userId) {
         await userService.updateUserProfile(userId, { avatar: newAvatarUrl });
       }
@@ -118,7 +117,7 @@ export default function CustomerAccountSettingsPage() {
       setAvatarUrl(resolvedAvatar);
       setAvatar(resolvedAvatar);
     } else {
-      throw new Error(res.message || 'Upload thất bại');
+      throw new Error('Upload thất bại');
     }
   };
 

@@ -40,13 +40,25 @@ const formatMessageTime = (value: string) => {
     return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 };
 
+const isImagePreview = (message?: ConversationItem['lastMessage'] | null) => {
+    if (!message) return false;
+    if (message.type === 'image') return true;
+
+    const value = (message.preview ?? message.content ?? '').trim();
+    return /^https?:\/\/.+\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(value) ||
+        /^\/?uploads\/.+\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(value);
+};
+
+const getConversationPreview = (message?: ConversationItem['lastMessage'] | null) => {
+    if (!message) return '';
+    if (isImagePreview(message)) return 'Đã nhận 1 ảnh';
+    return message.preview ?? message.content ?? '';
+};
+
 const toContact = (conversation: ConversationItem): Contact => ({
     id: conversation.id,
     name: conversation.partner?.fullName ?? 'Đối tác',
-    lastMessage:
-        conversation.lastMessage?.preview ??
-        conversation.lastMessage?.content ??
-        '',
+    lastMessage: getConversationPreview(conversation.lastMessage),
     time: conversation.lastMessage?.sentAt
         ? formatMessageTime(conversation.lastMessage.sentAt)
         : '',

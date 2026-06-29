@@ -52,7 +52,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         setIsUploading(true);
         try {
             setSendError(null);
-            const imageUrl = await uploadService.uploadImage(file, 'chat');
+            const imageUrl = await uploadService.uploadOrderImage(file);
             await onSendImage(imageUrl);
         } catch (error) {
             setSendError(error instanceof Error ? error.message : 'Không thể gửi hình ảnh');

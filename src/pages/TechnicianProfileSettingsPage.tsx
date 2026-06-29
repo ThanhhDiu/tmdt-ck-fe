@@ -4,7 +4,7 @@ import { userService } from '../services/userService';
 import { technicianService } from '../services/technician/technicianService';
 import { authService } from '../services/auth/authService';
 
-import { uploadService } from '../services/technician/uploadTechnical';
+import { uploadService } from '../services/uploadService';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { useToast } from '../components/common/Toast';
 import { resolveMediaUrl } from '../utils/mediaUrl';
@@ -176,9 +176,8 @@ export default function TechnicianProfileSettingsPage() {
     setIsUploading(true);
     try {
       // Gọi API upload ảnh lên server (Multipart/form-data)
-      const res = await uploadService.uploadImage(file);
-      if (res.success && res.data?.url) {
-        const newAvatarUrl = res.data.url;
+      const newAvatarUrl = await uploadService.uploadAvatar(file);
+      if (newAvatarUrl) {
         // Cập nhật avatar URL vào database thông qua API user
         if (userId) {
           await userService.updateUserProfile(userId, { avatar: newAvatarUrl });
@@ -195,7 +194,7 @@ export default function TechnicianProfileSettingsPage() {
 
         showToast('Cập nhật ảnh đại diện thành công!', 'success');
       } else {
-        throw new Error(res.message || 'Upload thất bại');
+        throw new Error('Upload thất bại');
       }
     } catch (error: unknown) {
       console.error('Lỗi upload avatar:', error);

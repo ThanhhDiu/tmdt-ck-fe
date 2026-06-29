@@ -51,7 +51,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ open, orderId, onClose, onSub
     setSubmitting(true);
     setError('');
     try {
-      const attachedImages = await Promise.all(files.map((file) => uploadService.uploadImage(file, 'orders')));
+      const attachedImages = await Promise.all(files.map((file) => uploadService.uploadOrderImage(file)));
       await reviewService.submitReview({
         orderId,
         rating,

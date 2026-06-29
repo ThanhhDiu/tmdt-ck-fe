@@ -56,7 +56,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ open, orderId, orderCode, onC
         setSubmitting(true);
         setError("");
         try {
-            const evidenceImages = await Promise.all(files.map((file) => uploadService.uploadImage(file, "orders")));
+            const evidenceImages = await Promise.all(files.map((file) => uploadService.uploadOrderImage(file)));
             await reportService.submitReport({
                 orderId,
                 reason,

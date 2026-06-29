@@ -5,7 +5,6 @@ import type { OrderResponse } from '../../types/order/order';
 import { getOrderStatusLabel } from '../../stores/orderStore';
 import { resolveMediaUrl } from '../../utils/mediaUrl.ts';
 
-
 interface OrderDetailPanelProps {
     order: OrderResponse;
     role: UserRole;
@@ -14,15 +13,6 @@ interface OrderDetailPanelProps {
     onPay?: (order: OrderResponse) => void;
     onConfirmCash?: (id: string) => void;
 }
-
-type OrderWithReviewState = OrderResponse & {
-    review?: unknown;
-    customerReview?: unknown;
-    reviewId?: string | null;
-    reviewed?: boolean;
-    hasReview?: boolean;
-    rating?: number | null;
-};
 
 const formatDateTime = (value?: string): string => {
     if (!value) return 'Chưa cập nhật';
@@ -40,52 +30,8 @@ const formatDateTime = (value?: string): string => {
 };
 
 const formatMoney = (value?: number): string => (value ?? 0).toLocaleString('vi-VN');
-const reviewedOrderKey = (orderId: string) => `glowup_reviewed_order_${orderId}`;
-
-const getLocalReviewedState = (orderId: string) => {
-    try {
-        return localStorage.getItem(reviewedOrderKey(orderId)) === 'true';
-    } catch {
-        return false;
-    }
-};
-
-const setLocalReviewedState = (orderId: string) => {
-    try {
-        localStorage.setItem(reviewedOrderKey(orderId), 'true');
-    } catch {
-        // UI state is still updated even when storage is unavailable.
-    }
-};
-
-const hasOrderReview = (order: OrderResponse) => {
-    const data = order as OrderWithReviewState;
-    return Boolean(
-        data.review ||
-        data.customerReview ||
-        data.reviewId ||
-        data.reviewed ||
-        data.hasReview ||
-        data.rating
-    );
-};
 
 export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role, onBack, onCancel, onPay, onConfirmCash }) => {
-    const [reviewOpen, setReviewOpen] = React.useState(false);
-    const [reportOpen, setReportOpen] = React.useState(false);
-    const [reviewSubmitted, setReviewSubmitted] = React.useState(() => getLocalReviewedState(order.id));
-
-    React.useEffect(() => {
-        setReviewSubmitted(getLocalReviewedState(order.id));
-    }, [order.id]);
-
-    const handleReviewSubmitted = React.useCallback(() => {
-        setReviewSubmitted(true);
-        setReviewOpen(false);
-        setLocalReviewedState(order.id);
-        window.alert('Đã gửi đánh giá. Cảm ơn bạn!');
-    }, [order.id]);
-
     const partner = role === 'technician' ? order.customer : order.technician;
     const normalizedStatus = order.status.toLowerCase();
     const canCancel = !['completed', 'cancelled'].includes(normalizedStatus);
@@ -162,18 +108,20 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                 {hasImages ? (
                     <div className="images-block">
                         <div className="image-grid">
-                            {order.images?.map((img, idx) => (
-                                <img 
-                                    key={idx} 
-                                    src={resolveMediaUrl(img) || ""}
-                                    alt={`Ảnh thiết bị ${idx + 1}`} 
-                                    className="req-image" 
-                                    onClick={() => setFullScreenImage(resolveMediaUrl(img))} // THÊM SỰ KIỆN CLICK
-                                />
-                            ))}
+                            {order.images?.map((image, index) => {
+                                const resolvedImage = resolveMediaUrl(image);
+                                return (
+                                    <img
+                                        key={`${order.id}-${index}`}
+                                        src={resolvedImage || ''}
+                                        alt={`Ảnh thiết bị ${index + 1}`}
+                                        className="req-image"
+                                        onClick={() => setFullScreenImage(resolvedImage)}
+                                    />
+                                );
+                            })}
                         </div>
-                    </div>                
-
+                    </div>
                 ) : (
                     <div className="detail-empty-state">
                         <FaImage /> Chưa có hình ảnh đính kèm.
@@ -184,32 +132,13 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                     <div className="lightbox-overlay" onClick={() => setFullScreenImage(null)}>
                         <img src={fullScreenImage} alt="Phóng to" className="lightbox-image" />
                     </div>
-                )}    
+                )}
             </div>
 
             {order.cancelReason && (
                 <div className="detail-card mt-24 danger-border">
                     <span className="detail-label">Lý do hủy</span>
                     <p className="detail-description">{order.cancelReason}</p>
-                </div>
-            )}
-
-            {canReviewOrReport && (
-                <div className="detail-card mt-24">
-                    <span className="detail-label">Đánh giá & báo cáo</span>
-                    <p className="detail-description">
-                        Gửi đánh giá chất lượng hoặc báo cáo vi phạm sau khi đơn hàng hoàn tất.
-                    </p>
-                    <div className="detail-footer" style={{ justifyContent: 'flex-start', padding: 0, marginTop: 16 }}>
-                        {canReview && (
-                            <button className="btn-large-primary" onClick={() => setReviewOpen(true)}>
-                                Gửi đánh giá
-                            </button>
-                        )}
-                        <button className="btn-large-primary danger-button" onClick={() => setReportOpen(true)}>
-                            Báo cáo sự cố
-                        </button>
-                    </div>
                 </div>
             )}
 
@@ -236,24 +165,6 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                     </button>
                 )}
             </div>
-
-            {order.technician?.id && (
-                <>
-                    <ReviewModal
-                        open={reviewOpen}
-                        orderId={order.id}
-                        onClose={() => setReviewOpen(false)}
-                        onSubmitted={handleReviewSubmitted}
-                    />
-                    <ReportModal
-                        open={reportOpen}
-                        orderId={order.id}
-                        orderCode={order.id}
-                        onClose={() => setReportOpen(false)}
-                        onSubmitted={() => window.alert('Đã gửi khiếu nại. GlowUp sẽ xử lý trong thời gian sớm nhất.')}
-                    />
-                </>
-            )}
         </div>
     );
 };

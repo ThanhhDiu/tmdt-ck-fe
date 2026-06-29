@@ -9,6 +9,7 @@ import {
 import './completedDetail.css';
 import WarrantyModal from '../modal/WarrantyModal';
 import ReportModal from '../modal/ReportModal';
+import ReviewModal from '../modal/ReviewModal';
 import { resolveMediaUrl } from '../../utils/mediaUrl.ts';
 import { useNavigate } from 'react-router-dom';
 import { navigateToChat } from '../../utils/chatNavigation';
@@ -19,8 +20,46 @@ interface CompletedDetailProps {
     role: UserRole;
     onBack: () => void;
     onRefreshOrder: () => void;
-    onOpenRating?: () => void;
 }
+
+type OrderWithReviewState = OrderResponse & {
+    review?: unknown;
+    customerReview?: unknown;
+    reviewId?: string | null;
+    reviewed?: boolean;
+    hasReview?: boolean;
+    rating?: number | null;
+};
+
+const reviewedOrderKey = (orderId: string) => `glowup_reviewed_order_${orderId}`;
+
+const getLocalReviewedState = (orderId: string) => {
+    try {
+        return localStorage.getItem(reviewedOrderKey(orderId)) === 'true';
+    } catch {
+        return false;
+    }
+};
+
+const setLocalReviewedState = (orderId: string) => {
+    try {
+        localStorage.setItem(reviewedOrderKey(orderId), 'true');
+    } catch {
+        // UI state is still updated even when storage is unavailable.
+    }
+};
+
+const hasOrderReview = (order: OrderResponse) => {
+    const data = order as OrderWithReviewState;
+    return Boolean(
+        data.review ||
+        data.customerReview ||
+        data.reviewId ||
+        data.reviewed ||
+        data.hasReview ||
+        data.rating
+    );
+};
 
 const formatDateTime = (value?: string): string => {
     if (!value) return 'Chưa cập nhật';
@@ -29,10 +68,12 @@ const formatDateTime = (value?: string): string => {
     return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}, Ngày ${date.getDate()} Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
 };
 
-export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, onBack, onRefreshOrder, onOpenRating}) => {
+export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, onBack, onRefreshOrder}) => {
     const navigate = useNavigate();
     const [showWarrantyModal, setShowWarrantyModal] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewSubmitted, setReviewSubmitted] = useState(() => getLocalReviewedState(order.id));
     
     // --- THÊM STATE LOCAL ĐỂ LƯU THÔNG TIN BẢO HÀNH ---
     const [localWarranty, setLocalWarranty] = useState<any>(null);
@@ -48,6 +89,7 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
 
     useEffect(() => {
         fetchWarrantyData();
+        setReviewSubmitted(getLocalReviewedState(order.id));
     }, [order?.id]);
 
     if (!order) {
@@ -120,8 +162,15 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
         }
     };
 
-    const isRated = false; 
-    const ratingGiven = 0; 
+    const isRated = hasOrderReview(order) || reviewSubmitted; 
+    const ratingGiven = Number((order as OrderWithReviewState).rating ?? 0); 
+
+    const handleReviewSubmitted = () => {
+        setReviewSubmitted(true);
+        setShowReviewModal(false);
+        setLocalReviewedState(order.id);
+        window.alert('Đã gửi đánh giá. Cảm ơn bạn!');
+    };
 
     const handleChatClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -247,10 +296,10 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
                                     <div className="rating-stars-input">
                                         {[...Array(5)].map((_, i) => <FaStar key={i} className="star-empty" />)}
                                     </div>
-                                    <div className="rating-placeholder" onClick={onOpenRating}>
+                                    <div className="rating-placeholder" onClick={() => setShowReviewModal(true)}>
                                         Chia sẻ cảm nghĩ của bạn về chất lượng sửa chữa...
                                     </div>
-                                    <button className="btn-solid-dark w-100" onClick={onOpenRating}>
+                                    <button className="btn-solid-dark w-100" onClick={() => setShowReviewModal(true)}>
                                         Gửi đánh giá
                                     </button>
                                 </>
@@ -348,9 +397,11 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
                             )
                         )}
 
-                        <button className="btn-text-danger w-100 text-center mt-3" onClick={() => setShowReportModal(true)}>
-                            <FaTriangleExclamation /> Báo cáo sự cố
-                        </button>
+                        {role === 'customer' && (
+                            <button className="btn-text-danger w-100 text-center mt-3" onClick={() => setShowReportModal(true)}>
+                                <FaTriangleExclamation /> Báo cáo sự cố
+                            </button>
+                        )}
                     </div>
 
                 </div>
@@ -371,9 +422,17 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
 
             <ReportModal
                 open={showReportModal}
-                orderId={orderData.id.replace('#', '')}
-                orderCode={orderData.id.replace('#', '')}
+                orderId={order.id}
+                orderCode={order.id}
                 onClose={() => setShowReportModal(false)}
+                onSubmitted={() => window.alert('Đã gửi khiếu nại. GlowUp sẽ xử lý trong thời gian sớm nhất.')}
+            />
+
+            <ReviewModal
+                open={showReviewModal}
+                orderId={order.id}
+                onClose={() => setShowReviewModal(false)}
+                onSubmitted={handleReviewSubmitted}
             />
 
         </div>

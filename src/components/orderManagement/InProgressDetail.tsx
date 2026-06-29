@@ -4,7 +4,7 @@ import type { OrderResponse } from '../../types/order/order';
 import { orderController } from '../../controllers/order/orderController';
 import {
     FaArrowLeft, FaCircleExclamation, FaLocationDot, 
-    FaPlus, FaCheck, FaScrewdriverWrench, FaTruckFast, FaCheckDouble
+    FaCheck, FaScrewdriverWrench, FaTruckFast, FaCheckDouble
 } from 'react-icons/fa6';
 import { AdjustmentModal } from '../modal/AdjustmentModal.tsx';
 import { ImageUploader } from '../common/ImageUploader'; // Bổ sung Image Uploader
@@ -22,6 +22,10 @@ export const InProgressDetail: React.FC<InProgressProps> = ({ order, role, onBac
     const [showAdjustModal, setShowAdjustModal] = useState(false);
     const [rejectReason, setRejectReason] = useState("");
     const [loading, setLoading] = useState(false);
+
+    if (!order) {
+        return <div className="order-alert error">Không tìm thấy dữ liệu đơn hàng!</div>;
+    }
     
     // State lưu ảnh hoàn thành do thợ tải lên
     const [completionImages, setCompletionImages] = useState<string[]>([]);

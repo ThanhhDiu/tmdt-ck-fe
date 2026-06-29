@@ -280,6 +280,12 @@ const pickPersonName = (primary?: { fullName?: string }, fallback = 'Chưa cập
 const normalizeStatus = (status: string): string => status.trim().toLowerCase();
 
 export const getOrderTab = (order: OrderResponse): OrderTabId => {
+    const isWarranty = order.id?.startsWith('WR-');
+
+    if (isWarranty && !['COMPLETED', 'CANCELLED'].includes(order.status)) {
+        return 'warranty';
+    }
+
     const normalized = normalizeStatus(order.status);
 
     if (normalized.includes('cancel')) return 'cancelled';
@@ -287,7 +293,6 @@ export const getOrderTab = (order: OrderResponse): OrderTabId => {
     if (normalized.includes('complete')) return 'completed';
     if (normalized.includes('progress') || normalized.includes('working') || normalized.includes('repair')) return 'in-progress';
     if (normalized.includes('schedule') || normalized.includes('confirm') || normalized.includes('assigned')) return 'scheduled';
-    if (normalized.includes('warranty')) return 'warranty';
 
     return 'new';
 };
@@ -373,8 +378,12 @@ export const mapOrderToScheduledOrder = (order: OrderResponse): ScheduledOrder =
     id: order.id,
     technicianId: order.technician?.id,
     customerId: order.customer?.id,
-    serviceName: order.serviceName ?? order.deviceName ?? 'Đơn hàng',
-    subService: order.subService ?? order.serviceCategory ?? order.description ?? 'Chưa có mô tả',
+    
+    serviceName: order.id?.startsWith('WR-') 
+        ? `Bảo hành: ${order.serviceName || 'Dịch vụ'}` 
+        : (order.serviceName ?? order.deviceName ?? 'Đơn hàng'),
+        
+    subService: order.description ?? 'Không có mô tả',
     customerName: pickPersonName(order.customer, 'Khách hàng'),
     technicianName: pickPersonName(order.technician, 'Chưa phân công'),
     time: formatDateTime(order.scheduledAt ?? order.expectedTime),
@@ -382,6 +391,7 @@ export const mapOrderToScheduledOrder = (order: OrderResponse): ScheduledOrder =
     statusText: getOrderStatusLabel(order),
     estPrice: formatMoney(order.estimatedPrice ?? order.finalPrice),
     note: order.description,
+    isWarranty: order.id?.startsWith('WR-') 
 });
 
 export const mapOrderToInProgressOrder = (order: OrderResponse): InProgressOrder => ({
@@ -407,6 +417,7 @@ export const mapOrderToCompletedOrder = (order: OrderResponse): CompletedOrder =
     completionDate: formatDateTime(order.completedAt ?? order.updatedAt ?? order.createdAt),
     totalPrice: formatMoney(order.finalPrice ?? order.estimatedPrice),
     rating: 0,
+    warrantyTicket: order.warrantyTicket, 
 });
 
 export const mapOrderToCancelledOrder = (order: OrderResponse): CancelledOrder => ({

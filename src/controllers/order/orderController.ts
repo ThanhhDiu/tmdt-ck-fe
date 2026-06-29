@@ -119,5 +119,32 @@ export const orderController = {
         } catch (e) {
             return { success: false, message: 'Lỗi khi hoàn thành đơn' };
         }
-    }
+    },
+
+    submitWarranty: async (orderId: string, payload: { description: string; images: string[]; scheduledAt: string }) => {
+        try {
+            const data = await orderService.submitWarranty(orderId, payload);
+            return { success: true, data };
+        } catch (e) {
+            return { success: false, message: 'Lỗi khi gửi yêu cầu bảo hành' };
+        }
+    },
+
+    updateWarrantyStatus: async (warrantyId: string, status: 'in_progress' | 'rejected') => {
+        try {
+            const data = await orderService.updateWarrantyStatus(warrantyId, status);
+            return { success: true, data };
+        } catch (error) {
+            return { success: false, message: error instanceof Error ? error.message : 'Lỗi khi cập nhật trạng thái bảo hành' };
+        }
+    },
+
+    getWarrantyInfo: async (orderId: string) => {
+        try {
+            const data = await orderService.getWarrantyInfo(orderId);
+            return { success: true, data };
+        } catch (error) {
+            return { success: false, data: null };
+        }
+    },
 };

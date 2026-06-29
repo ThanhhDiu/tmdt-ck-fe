@@ -156,4 +156,19 @@ export const orderService = {
         unwrap(response.data);
         return orderService.getOrderById(orderId);
     },
+
+    submitWarranty: async (orderId: string, payload: { description: string; images: string[]; scheduledAt: string }) => {
+        const response = await apiClient.post(`/api/orders/${orderId}/warranty`, payload);
+        return unwrap(response.data);
+    },
+
+    getWarrantyInfo: async (orderId: string) => {
+        const response = await apiClient.get(`/api/orders/${orderId}/warranty`);
+        return unwrap(response.data);
+    },
+
+    updateWarrantyStatus: async (warrantyId: string, status: 'in_progress' | 'rejected') => {
+        const response = await apiClient.patch(`/api/orders/warranty/${warrantyId}/status?status=${status}`);
+        return unwrap(response.data);
+    },
 };

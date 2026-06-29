@@ -1,6 +1,6 @@
 import React from 'react';
 import type { UserRole } from '../../types/UserRole';
-import { FaRegCalendar, FaStar, FaWrench } from 'react-icons/fa6';
+import { FaRegCalendar, FaStar, FaWrench, FaShieldHalved, FaTriangleExclamation } from 'react-icons/fa6';
 import './completedCard.css';
 
 export interface CompletedOrder {
@@ -12,6 +12,7 @@ export interface CompletedOrder {
     completionDate: string;
     totalPrice: number;
     rating: number;
+    warrantyTicket?: { status: string }; 
 }
 
 interface CompletedCardProps {
@@ -21,14 +22,35 @@ interface CompletedCardProps {
 }
 
 export const CompletedCard: React.FC<CompletedCardProps> = ({ data, role, onViewDetail }) => {
+    // Đọc trạng thái bảo hành
+   const ticketStatus = data.warrantyTicket?.status?.toLowerCase();
+    const isPending = ticketStatus === 'pending';
+    const isApproved = ticketStatus === 'in_progress' || ticketStatus === 'approved';
+
     return (
-        // Gắn onClick vào cả thẻ card
         <div className="cmp-list-card" onClick={() => onViewDetail(data.id)}>
             <div className="cmp-icon-box">
                 <FaWrench />
             </div>
 
             <div className="cmp-card-main">
+                {/* --- HIỂN THỊ TAG BẢO HÀNH --- */}
+                {(isPending || isApproved) && (
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                        {isPending && (
+                            <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: '#fef3c7', color: '#d97706', border: '1px solid #fcd34d', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                                <FaTriangleExclamation /> Chờ duyệt bảo hành
+                            </span>
+                        )}
+                        {isApproved && (
+                            <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                                <FaShieldHalved /> Đang bảo hành
+                            </span>
+                        )}
+                    </div>
+                )}
+                {/* ------------------------------ */}
+
                 <h3 className="cmp-person-name">
                     {role === 'technician' ? data.customerName : data.technicianName}
                 </h3>

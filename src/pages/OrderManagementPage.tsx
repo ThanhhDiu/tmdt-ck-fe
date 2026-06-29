@@ -89,11 +89,23 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                 );
 
             case 'scheduled':
-            case 'warranty':
                 return (
                     <ScheduledCard
                         key={order.id}
                         data={mapOrderToScheduledOrder(order)}
+                        role={role}
+                        onViewDetail={selectOrder}
+                        onCancel={openCancelModal}
+                    />
+                );
+            case 'warranty': 
+                return (
+                    <ScheduledCard
+                        key={order.id}
+                        data={{
+                            ...mapOrderToScheduledOrder(order),
+                            isWarranty: true 
+                        }}
                         role={role}
                         onViewDetail={selectOrder}
                         onCancel={openCancelModal}
@@ -148,7 +160,11 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                     <CompletedDetail 
                         role={role} 
                         onBack={clearSelectedOrder}
-                        // order={order} 
+                        order={order} 
+                        onRefreshOrder={() => {
+                            refreshOrders(); 
+                            selectOrder(order.id); 
+                        }}
                     />
                 );
             case 'scheduled':
@@ -159,7 +175,7 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                         role={role} 
                         onBack={clearSelectedOrder} 
                         onCancel={openCancelModal}
-                        isWarranty={tab === 'warranty'} 
+                        isWarranty={tab === 'warranty'}
                     />
                 );
             

@@ -50,6 +50,7 @@ export default function TechnicianProfileSettingsPage() {
   const [areas, setAreas] = useState<string[]>([]);
   const [userId, setUserId] = useState<string>('');
   const [userCode, setUserCode] = useState<string>('');
+  const [verificationStatus, setVerificationStatus] = useState<string>('');
 
   const navigate = useNavigate();
   const { profile: userProfileContext, setAvatar, updateProfile } = useUserProfile();
@@ -59,6 +60,7 @@ export default function TechnicianProfileSettingsPage() {
   const [isUploading, setIsUploading] = useState(false);
   // State quản lý trạng thái lưu hồ sơ — tránh double-submit
   const [isSaving, setIsSaving] = useState(false);
+  const isLoadedRef = useRef(false);
 
   const handleLogout = () => {
     authService.logout();
@@ -77,37 +79,74 @@ export default function TechnicianProfileSettingsPage() {
     };
   }, [previewUrl]);
 
+  // Lock body scroll when pending verification status is active
   useEffect(() => {
-    userService.getMe()
-      .then((res) => {
-        const u = res.data;
-        setUserId(u.id?.toString() || '');
-        if (u.code) setUserCode(u.code);
-        setProfile({
-          name: u.fullName || '',
-          phone: u.phone || '',
-          bio: '', // Might want to fetch from technician profile API specifically if backend splits it
-        });
+    if (verificationStatus?.toLowerCase() === 'pending') {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [verificationStatus]);
 
-        if (u.code) {
-          // If the backend has a specific getTechnicianById that returns these
-          technicianService.getTechnician(u.code)
-            .then(techRes => {
-              if (techRes) {
-                const t = techRes;
-                setIsAvailable(t.isAvailable ?? true);
-                setSkills(t.skills || []);
-                setAreas(t.district ? [t.district] : []); // Just using district as an example, maybe multiple areas later
-                setProfile(current => ({ ...current, bio: t.bio || '' }));
-              }
+  useEffect(() => {
+    // Try to get code from context first, then localStorage
+    const code = userProfileContext.code || (() => {
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        try {
+          const parsed = JSON.parse(rawUser);
+          const u = parsed.user || parsed;
+          return u.code || '';
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      return '';
+    })();
+
+    if (!code || isLoadedRef.current) return;
+    isLoadedRef.current = true;
+
+    setUserCode(code);
+
+    // Call /api/technicians/{code} first to check status
+    technicianService.getTechnician(code)
+      .then((techRes) => {
+        if (techRes) {
+          const t = techRes;
+          setVerificationStatus(t.verificationStatus || 'none');
+          
+          if (t.verificationStatus?.toLowerCase() === 'pending') {
+            // If pending, do not call /api/auth/me, just exit
+            return;
+          }
+
+          // If NOT pending, call userService.getMe() to fetch other profile details
+          userService.getMe()
+            .then((res) => {
+              const u = res.data;
+              setUserId(u.id?.toString() || '');
+              setIsAvailable(t.isAvailable ?? true);
+              setSkills(t.skills || []);
+              setAreas(t.district ? [t.district] : []);
+              setProfile({
+                name: u.fullName || '',
+                phone: u.phone || '',
+                bio: t.bio || '',
+              });
             })
-            .catch(err => console.log('Could not load technician specific profile, maybe not initialized yet', err));
+            .catch((err) => {
+              console.error('Lỗi khi tải thông tin user:', err);
+            });
         }
       })
       .catch((err) => {
-        console.error('Lỗi khi tải thông tin user:', err);
+        console.error('Lỗi khi tải hồ sơ thợ:', err);
       });
-  }, []);
+  }, [userProfileContext.code]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -254,9 +293,13 @@ export default function TechnicianProfileSettingsPage() {
     );
   };
 
+  const isPending = verificationStatus?.toLowerCase() === 'pending';
+
   return (
-    <div className="settings-page settings-page--technician">
-      <SettingsFrame as="div" singleColumn className="settings-frame--technician-full">
+    <div className="settings-page settings-page--technician" style={{ position: 'relative' }}>
+      {!isPending ? (
+        <>
+          <SettingsFrame as="div" singleColumn className="settings-frame--technician-full">
         <SettingsMain>
           <SettingsTopline
             title="Hồ sơ & kỹ năng"
@@ -269,7 +312,8 @@ export default function TechnicianProfileSettingsPage() {
             }
           />
 
-          <section className="tech-settings-overview">
+          <div style={{ position: 'relative' }}>
+            <section className="tech-settings-overview">
             <article className="tech-settings-hero">
               <div className="tech-settings-hero__identity">
                 <div className="profile-avatar-wrapper" onClick={handleAvatarClick} title="Nhấp để đổi ảnh đại diện"
@@ -457,15 +501,107 @@ export default function TechnicianProfileSettingsPage() {
               text="Thông tin rõ ràng về kỹ năng và mô tả chuyên môn giúp khách hàng tin tưởng hơn trước khi đặt dịch vụ."
             />
           </div>
-        </SettingsMain>
-      </SettingsFrame>
 
-      <DeleteAccountModal
-        open={deleteOpen}
-        message="Bạn có chắc chắn muốn xóa tài khoản kỹ thuật viên? Toàn bộ lịch sử nhận đơn và cấu hình hồ sơ sẽ biến mất vĩnh viễn."
-        onConfirm={() => setDeleteOpen(false)}
-        onCancel={() => setDeleteOpen(false)}
-      />
+          </div>
+        </SettingsMain>
+          </SettingsFrame>
+
+          <DeleteAccountModal
+            open={deleteOpen}
+            message="Bạn có chắc chắn muốn xóa tài khoản kỹ thuật viên? Toàn bộ lịch sử nhận đơn và cấu hình hồ sơ sẽ biến mất vĩnh viễn."
+            onConfirm={() => setDeleteOpen(false)}
+            onCancel={() => setDeleteOpen(false)}
+          />
+        </>
+      ) : (
+        <div style={{ height: '80vh' }} />
+      )}
+
+      {/* Glassmorphic Overlay for Pending Status */}
+      {isPending && (
+        <>
+          <style>{`
+            .pending-overlay {
+              position: fixed;
+              top: 0;
+              left: 240px;
+              right: 0;
+              bottom: 0;
+              z-index: 1000;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              background-color: rgba(255, 255, 255, 0.65);
+              backdrop-filter: blur(10px);
+              padding: 40px;
+              text-align: center;
+              pointer-events: auto;
+            }
+            @media (max-width: 900px) {
+              .pending-overlay {
+                left: 72px;
+              }
+            }
+          `}</style>
+          <div className="pending-overlay">
+            <div style={{
+              backgroundColor: 'white',
+              padding: '32px 40px',
+              borderRadius: '16px',
+              boxShadow: '0 10px 30px rgba(47, 58, 85, 0.1)',
+              border: '1px solid #e8e7e1',
+              maxWidth: '480px',
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: '#fff7e8',
+                color: '#a16207',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#2f3a55', margin: 0 }}>
+                Hồ sơ đang chờ phê duyệt
+              </h3>
+              <p style={{ color: '#7a7a7a', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>
+                Yêu cầu xác minh danh tính của bạn đang được ban quản trị xét duyệt. Trong thời gian này, bạn không thể thay đổi thông tin hồ sơ hành nghề.
+              </p>
+              <button 
+                onClick={() => navigate('/technician/verification')} 
+                style={{
+                  marginTop: '8px',
+                  padding: '10px 24px',
+                  backgroundColor: '#aa3bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#932ee2'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#aa3bff'}
+              >
+                Verify
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

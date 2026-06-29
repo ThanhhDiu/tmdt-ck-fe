@@ -9,6 +9,7 @@ import {
   verificationStatusLabel,
 } from '../services/verificationService'
 import type { VerificationRequest, VerificationStatus } from '../types/VerificationRequest'
+import { resolveMediaUrl } from '../utils/mediaUrl'
 import './AdminVerificationUpdate.css'
 
 export default function AdminVerificationUpdate() {
@@ -23,7 +24,9 @@ export default function AdminVerificationUpdate() {
       const fetchDetail = async () => {
         try {
           const response = await getVerificationById(requestId)
-          setRequest(response.data || response)
+          if (response) {
+            setRequest(response)
+          }
         } catch (error) {
           console.error('Lỗi khi lấy chi tiết hồ sơ xác minh:', error)
         }
@@ -59,7 +62,7 @@ export default function AdminVerificationUpdate() {
       })
 
       const techStatusRes = await getTechnicianVerificationStatus(request.technicianId)
-      setSavedStatus(techStatusRes?.status || techStatusRes?.data?.status || status)
+      setSavedStatus(techStatusRes || status)
       setIsDone(true)
     } catch (error) {
       console.error('Lỗi khi cập nhật trạng thái:', error)
@@ -90,7 +93,7 @@ export default function AdminVerificationUpdate() {
         {!isDone ? (
           <section className="avu-card">
             <div className="avu-target">
-              <img src={request.documents.portrait} alt={request.fullName} />
+              <img src={resolveMediaUrl(request.documents.portrait) || ''} alt={request.fullName} />
               <div>
                 <h3>{request.fullName}</h3>
                 <p>{request.technicianId} · {request.phone}</p>

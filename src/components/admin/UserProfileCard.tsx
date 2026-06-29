@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { BadgeCheckIcon } from '../common/Icons';
+import { updateAdminUserStatus } from '../../services/adminUserService';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 import './UserProfileCard.css';
 
 interface UserProfile {
@@ -17,6 +19,11 @@ interface UserProfile {
   isVerified?: boolean;
 }
 
+interface UserProfileCardProps {
+  user?: UserProfile;
+  onRefresh?: () => void;
+}
+
 const defaultUser: UserProfile = {
   name: 'Nguyễn Văn Hùng',
   id: 'TECH-7821-VN',
@@ -29,18 +36,45 @@ const defaultUser: UserProfile = {
   isVerified: true,
 };
 
-export const UserProfileCard: React.FC<{ user?: UserProfile }> = ({ user: passedUser }) => {
+export const UserProfileCard: React.FC<UserProfileCardProps> = ({ user: passedUser, onRefresh }) => {
   const user = passedUser || defaultUser;
   const [showLockModal, setShowLockModal] = useState(false);
   const [lockReason, setLockReason] = useState('');
+  const [loading, setLoading] = useState(false);
   const isLocked = user.status === 'locked';
+
+  const handleToggleLock = async () => {
+    if (!user.id) return;
+    try {
+      setLoading(true);
+      const userId = parseInt(user.id, 10);
+      const nextStatus = isLocked ? 'active' : 'locked';
+      await updateAdminUserStatus(userId, {
+        status: nextStatus,
+        reason: isLocked ? undefined : lockReason,
+      });
+      alert(isLocked ? 'Đã mở lại tài khoản thành công!' : 'Đã khóa tài khoản thành công!');
+      setShowLockModal(false);
+      setLockReason('');
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Lỗi khi thực hiện thao tác.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resolvedAvatar = resolveMediaUrl(user.avatar) || 'https://i.pravatar.cc/150?img=default';
 
   return (
     <>
       <div className="upc-card">
         <div className="upc-left">
           <div className="upc-avatar-wrapper">
-            <img src={user.avatar} alt={user.name} className="upc-avatar" />
+            <img src={resolvedAvatar} alt={user.name} className="upc-avatar" />
             {user.isVerified && <span className="upc-verified-badge"><BadgeCheckIcon size={14} /> ĐÃ XÁC MINH</span>}
           </div>
           <div className="upc-info">
@@ -87,8 +121,14 @@ export const UserProfileCard: React.FC<{ user?: UserProfile }> = ({ user: passed
                 <h3 className="upc-modal-title">Mở lại tài khoản</h3>
                 <p className="upc-modal-desc">Bạn có chắc chắn muốn mở lại tài khoản <strong>{user.name}</strong> ({user.id}) không?</p>
                 <div className="upc-modal-actions">
-                  <button className="upc-modal-cancel" onClick={() => setShowLockModal(false)}>Hủy</button>
-                  <button className="upc-modal-confirm upc-modal-unlock" onClick={() => { alert('Đã mở lại tài khoản!'); setShowLockModal(false); }}>Xác nhận mở lại</button>
+                  <button className="upc-modal-cancel" onClick={() => setShowLockModal(false)} disabled={loading}>Hủy</button>
+                  <button 
+                    className="upc-modal-confirm upc-modal-unlock" 
+                    onClick={handleToggleLock}
+                    disabled={loading}
+                  >
+                    {loading ? 'Đang xử lý...' : 'Xác nhận mở lại'}
+                  </button>
                 </div>
               </>
             ) : (
@@ -101,10 +141,17 @@ export const UserProfileCard: React.FC<{ user?: UserProfile }> = ({ user: passed
                   value={lockReason}
                   onChange={e => setLockReason(e.target.value)}
                   rows={4}
+                  disabled={loading}
                 />
                 <div className="upc-modal-actions">
-                  <button className="upc-modal-cancel" onClick={() => setShowLockModal(false)}>Hủy</button>
-                  <button className="upc-modal-confirm" onClick={() => { alert('Đã khóa tài khoản!'); setShowLockModal(false); }}>Xác nhận khóa</button>
+                  <button className="upc-modal-cancel" onClick={() => setShowLockModal(false)} disabled={loading}>Hủy</button>
+                  <button 
+                    className="upc-modal-confirm" 
+                    onClick={handleToggleLock}
+                    disabled={loading}
+                  >
+                    {loading ? 'Đang xử lý...' : 'Xác nhận khóa'}
+                  </button>
                 </div>
               </>
             )}
@@ -114,3 +161,4 @@ export const UserProfileCard: React.FC<{ user?: UserProfile }> = ({ user: passed
     </>
   );
 };
+

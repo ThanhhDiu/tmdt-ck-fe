@@ -230,3 +230,19 @@ export const getAdminComplaintStats = async (): Promise<ComplaintStats> => {
     TOTAL: open + investigating + resolved + dismissed,
   };
 };
+
+export const resolveAdminComplaint = async (
+  id: string,
+  payload: { status: string; note: string; lockTechnician?: boolean; lockReason?: string }
+): Promise<any> => {
+  const response = await fetchWithAuth(`${API_URL}/reports/${encodeURIComponent(id)}/resolve`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json();
+  if (!response.ok || !result.success) {
+    throw new Error(result.error?.message || 'Không thể cập nhật xử lý khiếu nại');
+  }
+  return result.data;
+};

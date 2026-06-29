@@ -107,6 +107,11 @@
   color: var(--primary);
 }
 
+.pc-distance {
+  font-weight: 600;
+  color: #475569;
+}
+
 .pc-dot {
   color: #cbd5e1;
 }

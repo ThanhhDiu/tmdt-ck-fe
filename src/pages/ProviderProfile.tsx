@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { useCustomerNavigate } from '../components/layout/useCustomerNavigate';
+import { Header } from '../components/layout/Header';
 
 import { ProfileHeader } from '../components/provider-profile/ProfileHeader';
 
@@ -12,19 +13,18 @@ import { AboutTab } from '../components/provider-profile/AboutTab';
 
 import { ScheduleTab } from '../components/provider-profile/ScheduleTab';
 
-import { ProjectsTab } from '../components/provider-profile/ProjectsTab';
-
 import { ScheduleSidebar, VerificationSidebar, MapSidebar } from '../components/provider-profile/SidebarWidgets';
 
-import { ChangePasswordTab } from '../components/provider-profile/ChangePasswordTab';
-
-import { technicianService } from '../services/technician/technicianService';
+import { normalizeTechnicianSchedule, technicianService } from '../services/technician/technicianService';
+import { orderService } from '../services/order/orderService';
 
 import { mapDetailToProfileHeader } from '../utils/technicianMappers';
 
 import { resolveTechnicianIdFromLocation } from '../utils/providerNavigation';
 
 import type { ProfileHeaderProps } from '../components/provider-profile/ProfileHeader';
+import type { TechnicianDetail, TechnicianReview, TechnicianScheduleSlot } from '../types/technician';
+import type { OrderResponse } from '../types/order/order';
 
 import './ProviderProfile.css';
 
@@ -72,11 +72,15 @@ export const ProviderProfile: React.FC = () => {
 
     const state = location.state as { activeTab?: string } | null;
 
-    return state?.activeTab || 'about';
+    return state?.activeTab === 'security' || state?.activeTab === 'projects' ? 'about' : state?.activeTab || 'about';
 
   });
 
   const [profileData, setProfileData] = useState<ProfileHeaderProps>(defaultProfile);
+  const [detailData, setDetailData] = useState<TechnicianDetail | null>(null);
+  const [reviews, setReviews] = useState<TechnicianReview[]>([]);
+  const [schedule, setSchedule] = useState<TechnicianScheduleSlot[]>([]);
+  const [technicianOrders, setTechnicianOrders] = useState<OrderResponse[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -116,6 +120,17 @@ export const ProviderProfile: React.FC = () => {
 
         if (cancelled) return;
 
+        const [reviewItems, orderItems] = await Promise.all([
+          technicianService.getTechnicianReviews(technicianId).catch(() => detail.reviews ?? []),
+          orderService.listTechnicianOrders(technicianId, { size: 100 }).catch(() => []),
+        ]);
+
+        if (cancelled) return;
+
+        setDetailData(detail);
+        setReviews((reviewItems ?? []).filter(Boolean) as TechnicianReview[]);
+        setSchedule(normalizeTechnicianSchedule(detail.schedule));
+        setTechnicianOrders((orderItems ?? []).filter(Boolean) as OrderResponse[]);
         setProfileData(mapDetailToProfileHeader(detail));
 
       } catch (error) {
@@ -166,6 +181,8 @@ export const ProviderProfile: React.FC = () => {
 
     <div style={{ backgroundColor: '#f4f3ec', minHeight: '100vh' }}>
 
+      <Header onNavigate={onNavigate} />
+
       <main className="pp-main-container">
 
         {isLoading && (
@@ -192,7 +209,7 @@ export const ProviderProfile: React.FC = () => {
 
               profile={profileData}
 
-              onBack={() => onNavigate('find-provider')}
+              onBack={() => onNavigate('provider')}
 
               onReviewsClick={() => setActiveTab('reviews')}
 
@@ -218,33 +235,26 @@ export const ProviderProfile: React.FC = () => {
 
                 {activeTab === 'about' && (
 
-                  <AboutTab onViewAllReviews={() => setActiveTab('reviews')} />
+                  <AboutTab detail={detailData} reviews={reviews} onViewAllReviews={() => setActiveTab('reviews')} />
 
                 )}
 
-                {activeTab === 'reviews' && <AboutTab onlyReviews />}
+                {activeTab === 'reviews' && <AboutTab detail={detailData} reviews={reviews} onlyReviews />}
 
-                {activeTab === 'schedule' && <ScheduleTab />}
-
-                {activeTab === 'projects' && <ProjectsTab />}
-
-                {activeTab === 'security' && <ChangePasswordTab />}
+                {activeTab === 'schedule' && <ScheduleTab schedule={schedule} bookedOrders={technicianOrders} />}
 
               </div>
 
-              {activeTab !== 'security' && (
+              <div className="pp-sidebar-right">
 
-                <div className="pp-sidebar-right">
+                <ScheduleSidebar />
 
-                  <ScheduleSidebar />
+                <VerificationSidebar />
 
-                  <VerificationSidebar />
+                <MapSidebar />
 
-                  <MapSidebar />
+              </div>
 
-                </div>
-
-              )}
 
             </div>
 

@@ -78,6 +78,14 @@ export const chatService = {
     return unwrap<ChatMessage>(response.data);
   },
 
+  sendImageMessage: async (conversationId: string, imageUrl: string): Promise<ChatMessage> => {
+    const response = await apiClient.post(`/api/conversations/${conversationId}/messages`, {
+      type: 'image',
+      content: imageUrl,
+    });
+    return unwrap<ChatMessage>(response.data);
+  },
+
   createQuotation: async (
     conversationId: string,
     payload: CreateQuotationPayload

@@ -1,6 +1,6 @@
 import apiClient from '../api/config';
 
-const API_ORIGIN =
+export const API_ORIGIN =
     (apiClient.defaults.baseURL || 'http://localhost:8080/').replace(/\/api\/?$/, '').replace(/\/$/, '');
 
 /**

@@ -14,6 +14,7 @@ export interface ProviderProps {
     price: string;
     isAvailable: boolean;
     timeAvailable?: string;
+    distanceKm?: number | null;
 }
 
 export const ProviderCard: React.FC<{
@@ -46,6 +47,10 @@ export const ProviderCard: React.FC<{
                         </div>
                         <span className="pc-dot">•</span>
                         <span className="pc-location">{provider.location}</span>
+                        <span className="pc-dot">•</span>
+                        <span className="pc-distance">
+                            {provider.distanceKm != null ? `${provider.distanceKm.toFixed(1)} km` : '-- km'}
+                        </span>
                         <div className="pc-availability-container">
                             {provider.isAvailable ? (
                                 <span className="pc-avail-now">Sẵn sàng ngay</span>

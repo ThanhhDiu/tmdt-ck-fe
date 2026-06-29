@@ -4,10 +4,24 @@
     flex-direction: column;
 }
 
+.technicianContainer {
+    height: calc(100vh - 96px);
+    min-height: 620px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
 .mainLayout {
     flex: 1;
     display: flex;
     overflow: hidden;
+}
+
+.technicianContainer .mainLayout {
+    min-height: 0;
+    background: #f8fafc;
 }
 
 /* SIDEBAR */
@@ -16,6 +30,13 @@
     background: var(--plate-white);
     width: 280px;
     transition: transform 0.3s ease;
+}
+
+.technicianContainer .sidebar {
+    width: 320px;
+    flex: 0 0 320px;
+    border-right: 1px solid #e2e8f0;
+    background: #ffffff;
 }
 
 .sidebarClosed {
@@ -29,6 +50,11 @@
     flex-direction: column;
 }
 
+.technicianContainer .chatArea {
+    min-width: 0;
+    background: #f8fafc;
+}
+
 /* HEADER */
 .chatHeader {
     padding: 12px 16px;
@@ -36,6 +62,12 @@
     background: var(--white);
     display: flex;
     align-items: center;
+}
+
+.technicianContainer .chatHeader {
+    min-height: 64px;
+    border-bottom-color: #e2e8f0;
+    background: #ffffff;
 }
 
 /* TOGGLE BUTTON */
@@ -53,9 +85,19 @@
   overflow-y: auto;
 }
 
+.technicianContainer .messageList {
+    min-height: 0;
+    padding: 20px;
+}
+
 .inputArea {
   padding: 12px;
   border-top: 1px solid #eee;
+}
+
+.technicianContainer .inputArea {
+    border-top-color: #e2e8f0;
+    background: #ffffff;
 }
 
 /* BUBBLE */
@@ -97,6 +139,62 @@
     background: var(--blueberry-skin);
     color: white;
     border-bottom-right-radius: 4px;
+}
+
+.imageBubble {
+    display: block;
+    width: min(260px, 60vw);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.imageBubble img {
+    display: block;
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+}
+
+.typingIndicator {
+    margin: 4px 0 12px 44px;
+    color: #64748b;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.messageSkeletonStack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.messageSkeleton,
+.messageSkeletonShort {
+    width: min(420px, 72%);
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #eef2f7, #f8fafc, #eef2f7);
+    background-size: 200% 100%;
+    animation: chatSkeleton 1.2s ease-in-out infinite;
+}
+
+.messageSkeletonRight {
+    align-self: flex-end;
+}
+
+.messageSkeletonShort {
+    width: min(260px, 54%);
+}
+
+@keyframes chatSkeleton {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
 }
 
 .repairMessageContent {

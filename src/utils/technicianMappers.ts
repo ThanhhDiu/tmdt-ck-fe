@@ -16,6 +16,12 @@ export const toNumber = (value?: number | string | null, fallback = 0): number =
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+const toOptionalNumber = (value?: number | string | null): number | null => {
+  if (value == null) return null;
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
 export const mapListItemToProviderCard = (item: TechnicianListItem): ProviderProps => ({
   id: item.id,
   name: item.fullName,
@@ -27,6 +33,7 @@ export const mapListItemToProviderCard = (item: TechnicianListItem): ProviderPro
   price: formatPricePerHour(item.pricePerHour ?? null),
   isAvailable: Boolean(item.isAvailable),
   timeAvailable: item.timeAvailable ?? undefined,
+  distanceKm: toOptionalNumber(item.distanceKm ?? item.distanceInKm ?? item.distance_km ?? item.distance),
 });
 
 export const mapListItemToPremiumCard = (item: TechnicianListItem): PremiumProviderProps => ({

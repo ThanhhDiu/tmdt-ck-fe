@@ -1,6 +1,7 @@
 import React from 'react';
 import type { OrderResponse } from '../../types/order/order';
 import styles from './Chat.module.css';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 type RepairRequestCardProps = {
   order: OrderResponse;
@@ -17,6 +18,7 @@ export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({
 }) => {
   const formatPrice = (value?: number) =>
     new Intl.NumberFormat('vi-VN').format(value ?? 0);
+  const resolvedImages = (order.images ?? []).map((src) => resolveMediaUrl(src) ?? src);
 
   return (
     <div className={styles.repairRequestCard}>
@@ -32,9 +34,9 @@ export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({
           <span>Ước tính: {formatPrice(order.estimatedPrice)} VNĐ</span>
         )}
       </div>
-      {order.images && order.images.length > 0 && (
+      {resolvedImages.length > 0 && (
         <div className={styles.repairRequestImages}>
-          {order.images.slice(0, 3).map((src) => (
+          {resolvedImages.slice(0, 3).map((src) => (
             <img key={src} src={src} alt="Ảnh yêu cầu" />
           ))}
         </div>

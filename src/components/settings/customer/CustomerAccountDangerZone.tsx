@@ -9,7 +9,7 @@ export function CustomerAccountDangerZone({ onDelete }: CustomerAccountDangerZon
   return (
     <SettingsDangerZone
       title="Xóa tài khoản"
-      text="Sau khi xóa, lịch sử đơn hàng, địa chỉ đã lưu và cài đặt cá nhân sẽ không thể khôi phục. Đây là bước xác nhận cuối cùng trước khi gửi yêu cầu xóa."
+      text="Sau khi xác nhận, tài khoản sẽ được vô hiệu hóa và phiên đăng nhập hiện tại sẽ bị xóa. Đây là bước xác nhận cuối cùng trước khi gửi yêu cầu xóa mềm."
       action={
         <button type="button" className="settings-danger-button" onClick={onDelete}>
           <Trash2 size={18} />

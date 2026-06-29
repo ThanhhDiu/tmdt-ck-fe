@@ -371,6 +371,8 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
 
             <ReportModal
                 open={showReportModal}
+                orderId={orderData.id.replace('#', '')}
+                orderCode={orderData.id.replace('#', '')}
                 onClose={() => setShowReportModal(false)}
             />
 

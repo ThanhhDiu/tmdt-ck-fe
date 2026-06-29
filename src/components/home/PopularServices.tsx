@@ -1,40 +1,87 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PopularServices.css';
-import { 
-  SnowflakeIcon, 
-  WashingMachineIcon, 
-  FridgeIcon, 
-  BroomIcon, 
-  WrenchIcon, 
-  BugIcon, 
-  MicrowaveIcon, 
-  CarIcon 
+import {
+  SnowflakeIcon,
+  WashingMachineIcon,
+  FridgeIcon,
+  BroomIcon,
+  WrenchIcon,
+  BugIcon,
+  MicrowaveIcon,
+  CarIcon,
 } from '../common/Icons';
+import { getCategories, type Category } from '../../services/categoryService';
 
 export interface ServiceItem {
   id: string;
   name: string;
   description: string;
   icon: React.ReactNode;
+  iconUrl?: string | null;
+  serviceCount?: number;
 }
 
-export const services: ServiceItem[] = [
-  { id: '1', name: 'Máy lạnh', description: 'Vệ sinh & Bảo trì', icon: <SnowflakeIcon /> },
-  { id: '2', name: 'Giặt ủi', description: 'Sạch tận cơ sở', icon: <WashingMachineIcon /> },
-  { id: '3', name: 'Tủ lạnh', description: 'Bảo trì định kỳ', icon: <FridgeIcon /> },
-  { id: '4', name: 'Dọn dẹp', description: 'Theo giờ / Định kỳ', icon: <BroomIcon /> },
-  { id: '5', name: 'Điện nước', description: 'Sửa chữa 24/7', icon: <WrenchIcon /> },
-  { id: '6', name: 'Côn trùng', description: 'Phun / Diệt triệt để', icon: <BugIcon /> },
-  { id: '7', name: 'Lò vi sóng', description: 'Sửa chữa & Bảo trì', icon: <MicrowaveIcon /> },
-  { id: '8', name: 'Xe hơi', description: 'Rửa & Chăm sóc', icon: <CarIcon /> },
+const fallbackIcons = [
+  <SnowflakeIcon />,
+  <WashingMachineIcon />,
+  <FridgeIcon />,
+  <BroomIcon />,
+  <WrenchIcon />,
+  <BugIcon />,
+  <MicrowaveIcon />,
+  <CarIcon />,
 ];
+
+export const mapCategoryToService = (category: Category, index = 0): ServiceItem => ({
+  id: category.id,
+  name: category.title,
+  description: category.description || 'Dịch vụ GlowUp',
+  icon: fallbackIcons[index % fallbackIcons.length],
+  iconUrl: category.iconUrl,
+  serviceCount: (category as Category & { serviceCount?: number }).serviceCount,
+});
+
+export const services: ServiceItem[] = [];
 
 export const PopularServices: React.FC = () => {
   const navigate = useNavigate();
+  const [items, setItems] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const categories = await getCategories('active');
+        if (active) {
+          setItems(categories.map(mapCategoryToService));
+        }
+      } catch (err) {
+        if (active) {
+          setItems([]);
+          setError(err instanceof Error ? err.message : 'Không thể tải danh mục dịch vụ');
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleServiceClick = (service: ServiceItem) => {
-    navigate(`/provider?service=${encodeURIComponent(service.name)}`);
+    navigate(`/provider?service=${encodeURIComponent(service.name)}&category=${encodeURIComponent(service.id)}`);
   };
 
   return (
@@ -48,7 +95,12 @@ export const PopularServices: React.FC = () => {
       </div>
 
       <div className="services-grid">
-        {services.map(service => (
+        {loading && <div className="services-state">Đang tải danh mục dịch vụ...</div>}
+        {!loading && error && <div className="services-state services-state--error">{error}</div>}
+        {!loading && !error && items.length === 0 && (
+          <div className="services-state">Chưa có danh mục dịch vụ đang hoạt động.</div>
+        )}
+        {!loading && !error && items.map((service) => (
           <div
             key={service.id}
             className="service-card"
@@ -57,10 +109,13 @@ export const PopularServices: React.FC = () => {
             tabIndex={0}
           >
             <div className="service-icon-container">
-              {service.icon}
+              {service.iconUrl ? <img src={service.iconUrl} alt={service.name} className="service-icon-img" /> : service.icon}
             </div>
             <h3 className="service-name">{service.name}</h3>
             <p className="service-desc">{service.description}</p>
+            {typeof service.serviceCount === 'number' && (
+              <p className="service-count">{service.serviceCount} dịch vụ</p>
+            )}
           </div>
         ))}
       </div>

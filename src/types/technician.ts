@@ -13,6 +13,35 @@ export type TechnicianListItem = {
   type?: string | null;
   titleBadge?: string | null;
   completedJobs?: number | null;
+  distanceKm?: number | string | null;
+  distance?: number | string | null;
+  distanceInKm?: number | string | null;
+  distance_km?: number | string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+};
+
+export type TechnicianReview = {
+  id: string;
+  orderId?: string | null;
+  authorName?: string | null;
+  authorAvatar?: string | null;
+  rating: number;
+  content?: string | null;
+  comment?: string | null;
+  attachedImages?: string[] | null;
+  images?: string[] | null;
+  createdAt?: string | null;
+};
+
+export type TechnicianScheduleSlot = {
+  id?: string;
+  date: string;
+  dayOfWeek?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  status?: 'available' | 'full' | 'partial' | 'off' | string | null;
+  label?: string | null;
 };
 
 export type TechnicianDetail = {
@@ -34,14 +63,24 @@ export type TechnicianDetail = {
   titleBadge?: string | null;
   verificationStatus?: string | null;
   yearsExperience?: number | null;
+  distanceKm?: number | string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  reviews?: TechnicianReview[] | null;
+  schedule?: TechnicianScheduleSlot[] | Record<string, string | null | undefined> | null;
 };
 
 export type TechnicianListParams = {
   service?: string;
+  categoryId?: string;
   district?: string;
   isAvailable?: boolean;
   minRating?: number;
   keyword?: string;
+  sortBy?: 'popular' | 'rating' | 'distance' | 'price';
+  sortDirection?: 'asc' | 'desc';
+  lat?: number;
+  lng?: number;
   page?: number;
   limit?: number;
 };

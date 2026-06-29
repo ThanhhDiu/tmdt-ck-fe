@@ -13,6 +13,8 @@ import { CancelledCard } from '../components/orderManagement/CancelledCard.tsx';
 import PaymentCard from '../components/orderManagement/PaymentCard.tsx';
 import PaymentModal from '../components/orderManagement/PaymentModal.tsx';
 import OrderDetailPanel from '../components/orderManagement/OrderDetailPanel.tsx';
+import { InProgressDetail } from '../components/orderManagement/InProgressDetail';
+import { CompletedDetail } from '../components/orderManagement/CompletedDetail';
 import { OrderManagementProvider } from '../contexts/OrderManagementContext';
 import { useOrderManagement } from '../hooks/useOrderManagement';
 import { orderController } from '../controllers/order/orderController';
@@ -24,6 +26,7 @@ import {
     mapOrderToRequestData,
     mapOrderToScheduledOrder,
 } from '../stores/orderStore';
+import { ScheduledDetail } from '../components/orderManagement/ScheduledDetail.tsx';
 
 interface OrderPageProps {
     role: UserRole;
@@ -86,11 +89,23 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                 );
 
             case 'scheduled':
-            case 'warranty':
                 return (
                     <ScheduledCard
                         key={order.id}
                         data={mapOrderToScheduledOrder(order)}
+                        role={role}
+                        onViewDetail={selectOrder}
+                        onCancel={openCancelModal}
+                    />
+                );
+            case 'warranty': 
+                return (
+                    <ScheduledCard
+                        key={order.id}
+                        data={{
+                            ...mapOrderToScheduledOrder(order),
+                            isWarranty: true 
+                        }}
                         role={role}
                         onViewDetail={selectOrder}
                         onCancel={openCancelModal}
@@ -124,6 +139,65 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
         }
     };
 
+    const renderOrderDetail = (order: OrderResponse) => {
+        const tab = getOrderTab(order);
+
+        switch (tab) {
+            case 'in-progress':
+                return (
+                    <InProgressDetail 
+                        order={order}
+                        role={role} 
+                        onBack={clearSelectedOrder}
+                        onRefreshOrder={() => {
+                            refreshOrders(); 
+                            selectOrder(order.id); 
+                        }}
+                    />
+                );
+            case 'completed':
+                return (
+                    <CompletedDetail 
+                        role={role} 
+                        onBack={clearSelectedOrder}
+                        order={order} 
+                        onRefreshOrder={() => {
+                            refreshOrders(); 
+                            selectOrder(order.id); 
+                        }}
+                    />
+                );
+            case 'scheduled':
+            case 'warranty':
+                return (
+                    <ScheduledDetail 
+                        data={mapOrderToScheduledOrder(order)}
+                        role={role} 
+                        onBack={clearSelectedOrder} 
+                        onCancel={openCancelModal}
+                        isWarranty={tab === 'warranty'}
+                    />
+                );
+            
+            
+            // Mặc định: Yêu cầu mới, Đã hủy, Chờ thanh toán -> dùng chung OrderDetailPanel
+            case 'new':
+            case 'cancelled':
+            case 'awaiting-payment':
+            default:
+                return (
+                    <OrderDetailPanel
+                        order={order}
+                        role={role}
+                        onBack={clearSelectedOrder}
+                        onCancel={openCancelModal}
+                        onPay={handlePay}
+                        onConfirmCash={handleConfirmCash}
+                    />
+                );
+        }
+    };
+
     return (
         <div className="layout-wrapper">
             <div className="main-content">
@@ -135,14 +209,7 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                             ) : state.detailError ? (
                                 <div className="order-alert error">{state.detailError}</div>
                             ) : (
-                                <OrderDetailPanel
-                                    order={state.selectedOrder}
-                                    role={role}
-                                    onBack={clearSelectedOrder}
-                                    onCancel={openCancelModal}
-                                    onPay={handlePay}
-                                    onConfirmCash={handleConfirmCash}
-                                />
+                                renderOrderDetail(state.selectedOrder)
                             )
                         ) : (
                             <>

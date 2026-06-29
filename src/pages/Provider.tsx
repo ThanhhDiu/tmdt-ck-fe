@@ -180,7 +180,13 @@ export const Provider: React.FC = () => {
           : null;
 
     if (page === 'provider-profile' && technicianId) {
-      nav(buildProviderProfilePath(technicianId), { state: { ...record, id: technicianId } });
+      nav(buildProviderProfilePath(technicianId), { 
+        state: { 
+          ...record, 
+          id: technicianId,
+          serviceCategory: selectedService 
+        } 
+      });
       return;
     }
 

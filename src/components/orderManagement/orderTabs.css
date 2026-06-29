@@ -18,6 +18,7 @@
 }
 
 .tab-btn.active {
+    background-color: transparent !important;
     color: var(--blueberry-skin);
     border-bottom-color: var(--blueberry-skin);
     font-weight: var(--fw-semibold);

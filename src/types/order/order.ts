@@ -68,6 +68,19 @@ export interface OrderResponse {
 
     createdAt?: string;
     updatedAt?: string;
+    
+    isWarranty?: boolean; 
+    warrantyTicket?: WarrantyTicket;
+}
+
+export interface WarrantyTicket {
+    id: string;
+    code?: string;
+    status: 'pending' | 'in_progress' | 'rejected';
+    description: string;
+    scheduledAt: string;
+    images?: string[];
+    createdAt?: string;
 }
 
 export type OrderPaymentMethod = 'cash' | 'vnpay';

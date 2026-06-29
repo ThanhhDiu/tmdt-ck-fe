@@ -23,7 +23,7 @@ export interface OrderManagementContextValue {
     openCancelModal: (orderId: string) => void;
     closeCancelModal: () => void;
     setCancelReason: (reason: string) => void;
-    confirmCancel: () => void;
+    confirmCancel: () => Promise<void>; // Cập nhật lại kiểu trả về
     clearSelectedOrder: () => void;
 }
 
@@ -80,12 +80,32 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
         dispatch({ type: 'LOAD_DETAIL_SUCCESS', order: result.data });
     };
 
+    const confirmCancel = async () => {
+        const orderId = state.orderToCancelId;
+        const reason = state.cancelReason;
+        
+        if (!orderId) return;
+        if (!reason.trim()) {
+            window.alert('Vui lòng nhập lý do cụ thể!');
+            return;
+        }
+
+        const result = await orderController.cancelOrder(orderId, reason);
+        if (result.success) {
+            dispatch({ type: 'CONFIRM_CANCEL', role });
+            dispatch({ type: 'CLOSE_CANCEL_MODAL' });
+            await refreshOrders();
+        } else {
+            window.alert(result.message);
+        }
+    };
+
     useEffect(() => {
         void refreshOrders();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.page, state.pageSize]);
 
-    // --- Realtime: refresh on order status changes (e.g. -> awaiting payment / completed)
+    // --- Realtime: refresh on order status changes
     const refreshRef = useRef(refreshOrders);
     refreshRef.current = refreshOrders;
     const selectRef = useRef(selectOrder);
@@ -125,9 +145,7 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
             state,
             selectedOrder: state.selectedOrder,
             visibleOrders,
-            refreshOrders: async () => {
-                await refreshOrders();
-            },
+            refreshOrders,
             selectOrder,
             setActiveTab: (tab) => dispatch({ type: 'SET_ACTIVE_TAB', tab }),
             setPage: (page) => dispatch({ type: 'SET_PAGE', page }),
@@ -135,10 +153,10 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
             openCancelModal: (orderId) => dispatch({ type: 'OPEN_CANCEL_MODAL', orderId }),
             closeCancelModal: () => dispatch({ type: 'CLOSE_CANCEL_MODAL' }),
             setCancelReason: (reason) => dispatch({ type: 'SET_CANCEL_REASON', cancelReason: reason }),
-            confirmCancel: () => dispatch({ type: 'CONFIRM_CANCEL', role }),
+            confirmCancel, 
             clearSelectedOrder: () => dispatch({ type: 'CLEAR_SELECTED_ORDER' }),
         }),
-        [role, selectOrder, state, visibleOrders],
+        [role, state, visibleOrders, confirmCancel] 
     );
 
     return <OrderManagementContext.Provider value={value}>{children}</OrderManagementContext.Provider>;

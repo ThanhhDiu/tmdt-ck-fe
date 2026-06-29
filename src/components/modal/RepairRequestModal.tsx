@@ -1,25 +1,104 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "../common/Modal";
 import "./css/repairRequestModal.css";
-import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { X, XCircle } from "lucide-react"; 
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { navigateToChat } from "../../utils/chatNavigation";
 import { orderService } from "../../services/order/orderService";
 import { chatService } from "../../services/chat/chatService";
+import { authService } from "../../services/auth/authService";
+import { uploadService } from "../../services/uploadService";
 
 interface RepairRequestModalProps {
     open: boolean;
     onClose: () => void;
     technicianId?: string;
+    initialCategory?: string;
 }
 
-const RepairRequestModal: React.FC<RepairRequestModalProps> = ({ open, onClose, technicianId }) => {
+const RepairRequestModal: React.FC<RepairRequestModalProps> = ({ open, onClose, technicianId, initialCategory }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [deviceName, setDeviceName] = useState("");
     const [description, setDescription] = useState("");
-    const [address, setAddress] = useState("123 Nguyễn Hữu Cảnh, Bình Thạnh");
-    const [phone, setPhone] = useState("090 123 4567");
+    const [address, setAddress] = useState("");
+    const [phone, setPhone] = useState("");
+    const [serviceCategory, setServiceCategory] = useState("Khác");
+    
+    // State quản lý upload ảnh
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+    
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            const categoryFromUrl = searchParams.get("service");
+            const categoryFromState = location.state?.serviceCategory;
+            const resolvedCategory = initialCategory || categoryFromState || categoryFromUrl || "Khác";
+            
+            setServiceCategory(resolvedCategory); 
+
+            const fetchUserProfile = async () => {
+                try {
+                    const response = await authService.getMe();
+                    if (response.success && response.data) {
+                        if (response.data.address) setAddress(response.data.address);
+                        if (response.data.phone) setPhone(response.data.phone);
+                    }
+                } catch (error) {
+                    console.error("Không thể tự động tải thông tin người dùng:", error);
+                }
+            };
+            fetchUserProfile();
+        } else {
+            setDeviceName("");
+            setDescription("");
+            setAddress("");
+            setPhone("");
+            setServiceCategory("Khác"); 
+            setSelectedFiles([]);
+            previewUrls.forEach(url => URL.revokeObjectURL(url));
+            setPreviewUrls([]);
+        }
+    }, [open, location, searchParams, initialCategory]);
+
+    // Xử lý khi chọn ảnh
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const selected = Array.from(e.target.files);
+            
+            const MAX_SIZE = 1 * 1024 * 1024; //1MB
+            const validFiles = selected.filter(file => {
+                if (file.size > MAX_SIZE) {
+                    alert(`Ảnh "${file.name}" vượt quá dung lượng 1MB. Vui lòng chọn ảnh nhẹ hơn.`);
+                    return false;
+                }
+                return true;
+            });
+
+            // Chỉ lấy những file hợp lệ và giới hạn tối đa 3 ảnh
+            const totalFiles = [...selectedFiles, ...validFiles].slice(0, 3);
+            setSelectedFiles(totalFiles);
+
+            // Tạo URL preview
+            const newPreviews = totalFiles.map(file => URL.createObjectURL(file));
+            setPreviewUrls(newPreviews);
+        }
+    };
+
+    // Xử lý khi xóa 1 ảnh đã chọn
+    const handleRemoveImage = (index: number) => {
+        const updatedFiles = [...selectedFiles];
+        updatedFiles.splice(index, 1);
+        setSelectedFiles(updatedFiles);
+
+        const updatedPreviews = [...previewUrls];
+        URL.revokeObjectURL(updatedPreviews[index]); 
+        updatedPreviews.splice(index, 1);
+        setPreviewUrls(updatedPreviews);
+    };
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -40,7 +119,6 @@ const RepairRequestModal: React.FC<RepairRequestModalProps> = ({ open, onClose, 
 
                 {/* BODY */}
                 <div className="repair-body">
-                    {/* DEVICE NAME */}
                     <div className="form-group">
                         <label htmlFor="repair-device">TÊN THIẾT BỊ</label>
                         <input
@@ -66,12 +144,40 @@ const RepairRequestModal: React.FC<RepairRequestModalProps> = ({ open, onClose, 
                     {/* IMAGE */}
                     <div className="form-group">
                         <label>HÌNH ẢNH THỰC TẾ</label>
-                        <div className="upload-box">
-                            <div className="upload-icon" />
-                            <p>
-                                Tải lên ảnh để thợ chẩn đoán chính xác hơn (tối đa 3 ảnh)
-                            </p>
-                        </div>
+                        
+                        {previewUrls.length > 0 && (
+                            <div className="preview-container">
+                                {previewUrls.map((url, index) => (
+                                    <div key={index} className="preview-item">
+                                        <img src={url} alt={`Preview ${index}`} className="preview-image" />
+                                        <button 
+                                            className="btn-remove-preview"
+                                            onClick={() => handleRemoveImage(index)}
+                                            title="Xóa ảnh này"
+                                        >
+                                            <XCircle size={20} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {selectedFiles.length < 3 && (
+                            <label htmlFor="upload-images" className="upload-box">
+                                <input
+                                    id="upload-images"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    style={{ display: "none" }}
+                                    onChange={handleFileChange}
+                                />
+                                <div className="upload-icon" />
+                                <p>
+                                    Tải lên ảnh để thợ chẩn đoán chính xác hơn (đã chọn {selectedFiles.length}/3)
+                                </p>
+                            </label>
+                        )}
                     </div>
 
                     {/* ADDRESS */}
@@ -106,26 +212,31 @@ const RepairRequestModal: React.FC<RepairRequestModalProps> = ({ open, onClose, 
                             if (!technicianId) return;
                             setIsSubmitting(true);
                             try {
-                                // 1. Create order directly assigned to this technician
+                                // 1. Upload ảnh trước (nếu có)
+                                let uploadedImageUrls: string[] = [];
+                                if (selectedFiles.length > 0) {
+                                    uploadedImageUrls = await uploadService.uploadImages(selectedFiles, 'orders');
+                                }
+
+                                // 2. Tạo Order với mảng URL ảnh trả về
                                 const order = await orderService.createOrder({
                                     deviceName,
                                     description,
                                     address,
                                     estimatedPrice: 0,
                                     expectedTime: new Date().toISOString(),
-                                    serviceCategory: "Khác", // Default category
-                                    images: [],
+                                    serviceCategory: serviceCategory, 
+                                    images: uploadedImageUrls,
                                     technicianId
                                 });
 
-                                // 2. Create or find conversation linked to this order
+                                // 3. Tạo conversation
                                 const conv = await chatService.createConversation({
                                     technicianId,
                                     orderId: order.id
                                 });
 
                                 onClose();
-                                // 3. Navigate to chat with linked order ID and conversation ID
                                 navigateToChat(navigate, "customer", {
                                     conversationId: conv.id,
                                     orderId: order.id,
@@ -146,4 +257,4 @@ const RepairRequestModal: React.FC<RepairRequestModalProps> = ({ open, onClose, 
     );
 };
 
-export default RepairRequestModal;
+export default RepairRequestModal; 

@@ -26,6 +26,7 @@ export const CompletedCard: React.FC<CompletedCardProps> = ({ data, role, onView
    const ticketStatus = data.warrantyTicket?.status?.toLowerCase();
     const isPending = ticketStatus === 'pending';
     const isApproved = ticketStatus === 'in_progress' || ticketStatus === 'approved';
+    const isRejected = ticketStatus === 'rejected';
 
     return (
         <div className="cmp-list-card" onClick={() => onViewDetail(data.id)}>
@@ -35,7 +36,7 @@ export const CompletedCard: React.FC<CompletedCardProps> = ({ data, role, onView
 
             <div className="cmp-card-main">
                 {/* --- HIỂN THỊ TAG BẢO HÀNH --- */}
-                {(isPending || isApproved) && (
+                {(isPending || isApproved || isRejected) && ( 
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
                         {isPending && (
                             <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: '#fef3c7', color: '#d97706', border: '1px solid #fcd34d', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
@@ -45,6 +46,11 @@ export const CompletedCard: React.FC<CompletedCardProps> = ({ data, role, onView
                         {isApproved && (
                             <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: '#ecfdf5', color: '#059669', border: '1px solid #6ee7b7', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                                 <FaShieldHalved /> Đang bảo hành
+                            </span>
+                        )}
+                        {isRejected && (
+                            <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                                <FaTriangleExclamation /> Bảo hành bị từ chối
                             </span>
                         )}
                     </div>

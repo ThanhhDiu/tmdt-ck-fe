@@ -110,9 +110,12 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
     };
     const paymentMethodLabel = getPaymentMethodLabel(order.paymentMethod);
 
+    //ảnh
     const evidenceImages = order.priceAdjustment?.evidenceImages?.length 
         ? order.priceAdjustment.evidenceImages 
         : (order.images || []);
+    const orderImages = order.images || [];
+    const adjImages = order.priceAdjustment?.evidenceImages || [];
 
     const partner = role === 'technician' ? order.customer : order.technician;
     const partnerAvatar = resolveMediaUrl(partner?.avatar) || 'https://i.pravatar.cc/150?u=default';
@@ -135,11 +138,11 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
     const ticketStatus = warrantyTicket?.status?.toLowerCase();
     
     const isWarrantyPending = ticketStatus === 'pending';
-    const isWarrantyApproved = ticketStatus === 'in_progress' || ticketStatus === 'approved';
+    const isWarrantyApproved = ['in_progress', 'approved', 'scheduled'].includes(ticketStatus || '');
+    const isWarrantyRejected = ticketStatus === 'rejected';
 
     const [isUpdating, setIsUpdating] = useState(false);
     const handleUpdateWarranty = async (status: 'in_progress' | 'rejected') => {
-        // Có thể BE cần 'id' hoặc 'code', nếu báo lỗi bạn thay bằng warrantyTicket.code nhé
         const warrantyId = warrantyTicket?.id || warrantyTicket?.code; 
         if (!warrantyId) return; 
 
@@ -154,8 +157,8 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
             
             if (res.success) {
                 window.alert('Đã xử lý yêu cầu bảo hành thành công!');
-                fetchWarrantyData(); // Lấy lại trạng thái mới nhất
-                onRefreshOrder(); // Báo ra cha để reload lại list nếu cần
+                fetchWarrantyData(); 
+                onRefreshOrder(); 
             } else {
                 window.alert(res.message || 'Lỗi xử lý');
             }
@@ -260,27 +263,47 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
                         </div>
                     </div>
 
-                    {/* Bằng chứng hình ảnh nghiệm thu */}
+                    {/* Hình ảnh Đơn hàng (Lúc gửi + Lúc nghiệm thu) */}
                     <div className="cmp-card">
                         <div className="card-header-flex">
-                            <h3>Hình ảnh nghiệm thu</h3>
-                            <span className="photo-count">{evidenceImages.length} ẢNH</span>
+                            <h3>Hình ảnh đơn hàng</h3>
+                            <span className="photo-count">{orderImages.length} ẢNH</span>
                         </div>
                         <div className="photo-grid-row">
-                            {evidenceImages.length > 0 ? (
-                                evidenceImages.map((url, idx) => (
+                            {orderImages.length > 0 ? (
+                                orderImages.map((url, idx) => (
                                     <img 
                                         key={idx} 
                                         src={resolveMediaUrl(url) || ""} 
-                                        alt={`Nghiệm thu ${idx + 1}`} 
+                                        alt={`Hình ảnh ${idx + 1}`} 
                                         style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
                                     />
                                 ))
                             ) : (
-                                <p style={{ color: '#64748b', fontSize: '14px' }}>Không có hình ảnh nghiệm thu.</p>
+                                <p style={{ color: '#64748b', fontSize: '14px' }}>Chưa có hình ảnh.</p>
                             )}
                         </div>
                     </div>
+
+                    {/* Hình ảnh Vật tư phát sinh (Chỉ hiện nếu có) */}
+                    {adjImages.length > 0 && (
+                        <div className="cmp-card" style={{ marginTop: '16px' }}>
+                            <div className="card-header-flex">
+                                <h3 style={{ color: '#b45309' }}>Ảnh vật tư phát sinh</h3>
+                                <span className="photo-count" style={{ background: '#fef3c7', color: '#b45309' }}>{adjImages.length} ẢNH</span>
+                            </div>
+                            <div className="photo-grid-row">
+                                {adjImages.map((url, idx) => (
+                                    <img 
+                                        key={`adj-${idx}`} 
+                                        src={resolveMediaUrl(url) || ""} 
+                                        alt={`Vật tư ${idx + 1}`} 
+                                        style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #f59e0b' }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* --- CỘT PHẢI --- */}
@@ -372,7 +395,17 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
                                     <FaShieldHalved /> Đã tạo lịch hẹn bảo hành mới
                                 </p>
                                 <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px', marginBottom: 0 }}>
-                                    Vui lòng kiểm tra màn hình chính (Tab "Sắp hẹn") để theo dõi tiến độ.
+                                    Vui lòng kiểm tra tab "Bảo hành" để theo dõi.
+                                </p>
+                            </div>
+                        ) : isWarrantyRejected ? (
+                            <div className="warranty-rejected-box" style={{ background: '#fef2f2', padding: '12px', borderRadius: '8px', border: '1px solid #ef4444' }}>
+                                <p style={{ color: '#dc2626', fontWeight: 'bold', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <FaTriangleExclamation /> Yêu cầu bảo hành đã bị từ chối
+                                </p>
+                                <p style={{ fontSize: '14px', margin: '4px 0' }}><strong>Lỗi đã báo:</strong> {warrantyTicket.description}</p>
+                                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '12px' }}>
+                                    Yêu cầu của bạn không đủ điều kiện hoặc thợ đã từ chối. Vui lòng liên hệ tổng đài để được hỗ trợ thêm.
                                 </p>
                             </div>
                         ) : (

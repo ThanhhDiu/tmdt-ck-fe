@@ -14,6 +14,7 @@ import { resolveMediaUrl } from '../../utils/mediaUrl.ts';
 import { useNavigate } from 'react-router-dom';
 import { navigateToChat } from '../../utils/chatNavigation';
 import { orderController } from '../../controllers/order/orderController.ts';
+import { orderRealtimeClient } from '../../services/order/orderRealtimeClient.ts';
 
 interface CompletedDetailProps {
     order: OrderResponse; 
@@ -183,6 +184,24 @@ export const CompletedDetail: React.FC<CompletedDetailProps> = ({ order, role, o
         }
         navigateToChat(navigate, role, { orderId: order.id, customerId: order.customer?.id });
     };
+
+    useEffect(() => {
+        fetchWarrantyData();
+        setReviewSubmitted(getLocalReviewedState(order.id));
+
+        const off = orderRealtimeClient.onEvent((payload) => {
+            if (payload.orderId === order.id) {
+                console.log(`[Realtime] Phát hiện thay đổi đơn ${order.id}, đang cập nhật bảo hành...`);
+                fetchWarrantyData(); 
+                onRefreshOrder();   
+            }
+        });
+
+        // 3. Cleanup khi unmount
+        return () => {
+            off();
+        };
+    }, [order?.id]);
 
     // --- GIAO DIỆN ---
     return (

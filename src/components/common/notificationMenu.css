@@ -7,17 +7,25 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   width: 44px;
   height: 44px;
-  border-radius: 16px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  border-radius: 50%;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+
+  color: #374151;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+
+  transition: all .2s ease;
 }
 
-.notification-menu__trigger:hover,
+.notification-menu__trigger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
 .notification-menu__trigger.is-open {
   transform: translateY(-1px);
 }
@@ -72,6 +80,38 @@
 
 .notification-menu--dark .notification-menu__badge {
   box-shadow: 0 0 0 2px #1a1e3b;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -20px;
+
+  min-width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: #f4c15d;
+  color: #000;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+
+.test-bell{
+    color: var(--yogurt-tint) !important;
+    width:24px !important;
+    height:24px !important;
+    display:block !important;
+    stroke-width:2px;
 }
 
 .notification-menu__panel {

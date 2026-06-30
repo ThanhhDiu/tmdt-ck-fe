@@ -30,7 +30,7 @@ const formatNotificationTime = (value: string) => {
 };
 
 const NotificationMenu: React.FC<NotificationMenuProps> = ({
-  variant = 'light',
+  variant = 'dark',
   badgeStyle = 'dot',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -159,7 +159,7 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
         aria-expanded={isOpen}
         onClick={handleToggle}
       >
-        <BellIcon size={20} />
+        <BellIcon size={24} className="test-bell" />
         {showDotBadge && <span className="notification-dot" aria-hidden="true" />}
         {showCountBadge && (
           <span className="badge" aria-hidden="true">

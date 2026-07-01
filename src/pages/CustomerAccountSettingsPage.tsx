@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
-import { uploadService } from '../services/technician/uploadTechnical';
+import { uploadService } from '../services/uploadService';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { resolveMediaUrl } from '../utils/mediaUrl';
+import { authService } from '../services/auth/authService';
 import {
   CustomerAccountDangerZone,
   CustomerAccountProfileCard,
@@ -29,8 +30,11 @@ function profileToForm(profile: {
 
 export default function CustomerAccountSettingsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { profile, refreshProfile, setAvatar, updateProfile } = useUserProfile();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [form, setForm] = useState<CustomerAccountFormData>(() => profileToForm(profile));
   const [userId, setUserId] = useState<string>(profile.id);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar);
@@ -104,9 +108,8 @@ export default function CustomerAccountSettingsPage() {
   };
 
   const handleUploadAvatar = async (file: File) => {
-    const res = await uploadService.uploadImage(file);
-    if (res.success && res.data?.url) {
-      const newAvatarUrl = res.data.url;
+    const newAvatarUrl = await uploadService.uploadAvatar(file);
+    if (newAvatarUrl) {
       if (userId) {
         await userService.updateUserProfile(userId, { avatar: newAvatarUrl });
       }
@@ -114,7 +117,30 @@ export default function CustomerAccountSettingsPage() {
       setAvatarUrl(resolvedAvatar);
       setAvatar(resolvedAvatar);
     } else {
-      throw new Error(res.message || 'Upload thất bại');
+      throw new Error('Upload thất bại');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      await userService.deleteAccount();
+      authService.logout();
+      updateProfile({
+        id: '',
+        fullName: '',
+        phone: '',
+        email: '',
+        code: '',
+        avatar: null,
+        address: '',
+      });
+      navigate('/auth/login', { replace: true });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Không thể xóa tài khoản. Vui lòng thử lại.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -141,9 +167,16 @@ export default function CustomerAccountSettingsPage() {
 
       <DeleteAccountModal
         open={deleteOpen}
-        message="Bạn có chắc chắn? Toàn bộ lịch sử đơn hàng, ví và dữ liệu liên quan sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác."
-        onConfirm={() => setDeleteOpen(false)}
-        onCancel={() => setDeleteOpen(false)}
+        message="Bạn có chắc chắn muốn xóa tài khoản? Tài khoản sẽ được vô hiệu hóa, bạn sẽ được đăng xuất khỏi thiết bị hiện tại và cần liên hệ hỗ trợ nếu muốn khôi phục."
+        loading={isDeleting}
+        error={deleteError}
+        onConfirm={handleDeleteAccount}
+        onCancel={() => {
+          if (!isDeleting) {
+            setDeleteOpen(false);
+            setDeleteError('');
+          }
+        }}
       />
     </>
   );

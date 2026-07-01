@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { loginUser, registerUser } from '../services/auth'
 import { authService } from '../services/auth/authService'
+import { saveRememberMe } from '../utils/token'
 import './AuthScreens.css'
 type AccountType = 'customer' | 'technician'
 
@@ -151,9 +152,11 @@ function PageHeader({
 function ToggleGroup({
   value,
   onChange,
+  disabled = false,
 }: {
   value: AccountType
   onChange: (value: AccountType) => void
+  disabled?: boolean
 }) {
   return (
     <div className="auth-toggle" role="radiogroup" aria-label="Loại tài khoản">
@@ -163,6 +166,7 @@ function ToggleGroup({
         aria-checked={value === 'customer'}
         className={value === 'customer' ? 'is-active' : ''}
         onClick={() => onChange('customer')}
+        disabled={disabled}
       >
         <UserRound size={16} />
         <span>Người dùng</span>
@@ -173,6 +177,7 @@ function ToggleGroup({
         aria-checked={value === 'technician'}
         className={value === 'technician' ? 'is-active' : ''}
         onClick={() => onChange('technician')}
+        disabled={disabled}
       >
         <BadgeCheck size={16} />
         <span>Thợ</span>
@@ -195,6 +200,7 @@ function TextField({
   rightAction,
   name,
   required,
+  disabled,
 }: {
   label: string
   icon: ReactNode
@@ -209,6 +215,7 @@ function TextField({
   rightAction?: ReactNode
   name?: string
   required?: boolean
+  disabled?: boolean
 }) {
   const describedBy = [error ? `${name}-error` : '', helperText ? `${name}-hint` : '']
     .filter(Boolean)
@@ -232,6 +239,7 @@ function TextField({
           inputMode={inputMode}
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy || undefined}
+          disabled={disabled}
         />
         {rightAction}
       </div>
@@ -346,6 +354,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -369,17 +378,20 @@ export function LoginPage() {
 
     if (!validate()) {
       setSuccessMessage('')
+      setSubmitError('')
       return
     }
 
     setIsSubmitting(true)
     setSuccessMessage('')
+    setSubmitError('')
 
     try {
       const loginResponse = await loginUser({
         identifier: identifier.trim(),
         password: password
       })
+      saveRememberMe(rememberMe)
       
       // Gọi refreshProfile để update context sau khi đăng nhập thành công
       await refreshProfile()
@@ -400,7 +412,7 @@ export function LoginPage() {
 
     } catch (error) {
       setIsSubmitting(false)
-      setSuccessMessage('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.')
+      setSubmitError(error instanceof Error ? error.message : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin đăng nhập.')
     }
   }
 
@@ -421,6 +433,7 @@ export function LoginPage() {
         />
 
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
+        {submitError ? <StatusBanner type="error" title="Đăng nhập thất bại" description={submitError} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>
 
@@ -435,6 +448,7 @@ export function LoginPage() {
             error={errors.identifier}
             helperText="Có thể dùng email hoặc SĐT đã đăng ký."
             autoComplete="username"
+            disabled={isSubmitting}
           />
 
           <TextField
@@ -448,12 +462,14 @@ export function LoginPage() {
             placeholder="Nhập mật khẩu"
             error={errors.password}
             autoComplete="current-password"
+            disabled={isSubmitting}
             rightAction={
               <button
                 className="auth-field__action"
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                disabled={isSubmitting}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -466,6 +482,7 @@ export function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(event) => setRememberMe(event.target.checked)}
+                disabled={isSubmitting}
               />
               <span>Ghi nhớ đăng nhập</span>
             </label>
@@ -522,6 +539,7 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<FieldError>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
   const validate = () => {
     const nextErrors: FieldError = {}
@@ -569,11 +587,13 @@ export function RegisterPage() {
 
     if (!validate()) {
       setSuccessMessage('')
+      setSubmitError('')
       return
     }
 
     setIsSubmitting(true)
     setSuccessMessage('')
+    setSubmitError('')
     setErrors({})
 
     try {
@@ -603,6 +623,7 @@ export function RegisterPage() {
         setErrors({ phone: errorMessage })
       } else {
         setErrors({ fullName: errorMessage })
+        setSubmitError(errorMessage)
       }
     }
   }
@@ -624,9 +645,10 @@ export function RegisterPage() {
         />
 
         {successMessage ? <StatusBanner type="success" title="Hoàn tất" description={successMessage} /> : null}
+        {submitError ? <StatusBanner type="error" title="Đăng ký thất bại" description={submitError} /> : null}
 
         <form className="auth-form" onSubmit={onSubmit} noValidate>
-          <ToggleGroup value={accountType} onChange={setAccountType} />
+          <ToggleGroup value={accountType} onChange={setAccountType} disabled={isSubmitting} />
 
           <TextField
             name="fullName"
@@ -638,6 +660,7 @@ export function RegisterPage() {
             placeholder="Nhập họ và tên"
             error={errors.fullName}
             autoComplete="name"
+            disabled={isSubmitting}
           />
 
           <TextField
@@ -652,6 +675,7 @@ export function RegisterPage() {
             error={errors.email}
             autoComplete="email"
             inputMode="email"
+            disabled={isSubmitting}
           />
 
           <TextField
@@ -666,6 +690,7 @@ export function RegisterPage() {
             error={errors.phone}
             autoComplete="tel"
             inputMode="tel"
+            disabled={isSubmitting}
           />
 
           <TextField
@@ -679,12 +704,14 @@ export function RegisterPage() {
             placeholder="Tạo mật khẩu mạnh"
             error={errors.password}
             autoComplete="new-password"
+            disabled={isSubmitting}
             rightAction={
               <button
                 className="auth-field__action"
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                disabled={isSubmitting}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -704,12 +731,14 @@ export function RegisterPage() {
             placeholder="Nhập lại mật khẩu"
             error={errors.confirmPassword}
             autoComplete="new-password"
+            disabled={isSubmitting}
             rightAction={
               <button
                 className="auth-field__action"
                 type="button"
                 onClick={() => setShowConfirmPassword((current) => !current)}
                 aria-label={showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
+                disabled={isSubmitting}
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -733,6 +762,7 @@ export function RegisterPage() {
                     return current
                   })
                 }}
+                disabled={isSubmitting}
               />
               <span>
                 <span className="auth-required">*</span>{' '}

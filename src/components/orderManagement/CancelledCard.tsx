@@ -30,7 +30,7 @@ export const CancelledCard: React.FC<CancelledCardProps> = ({ data, role, onView
                     <span className="cnc-id">#{data.id}</span>
                 </div>
 
-                <h3 className="cnc-service-name">{data.serviceName} - {data.subService}</h3>
+                <h3 className="cnc-service-name">{data.serviceName}</h3>
 
                 <div className="cnc-meta-row">
                     <span className="cnc-date">

@@ -7,4 +7,5 @@ export interface CompletedOrder {
     completionDate: string;
     totalPrice: number;
     rating: number; // Số sao đánh giá (0 nếu chưa đánh giá)
+    warrantyTicket?: { status: string };
 }

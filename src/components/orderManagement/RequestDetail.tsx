@@ -1,10 +1,12 @@
 import React from 'react';
+import { useState } from "react";
 import type {RequestData} from "../../types/RequestData.ts";
 import type {UserRole} from "../../types/UserRole.ts";
 import "./requestDetail.css"
 import {FaLocationDot, FaClock, FaRegCommentDots, FaArrowLeft} from 'react-icons/fa6';
 import { navigateToChat } from "../../utils/chatNavigation";
 import {useNavigate} from "react-router-dom";
+import { resolveMediaUrl } from '../../utils/mediaUrl.ts';
 
 interface RequestDetailProps {
     data: RequestData;
@@ -15,6 +17,9 @@ interface RequestDetailProps {
 
 export const RequestDetail: React.FC<RequestDetailProps> = ({ data, role, onBack, onCancel }) => {
     const navigate = useNavigate();
+
+    const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+
     const handleChatClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (role === 'customer' && data.technicianId) {
@@ -50,7 +55,7 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ data, role, onBack
                     </div>
                 </div>
 
-                {/* hình ảnh */}
+                {/* HÌNH ẢNH */}
                 <div className="images-block">
                     <div className="block-header">
                         <span className="label">HÌNH ẢNH THỰC TẾ</span>
@@ -58,10 +63,23 @@ export const RequestDetail: React.FC<RequestDetailProps> = ({ data, role, onBack
                     </div>
                     <div className="image-grid">
                         {data.images.map((img, idx) => (
-                            <img key={idx} src={img} alt="Lỗi thiết bị" className="req-image" />
+                            <img 
+                                key={idx} 
+                                src={resolveMediaUrl(img) || ""}
+                                alt={`Ảnh thiết bị ${idx + 1}`} 
+                                className="req-image" 
+                                onClick={() => setFullScreenImage(resolveMediaUrl(img))} // THÊM SỰ KIỆN CLICK
+                            />
                         ))}
                     </div>
                 </div>
+
+                {/* LIGHTBOX (Overlay phóng to) */}
+                {fullScreenImage && (
+                    <div className="lightbox-overlay" onClick={() => setFullScreenImage(null)}>
+                        <img src={fullScreenImage} alt="Phóng to" className="lightbox-image" />
+                    </div>
+                )}
 
                 {/* địa điểm và thời gian */}
                 <div className="meta-grid">

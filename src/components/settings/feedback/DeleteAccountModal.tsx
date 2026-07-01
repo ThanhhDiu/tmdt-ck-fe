@@ -6,6 +6,8 @@ interface DeleteAccountModalProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  loading?: boolean;
+  error?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -14,8 +16,10 @@ export function DeleteAccountModal({
   open,
   title = 'Xóa tài khoản',
   message,
-  confirmLabel = 'Xóa vĩnh viễn',
+  confirmLabel = 'Xóa tài khoản',
   cancelLabel = 'Hủy',
+  loading = false,
+  error,
   onConfirm,
   onCancel,
 }: DeleteAccountModalProps) {
@@ -33,12 +37,13 @@ export function DeleteAccountModal({
           {title}
         </h2>
         <p className="settings-modal__text">{message}</p>
+        {error && <p className="settings-modal__error">{error}</p>}
 
         <div className="settings-modal__actions">
-          <button type="button" className="settings-danger-button" onClick={onConfirm}>
-            {confirmLabel}
+          <button type="button" className="settings-danger-button" onClick={onConfirm} disabled={loading}>
+            {loading ? 'Đang xóa...' : confirmLabel}
           </button>
-          <button type="button" className="settings-secondary-button" onClick={onCancel}>
+          <button type="button" className="settings-secondary-button" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </button>
         </div>

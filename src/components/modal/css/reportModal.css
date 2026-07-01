@@ -108,3 +108,33 @@
 .btn-solid-danger:hover {
     background: #dc2626;
 }
+
+.report-file-count,
+.report-error {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.report-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 10px;
+}
+
+.report-preview-grid img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.report-error {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.report-footer button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}

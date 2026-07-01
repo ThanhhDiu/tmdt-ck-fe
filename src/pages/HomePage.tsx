@@ -45,7 +45,6 @@ export const HomePage: React.FC = () => {
         <HeroSection />
         <PopularServices />
         <TopExperts onNavigate={onNavigate} />
-        <PremiumBanner />
       </main>
       <Footer />
     </div>

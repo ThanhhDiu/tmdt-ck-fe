@@ -87,6 +87,21 @@ export const orderService = {
         return normalizePage(response.data, { page, size });
     },
 
+    listTechnicianOrders: async (technicianId: string, query: OrderListQuery = {}): Promise<OrderResponse[]> => {
+        const page = query.page ?? 0;
+        const size = query.size ?? 100;
+
+        const response = await apiClient.get('/api/orders', {
+            params: {
+                technician: technicianId,
+                page,
+                size,
+            },
+        });
+
+        return normalizePage(response.data, { page, size }).items;
+    },
+
     getOrderById: async (id: string): Promise<OrderResponse> => {
         const response = await apiClient.get(`/api/orders/${id}`);
         return normalizeOrder(response.data);
@@ -143,5 +158,32 @@ export const orderService = {
         const response = await apiClient.post(`/api/orders/${orderId}/payment/cash-confirm`);
         unwrap(response.data);
         return orderService.getOrderById(orderId);
+    },
+
+    updateOrderStatus: async (orderId: string, status: string): Promise<OrderResponse> => {
+        const response = await apiClient.patch(`/api/orders/${orderId}/status`, { status });
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
+
+    completeOrder: async (orderId: string, payload: { finalPrice?: number; images: string[] }): Promise<OrderResponse> => {
+        const response = await apiClient.post(`/api/orders/${orderId}/complete`, payload);
+        unwrap(response.data);
+        return orderService.getOrderById(orderId);
+    },
+
+    submitWarranty: async (orderId: string, payload: { description: string; images: string[]; scheduledAt: string }) => {
+        const response = await apiClient.post(`/api/orders/${orderId}/warranty`, payload);
+        return unwrap(response.data);
+    },
+
+    getWarrantyInfo: async (orderId: string) => {
+        const response = await apiClient.get(`/api/orders/${orderId}/warranty`);
+        return unwrap(response.data);
+    },
+
+    updateWarrantyStatus: async (warrantyId: string, status: 'in_progress' | 'rejected') => {
+        const response = await apiClient.patch(`/api/orders/warranty/${warrantyId}/status?status=${status}`);
+        return unwrap(response.data);
     },
 };

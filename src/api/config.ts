@@ -1,18 +1,7 @@
 import axios from 'axios';
 import { loadTokenFromStorage } from '../utils/token';
-/*
-const apiClient = axios.create({
-    // baseURL: 'http://192.168.88.251:8080/api/',
-    // baseURL: 'http://10.0.2.2:8080/',
-    baseURL: 'http://localhost:8080/',
-    // baseURL: 'http://192.168.1.191:8080/',
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-*/
-// Mở file config.ts và sửa lại đoạn này:
+
+export const BASE_URL = 'http://localhost:8080/';
 
 const apiClient = axios.create({
     // Đổi từ IP nội bộ sang localhost + thêm tiền tố /api

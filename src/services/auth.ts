@@ -26,10 +26,10 @@ export const registerUser = async (userData: RegisterUserData): Promise<void> =>
     }),
   })
 
-  const data = await response.json()
+  const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    throw new Error(data.message || 'Đăng ký thất bại')
+    throw new Error(data.message || data.error || 'Đăng ký thất bại')
   }
 }
 
@@ -89,10 +89,13 @@ export const loginUser = async (
     }),
   })
 
-  const data: LoginResponse = await response.json()
+  const data = await response.json().catch(() => ({})) as LoginResponse & {
+    message?: string
+    error?: string
+  }
 
-  if (!response.ok) {
-    throw new Error('Đăng nhập thất bại')
+  if (!response.ok || data.success === false) {
+    throw new Error(data.message || data.error || 'Đăng nhập thất bại')
   }
   const { user, accessToken, refreshToken } = data.data
   localStorage.setItem('user', JSON.stringify({ user }))

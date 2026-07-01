@@ -22,6 +22,9 @@ export type MessageNewWsPayload = {
     senderId: string;
     type: string;
     content?: string | null;
+    imageUrl?: string | null;
+    mediaUrl?: string | null;
+    attachments?: ChatMessage['attachments'];
     quotation?: ChatMessage['quotation'];
     sentAt: string;
     isRead?: boolean;
@@ -151,6 +154,9 @@ export const mapWsMessageToChatMessage = (
     senderId: msg.senderId,
     type: (msg.type?.toLowerCase() ?? 'text') as ChatMessage['type'],
     content: msg.content,
+    imageUrl: msg.imageUrl ?? null,
+    mediaUrl: msg.mediaUrl ?? null,
+    attachments: msg.attachments ?? null,
     quotation: msg.quotation ?? null,
     sentAt:
       typeof msg.sentAt === 'string'

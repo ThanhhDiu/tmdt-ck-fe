@@ -42,6 +42,15 @@ export default function AppRouter() {
     <Routes>
       <Route path="/technician">
         <Route
+          path="chat"
+          element={
+            <TechnicianLayout activeItem="messages">
+              <ChatPage role="technician" />
+            </TechnicianLayout>
+          }
+        />
+
+        <Route
           path="jobs"
           element={
             <TechnicianLayout activeItem="jobs">
@@ -139,6 +148,7 @@ export default function AppRouter() {
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/rewards" element={<VoucherRewardsPage />} />
       <Route path="/provider-profile" element={<ProviderProfile />} />
+      <Route path="/technicant/chat" element={<Navigate to="/technician/chat" replace />} />
 
       {/* Technician routes */}
       <Route path="/technician/jobs" element={

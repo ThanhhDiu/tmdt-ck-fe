@@ -574,6 +574,18 @@
   line-height: 1.7;
 }
 
+.settings-modal__error {
+  margin: 14px 0 0;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: var(--fw-semibold);
+}
+
+.settings-modal button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .settings-modal__actions {
   display: flex;
   flex-direction: column;

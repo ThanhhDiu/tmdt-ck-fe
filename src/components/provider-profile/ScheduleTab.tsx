@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import type { TechnicianScheduleSlot } from '../../types/technician';
+import type { BusySlotResponse, TechnicianScheduleSlot } from '../../types/technician';
 import type { OrderResponse } from '../../types/order/order';
 import { normalizeScheduleDayKey } from '../../services/technician/technicianService';
 import './ScheduleTab.css';
 
 interface ScheduleTabProps {
   schedule?: TechnicianScheduleSlot[];
-  bookedOrders?: OrderResponse[];
+  busySlots?: BusySlotResponse[];
 }
 
 const WEEK_DAYS = [
@@ -32,12 +32,17 @@ const toDateKey = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-const parseOrderDate = (order: OrderResponse) => {
-  const rawDate = order.scheduledAt ?? order.expectedTime;
+const parseOrderDate = (slot: BusySlotResponse) => {
+  const rawDate = slot.scheduledAt ?? slot.expectedTime;
   if (!rawDate) return null;
 
   const date = new Date(rawDate);
   return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const isActiveBookedOrder = (slot: BusySlotResponse) => {
+  const status = (slot.status ?? '').toLowerCase();
+  return !status.includes('cancel');
 };
 
 const formatDate = (date: Date) =>
@@ -69,12 +74,7 @@ const getSlotTone = (slot?: TechnicianScheduleSlot, bookedCount = 0) => {
   return 'available';
 };
 
-const isActiveBookedOrder = (order: OrderResponse) => {
-  const status = (order.status ?? '').toLowerCase();
-  return !status.includes('cancel');
-};
-
-export const ScheduleTab: React.FC<ScheduleTabProps> = ({ schedule = [], bookedOrders = [] }) => {
+export const ScheduleTab: React.FC<ScheduleTabProps> = ({ schedule = [], busySlots = [] }) => {
   const upcomingDays = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -102,20 +102,20 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({ schedule = [], bookedO
   }, [schedule]);
 
   const ordersByDate = useMemo(() => {
-    const map = new Map<string, Array<{ order: OrderResponse; date: Date }>>();
+    const map = new Map<string, Array<{ slotInfo: BusySlotResponse; date: Date }>>();
 
-    bookedOrders.filter(isActiveBookedOrder).forEach((order) => {
-      const date = parseOrderDate(order);
+    busySlots.filter(isActiveBookedOrder).forEach((slotInfo) => {
+      const date = parseOrderDate(slotInfo);
       if (!date) return;
 
       const dateKey = toDateKey(date);
       const items = map.get(dateKey) ?? [];
-      items.push({ order, date });
+      items.push({ slotInfo, date });
       map.set(dateKey, items);
     });
 
     return map;
-  }, [bookedOrders]);
+  }, [busySlots]);
 
   const availableSlots = upcomingDays
     .map((day) => {
@@ -155,9 +155,10 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({ schedule = [], bookedO
               <div className="schedule-day-time">{formatSlot(slot, dayOrders.length)}</div>
               {dayOrders.length > 0 && (
                 <div className="schedule-booked-list">
-                  {dayOrders.slice(0, 2).map(({ order, date }) => (
-                    <span key={order.id}>
-                      #{order.id} - {formatTime(date)}
+                  {/* Map đúng mã đơn orderCode từ API mới */}
+                  {dayOrders.slice(0, 2).map(({ slotInfo, date }) => (
+                    <span key={slotInfo.orderCode}>
+                      #{slotInfo.orderCode} - {formatTime(date)}
                     </span>
                   ))}
                   {dayOrders.length > 2 && <span>+{dayOrders.length - 2} đơn khác</span>}
@@ -177,7 +178,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({ schedule = [], bookedO
         })}
       </div>
 
-      <section className="schedule-available-section">
+      {/* <section className="schedule-available-section">
         <h3>Khung giờ trống trong 7 ngày tới</h3>
         {availableSlots.length === 0 ? (
           <div className="schedule-empty-state">Thợ chưa có khung giờ trống trong 7 ngày tới.</div>
@@ -194,7 +195,7 @@ export const ScheduleTab: React.FC<ScheduleTabProps> = ({ schedule = [], bookedO
             ))}
           </div>
         )}
-      </section>
+      </section> */}
     </div>
   );
 };

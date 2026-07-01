@@ -14,15 +14,13 @@ import { AboutTab } from '../components/provider-profile/AboutTab';
 import { ScheduleTab } from '../components/provider-profile/ScheduleTab';
 
 import { normalizeTechnicianSchedule, technicianService } from '../services/technician/technicianService';
-import { orderService } from '../services/order/orderService';
 
 import { mapDetailToProfileHeader } from '../utils/technicianMappers';
 
 import { resolveTechnicianIdFromLocation } from '../utils/providerNavigation';
 
 import type { ProfileHeaderProps } from '../components/provider-profile/ProfileHeader';
-import type { TechnicianDetail, TechnicianReview, TechnicianScheduleSlot } from '../types/technician';
-import type { OrderResponse } from '../types/order/order';
+import type { BusySlotResponse, TechnicianDetail, TechnicianReview, TechnicianScheduleSlot } from '../types/technician';
 
 import './ProviderProfile.css';
 
@@ -78,7 +76,7 @@ export const ProviderProfile: React.FC = () => {
   const [detailData, setDetailData] = useState<TechnicianDetail | null>(null);
   const [reviews, setReviews] = useState<TechnicianReview[]>([]);
   const [schedule, setSchedule] = useState<TechnicianScheduleSlot[]>([]);
-  const [technicianOrders, setTechnicianOrders] = useState<OrderResponse[]>([]);
+  const [technicianOrders, setTechnicianOrders] = useState<BusySlotResponse[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -120,7 +118,7 @@ export const ProviderProfile: React.FC = () => {
 
         const [reviewItems, orderItems] = await Promise.all([
           technicianService.getTechnicianReviews(technicianId).catch(() => detail.reviews ?? []),
-          orderService.listTechnicianOrders(technicianId, { size: 100 }).catch(() => []),
+          technicianService.getTechnicianBusySlots(technicianId).catch(() => []),
         ]);
 
         if (cancelled) return;
@@ -128,7 +126,7 @@ export const ProviderProfile: React.FC = () => {
         setDetailData(detail);
         setReviews((reviewItems ?? []).filter(Boolean) as TechnicianReview[]);
         setSchedule(normalizeTechnicianSchedule(detail.schedule));
-        setTechnicianOrders((orderItems ?? []).filter(Boolean) as OrderResponse[]);
+        setTechnicianOrders((orderItems ?? []).filter(Boolean) as BusySlotResponse[]);
         setProfileData(mapDetailToProfileHeader(detail));
 
       } catch (error) {
@@ -239,7 +237,7 @@ export const ProviderProfile: React.FC = () => {
 
                 {activeTab === 'reviews' && <AboutTab detail={detailData} reviews={reviews} onlyReviews />}
 
-                {activeTab === 'schedule' && <ScheduleTab schedule={schedule} bookedOrders={technicianOrders} />}
+                {activeTab === 'schedule' && <ScheduleTab schedule={schedule} busySlots={technicianOrders} />}
 
               </div>
             </div>

@@ -36,6 +36,10 @@
   width: 100%; height: 100%; gap: 8px;
 }
 
+.chart-bars-container--loading {
+  opacity: 0.7;
+}
+
 .chart-bar-wrapper {
   display: flex; flex-direction: column; align-items: center;
   flex: 1; height: 100%; justify-content: flex-end; gap: 12px;
@@ -60,6 +64,12 @@
 
 .chart-bar-main:hover { opacity: 0.85; }
 
+.chart-bar-skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 37%, #e2e8f0 63%);
+  background-size: 400% 100%;
+  animation: chart-skeleton-loading 1.2s ease infinite;
+}
+
 .chart-bar-main:hover .bar-tooltip {
   opacity: 1; transform: translateX(-50%) translateY(-4px); visibility: visible;
 }
@@ -83,6 +93,26 @@
 .label-today {
   color: var(--text-primary); font-weight: 700;
   background: var(--bg-subtle); padding: 2px 10px; border-radius: 6px;
+}
+
+.chart-bar-label--loading {
+  color: var(--text-light);
+}
+
+.chart-empty-state {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+@keyframes chart-skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 @media (max-width: 768px) {

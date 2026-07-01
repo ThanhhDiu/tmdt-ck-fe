@@ -47,3 +47,20 @@
 .uoh-status.await { background: #fbf0df; color: #b9762a; }
 .uoh-status.done { background: #ecfdf3; color: #027a48; }
 .uoh-status.cancel { background: #fef3f2; color: #b42318; }
+
+.uoh-load-more {
+  margin-top: 12px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.uoh-load-more:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

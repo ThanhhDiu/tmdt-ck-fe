@@ -1,282 +1,182 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
 import { OrderTable } from '../components/orderManagement/OrderTable';
 import {
   getAdminOrders,
+  getOrderStats,
   type OrderStatsSummary,
   type OrderTableRow,
 } from '../services/orderService';
 import './AdminOrdersPage.css';
 
-const formatDateForFilter = (value?: string | null): Date | null => {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const parsePrice = (value?: string | null): number => {
-  if (!value) return 0;
-  const normalized = value.replace(/[^\d]/g, '');
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const DASHBOARD_FETCH_LIMIT = 1000;
-
-const buildOrderStats = (orders: OrderTableRow[]): OrderStatsSummary => {
-  return orders.reduce(
-    (acc, order) => {
-      switch (order.status) {
-        case 'NEW':
-        case 'ASSIGNED':
-        case 'SCHEDULED':
-        case 'IN_PROGRESS':
-          acc.processing += 1;
-          break;
-        case 'COMPLETED':
-          acc.completed += 1;
-          break;
-        case 'CANCELLED':
-          acc.cancelled += 1;
-          break;
-        default:
-          break;
-      }
-
-      return acc;
-    },
-    {
-      totalOrders: orders.length,
-      processing: 0,
-      completed: 0,
-      cancelled: 0,
-      disputes: 0,
-      pendingPriceReview: 0,
-    },
-  );
-};
-
-const isWithinTimeFilter = (order: OrderTableRow, filter: string): boolean => {
-  if (filter === 'Tất cả') return true;
-
-  const baseDate = formatDateForFilter(order.rawScheduledAt || order.rawCreatedAt);
-  if (!baseDate) return true;
-
-  const now = new Date();
-  const diffMs = now.getTime() - baseDate.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-  if (filter === 'Hôm nay') {
-    return now.toDateString() === baseDate.toDateString();
-  }
-
-  if (filter === '7 ngày') {
-    return diffDays >= 0 && diffDays <= 7;
-  }
-
-  if (filter === '30 ngày') {
-    return diffDays >= 0 && diffDays <= 30;
-  }
-
-  return true;
-};
-
-const isWithinPriceFilter = (order: OrderTableRow, filter: string): boolean => {
-  if (filter === 'Tất cả') return true;
-
-  const price = order.rawPrice ?? parsePrice(order.price);
-  if (filter === 'Dưới 300k') return price < 300000;
-  if (filter === '300k - 500k') return price >= 300000 && price <= 500000;
-  if (filter === 'Trên 500k') return price > 500000;
-
-  return true;
-};
-
 const AdminOrdersPage: React.FC = () => {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('Tất cả');
-  const [timeFilter, setTimeFilter] = useState('Tất cả');
-  const [paymentFilter, setPaymentFilter] = useState('Tất cả');
-  const [technicianFilter, setTechnicianFilter] = useState('Tất cả');
-  const [areaFilter, setAreaFilter] = useState('Tất cả');
-  const [priceFilter, setPriceFilter] = useState('Tất cả');
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const [fullData, setFullData] = useState<OrderTableRow[]>([]);
+  const [orders, setOrders] = useState<OrderTableRow[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
+  const [stats, setStats] = useState<OrderStatsSummary | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const pageCache = useRef<Map<string, { items: OrderTableRow[]; totalElements: number; totalPages: number }>>(new Map());
+
+  const requestStatus = useMemo(() => (statusFilter === 'Tất cả' ? undefined : (statusFilter as OrderTableRow['status'])), [statusFilter]);
+  const cacheKeyPrefix = useMemo(() => `${statusFilter}::${debouncedSearch}`, [statusFilter, debouncedSearch]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchText.trim()), 300);
     return () => window.clearTimeout(timer);
   }, [searchText]);
 
-  useEffect(() => {
-    let active = true;
-
-    const loadOrders = async () => {
-      try {
-        setOrdersLoading(true);
-        setOrdersError(null);
-
-        const firstPage = await getAdminOrders({
-          page: 1,
-          limit: DASHBOARD_FETCH_LIMIT,
-        });
-
-        if (!active) return;
-
-        const totalPages = Math.max(1, Math.ceil((firstPage.totalElements || 0) / DASHBOARD_FETCH_LIMIT));
-        let nextOrders = [...firstPage.items];
-
-        if (totalPages > 1) {
-          const remainingPages = await Promise.all(
-            Array.from({ length: totalPages - 1 }, (_, index) => {
-              return getAdminOrders({
-                page: index + 2,
-                limit: DASHBOARD_FETCH_LIMIT,
-              });
-            }),
-          );
-
-          if (!active) return;
-
-          nextOrders = [...nextOrders, ...remainingPages.flatMap((page) => page.items)];
-        }
-
-        setFullData(nextOrders);
-        setSelectedIds((current) => current.filter((id) => nextOrders.some((order) => order.id === id)));
-      } catch (error: any) {
-        if (!active) return;
-        setFullData([]);
-        setOrdersError(error?.message || 'Không thể tải danh sách đơn hàng');
-      } finally {
-        if (active) {
-          setOrdersLoading(false);
-        }
-      }
-    };
-
-    loadOrders();
-
-    return () => {
-      active = false;
-    };
+  const loadStats = useCallback(async () => {
+    try {
+      setStatsLoading(true);
+      const result = await getOrderStats();
+      setStats(result);
+    } catch {
+      setStats({
+        totalOrders: 0,
+        processing: 0,
+        completed: 0,
+        cancelled: 0,
+        disputes: 0,
+        pendingPriceReview: 0,
+      });
+    } finally {
+      setStatsLoading(false);
+    }
   }, []);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [areaFilter, debouncedSearch, paymentFilter, priceFilter, statusFilter, technicianFilter, timeFilter]);
+  const loadOrdersPage = useCallback(async (page: number) => {
+    const cacheKey = `${cacheKeyPrefix}::${page}`;
 
-  const filteredTechnicians = useMemo(() => {
-    return ['Tất cả', ...Array.from(new Set(fullData.map((order) => order.rawTechnician).filter(Boolean) as string[]))];
-  }, [fullData]);
-
-  const filteredAreas = useMemo(() => {
-    return ['Tất cả', ...Array.from(new Set(fullData.map((order) => order.rawArea).filter(Boolean) as string[]))];
-  }, [fullData]);
-
-  const paymentOptions = useMemo(() => {
-    return ['Tất cả', ...Array.from(new Set(fullData.map((order) => order.rawPaymentMethod).filter(Boolean) as string[]))];
-  }, [fullData]);
-
-  const filteredData = useMemo(() => {
-    return fullData.filter((order) => {
-      if (statusFilter !== 'Tất cả' && order.status !== statusFilter) return false;
-      if (!isWithinTimeFilter(order, timeFilter)) return false;
-      if (paymentFilter !== 'Tất cả' && order.rawPaymentMethod?.toUpperCase() !== paymentFilter.toUpperCase()) return false;
-      if (technicianFilter !== 'Tất cả' && order.rawTechnician !== technicianFilter) return false;
-      if (areaFilter !== 'Tất cả' && order.rawArea !== areaFilter) return false;
-      if (!isWithinPriceFilter(order, priceFilter)) return false;
-
-      if (debouncedSearch) {
-        const keyword = debouncedSearch.toLowerCase();
-        const searchable = [
-          order.id,
-          order.code,
-          order.customer,
-          order.service,
-          order.technician,
-          order.status,
-          order.area || '',
-          order.payment || '',
-          order.createdAt,
-          order.appointment,
-        ].join(' ').toLowerCase();
-
-        if (!searchable.includes(keyword)) return false;
-      }
-
-      return true;
-    });
-  }, [areaFilter, debouncedSearch, fullData, paymentFilter, priceFilter, statusFilter, technicianFilter, timeFilter]);
-
-  const totalItems = filteredData.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
+    if (pageCache.current.has(cacheKey)) {
+      const cached = pageCache.current.get(cacheKey)!;
+      setOrders(cached.items);
+      setTotalItems(cached.totalElements);
+      setTotalPages(Math.max(1, cached.totalPages));
+      setSelectedIds((current) => current.filter((id) => cached.items.some((order) => order.id === id)));
+      setOrdersLoading(false);
+      setOrdersError(null);
+      return;
     }
-  }, [currentPage, totalPages]);
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(start, start + itemsPerPage);
-  }, [currentPage, filteredData, itemsPerPage]);
-
-  const visibleOrders = paginatedData;
-  const stats = useMemo(() => buildOrderStats(filteredData), [filteredData]);
-
-  const openOrderDetail = () => {};
-
-  const retryOrderList = async () => {
-    setOrdersLoading(true);
-    setOrdersError(null);
 
     try {
-      const firstPage = await getAdminOrders({
-        page: 1,
-        limit: DASHBOARD_FETCH_LIMIT,
+      setOrdersLoading(true);
+      setOrdersError(null);
+
+      const result = await getAdminOrders({
+        page,
+        limit: itemsPerPage,
+        keyword: debouncedSearch || undefined,
+        status: requestStatus,
       });
 
-      const totalPages = Math.max(1, Math.ceil((firstPage.totalElements || 0) / DASHBOARD_FETCH_LIMIT));
-      let nextOrders = [...firstPage.items];
+      pageCache.current.set(cacheKey, {
+        items: result.items,
+        totalElements: result.totalElements,
+        totalPages: result.totalPages,
+      });
+      setOrders(result.items);
+      setTotalItems(result.totalElements);
+      setTotalPages(Math.max(1, result.totalPages));
+      setSelectedIds((current) => current.filter((id) => result.items.some((order) => order.id === id)));
 
-      if (totalPages > 1) {
-        const remainingPages = await Promise.all(
-          Array.from({ length: totalPages - 1 }, (_, index) => {
-            return getAdminOrders({
-              page: index + 2,
-              limit: DASHBOARD_FETCH_LIMIT,
-            });
-          }),
-        );
-
-        nextOrders = [...nextOrders, ...remainingPages.flatMap((page) => page.items)];
+      const hasNextPage = page * itemsPerPage < result.totalElements;
+      if (hasNextPage) {
+        const nextKey = `${cacheKeyPrefix}::${page + 1}`;
+        if (!pageCache.current.has(nextKey)) {
+          getAdminOrders({
+            page: page + 1,
+            limit: itemsPerPage,
+            keyword: debouncedSearch || undefined,
+            status: requestStatus,
+          })
+            .then((nextResult) => {
+              pageCache.current.set(nextKey, {
+                items: nextResult.items,
+                totalElements: nextResult.totalElements,
+                totalPages: nextResult.totalPages,
+              });
+            })
+            .catch(() => {});
+        }
       }
-
-      setFullData(nextOrders);
-      setSelectedIds((current) => current.filter((id) => nextOrders.some((order) => order.id === id)));
     } catch (error: any) {
-      setFullData([]);
+      setOrders([]);
+      setTotalItems(0);
+      setTotalPages(1);
       setOrdersError(error?.message || 'Không thể tải danh sách đơn hàng');
     } finally {
       setOrdersLoading(false);
     }
+  }, [cacheKeyPrefix, debouncedSearch, itemsPerPage, requestStatus]);
+
+  useEffect(() => {
+    void loadStats();
+  }, [loadStats]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    pageCache.current.clear();
+  }, [debouncedSearch, statusFilter]);
+
+  useEffect(() => {
+    void loadOrdersPage(currentPage);
+  }, [currentPage, loadOrdersPage]);
+
+  const visibleOrders = orders;
+  const displayTotalItems = Math.max(totalItems, visibleOrders.length);
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    if (currentPage <= 2) {
+      return [1, 2, 3];
+    }
+
+    if (currentPage >= totalPages - 1) {
+      return [totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1];
+  }, [currentPage, totalPages]);
+
+  const currentStats = stats || {
+    totalOrders: 0,
+    processing: 0,
+    completed: 0,
+    cancelled: 0,
+    disputes: 0,
+    pendingPriceReview: 0,
   };
 
-  const totalOrders = ordersLoading ? '...' : stats.totalOrders.toLocaleString('vi-VN');
-  const processingOrders = ordersLoading ? '...' : stats.processing.toLocaleString('vi-VN');
-  const completedOrders = ordersLoading ? '...' : stats.completed.toLocaleString('vi-VN');
-  const cancelledOrders = ordersLoading ? '...' : stats.cancelled.toLocaleString('vi-VN');
-  const disputesOrders = ordersLoading ? '...' : stats.disputes.toLocaleString('vi-VN');
-  const pendingPriceReviewOrders = ordersLoading ? '...' : stats.pendingPriceReview.toLocaleString('vi-VN');
+  const openOrderDetail = (order: OrderTableRow) => {
+    navigate(`/admin/orders/${order.id}`);
+  };
+
+  const retryOrderList = async () => {
+    pageCache.current.clear();
+    await Promise.all([loadOrdersPage(currentPage), loadStats()]);
+  };
+
+  const totalOrders = statsLoading ? '...' : currentStats.totalOrders.toLocaleString('vi-VN');
+  const processingOrders = statsLoading ? '...' : currentStats.processing.toLocaleString('vi-VN');
+  const completedOrders = statsLoading ? '...' : currentStats.completed.toLocaleString('vi-VN');
+  const cancelledOrders = statsLoading ? '...' : currentStats.cancelled.toLocaleString('vi-VN');
+  const disputesOrders = statsLoading ? '...' : currentStats.disputes.toLocaleString('vi-VN');
+  const pendingPriceReviewOrders = statsLoading ? '...' : currentStats.pendingPriceReview.toLocaleString('vi-VN');
 
   const statSkeleton = <div style={{ height: 22, width: '55%', borderRadius: 8, background: 'linear-gradient(90deg, #e2e8f0 25%, #f8fafc 37%, #e2e8f0 63%)' }} />;
 
@@ -351,7 +251,7 @@ const AdminOrdersPage: React.FC = () => {
         )}
 
         <section className="orders-stats-row">
-          {ordersLoading
+          {statsLoading
             ? Array.from({ length: 6 }).map((_, index) => (
               <div key={`stat-skeleton-${index}`} className="stat-card" style={{ minHeight: 74, position: 'relative', overflow: 'hidden' }}>
                 <div className="stat-title" style={{ opacity: 0.5 }}>Đang tải...</div>
@@ -371,8 +271,6 @@ const AdminOrdersPage: React.FC = () => {
         </section>
 
         <section className="orders-controls">
-          
-
           <div className="filters-row">
             <div className="filter-item">
               <label>Trạng thái</label>
@@ -386,42 +284,10 @@ const AdminOrdersPage: React.FC = () => {
                 <option>CANCELLED</option>
               </select>
             </div>
-            <div className="filter-item">
-              <label>Thời gian</label>
-              <select value={timeFilter} onChange={(e) => setTimeFilter(e.target.value)}><option>Tất cả</option><option>Hôm nay</option><option>7 ngày</option><option>30 ngày</option></select>
-            </div>
-            <div className="filter-item">
-              <label>Thanh toán</label>
-              <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}>
-                {paymentOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-item">
-              <label>Thợ kỹ thuật</label>
-              <select value={technicianFilter} onChange={(e) => setTechnicianFilter(e.target.value)}>
-                {filteredTechnicians.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-item">
-              <label>Khu vực</label>
-              <select value={areaFilter} onChange={(e) => setAreaFilter(e.target.value)}>
-                {filteredAreas.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-            <div className="filter-item">
-              <label>Mức giá</label>
-              <select value={priceFilter} onChange={(e) => setPriceFilter(e.target.value)}><option>Tất cả</option><option>Dưới 300k</option><option>300k - 500k</option><option>Trên 500k</option></select>
-            </div>
             <div className="orders-search-wrap">
               <input
                 className="orders-search"
-                placeholder="Tìm kiếm đơn hàng..."
+                placeholder="Tìm theo mã đơn, dịch vụ, tên khách hàng..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
@@ -432,47 +298,55 @@ const AdminOrdersPage: React.FC = () => {
         <section className="orders-main">
           <div className="orders-left">
             {renderOrderTable()}
-            {!ordersLoading && totalItems > 0 && (
-              <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
-                <button
-                  type="button"
-                  disabled={currentPage === 1}
-                  onClick={() => {
-                    setCurrentPage((prev) => Math.max(1, prev - 1));
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  style={{
-                    padding: '8px 12px',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: 6,
-                    background: currentPage === 1 ? '#f1f5f9' : '#fff',
-                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                    opacity: currentPage === 1 ? 0.5 : 1,
-                  }}
-                >
-                  ← Trước
-                </button>
-                <span style={{ padding: '0 8px', color: '#64748b', fontSize: 14 }}>
-                  Trang {currentPage} / {totalPages}
+            {!ordersLoading && visibleOrders.length > 0 && (
+              <div className="orders-pagination-footer">
+                <span className="orders-pagination-summary">
+                  Hiển thị {visibleOrders.length} trên tổng số {displayTotalItems.toLocaleString('vi-VN')} giao dịch
                 </span>
-                <button
-                  type="button"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => {
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  style={{
-                    padding: '8px 12px',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: 6,
-                    background: currentPage >= totalPages ? '#f1f5f9' : '#fff',
-                    cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer',
-                    opacity: currentPage >= totalPages ? 0.5 : 1,
-                  }}
-                >
-                  Sau →
-                </button>
+
+                <div className="orders-pagination-controls">
+                  <button
+                    type="button"
+                    className="orders-page-btn"
+                    disabled={currentPage === 1}
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.max(1, prev - 1));
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    aria-label="Trang trước"
+                  >
+                    {'<'}
+                  </button>
+
+                  {pageNumbers.map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      className={`orders-page-btn ${page === currentPage ? 'active' : ''}`}
+                      onClick={() => {
+                        setCurrentPage(page);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      aria-label={`Trang ${page}`}
+                      aria-current={page === currentPage ? 'page' : undefined}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="orders-page-btn"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    aria-label="Trang sau"
+                  >
+                    {'>'}
+                  </button>
+                </div>
               </div>
             )}
           </div>

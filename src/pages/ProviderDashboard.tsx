@@ -29,20 +29,6 @@ const ProviderDashboard: React.FC = () => {
     fetchAvailability();
   }, [profile.code]);
 
-  const handleToggleAvailability = async () => {
-    if (!profile.code) return;
-    const nextVal = !isAvailable;
-    try {
-      setLoading(true);
-      await technicianService.updateTechnicianAvailability(profile.code, nextVal);
-      setIsAvailable(nextVal);
-    } catch (error: any) {
-      console.error(error);
-      alert(error.message || 'Lỗi khi cập nhật trạng thái hoạt động.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const displayName = profile.fullName || 'Minh';
 
@@ -55,24 +41,6 @@ const ProviderDashboard: React.FC = () => {
             <span className="pd-greeting-text">CHÀO BUỔI SÁNG, {displayName.toUpperCase()}</span>
             <h1 className="pd-page-title">Overview Dashboard</h1>
           </div>
-          <div className="pd-availability">
-            <span className="pd-availability-label">AVAILABILITY</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
-              <label className="pd-switch-wrapper">
-                <input 
-                  type="checkbox" 
-                  checked={isAvailable} 
-                  onChange={handleToggleAvailability}
-                  disabled={loading || fetching}
-                />
-                <span className="pd-switch-slider"></span>
-              </label>
-              <span className="pd-availability-status">
-                <span className={isAvailable ? "status-dot-green" : "status-dot-red"}></span>
-                {fetching ? 'Đang tải...' : (loading ? 'Đang cập nhật...' : (isAvailable ? 'Accepting Jobs' : 'Offline'))}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Main Content Grid */}
@@ -81,7 +49,6 @@ const ProviderDashboard: React.FC = () => {
           <div className="pd-left-col">
             <StatsCards />
             <EarningsChart />
-            <AvailableTasks />
           </div>
 
           {/* Right Column */}

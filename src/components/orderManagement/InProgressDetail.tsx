@@ -47,6 +47,8 @@ export const InProgressDetail: React.FC<InProgressProps> = ({ order, role, onBac
     const partsList = adj?.parts || [];
 
     const displayImages = adj?.evidenceImages?.length ? adj.evidenceImages : (order.images || []);
+    const initialImages = order.images || [];
+    const adjImages = adj?.evidenceImages || [];
 
     // --- HÀM GỌI API ---
 
@@ -195,69 +197,58 @@ export const InProgressDetail: React.FC<InProgressProps> = ({ order, role, onBac
                 </div>
             </div>
 
-            {/* Vật tư & Linh kiện */}
+            {/* Linh kiện */}
             <div className="ipv-card">
                 <div className="card-header-split">
                     <h3>Vật tư & Linh kiện {partsList.length > 0 ? `(${partsList.length})` : ''}</h3>
                 </div>
                 <table className="parts-table">
-                    <thead>
-                    <tr>
-                        <th>TÊN LINH KIỆN</th>
-                        <th className="text-right">ĐƠN GIÁ</th>
-                    </tr>
-                    </thead>
+                    <thead><tr><th>TÊN LINH KIỆN</th><th className="text-right">ĐƠN GIÁ</th></tr></thead>
                     <tbody>
                         {partsList.length > 0 ? (
                             partsList.map((part, index) => (
-                                <tr key={index}>
-                                    <td>{part.name}</td>
-                                    <td className="text-right">{(part.price || 0).toLocaleString('vi-VN')}đ</td>
-                                </tr>
+                                <tr key={index}><td>{part.name}</td><td className="text-right">{(part.price || 0).toLocaleString('vi-VN')}đ</td></tr>
                             ))
                         ) : (
-                            <tr>
-                                <td colSpan={2} style={{ textAlign: 'center', padding: '16px', color: '#64748b' }}>
-                                    Không có linh kiện phát sinh
-                                </td>
-                            </tr>
+                            <tr><td colSpan={2} style={{ textAlign: 'center', padding: '16px', color: '#64748b' }}>Không có linh kiện phát sinh</td></tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Bằng chứng hình ảnh */}
+            {/* --- KHỐI HÌNH ẢNH ĐƯỢC ĐỒNG BỘ --- */}
             <div className="ipv-card">
-                <h3>Bằng chứng hình ảnh</h3>
-                
-                {/* Nếu là thợ, cho phép upload ảnh nghiệm thu để chốt đơn */}
-                {role === 'technician' ? (
+                <h3>Hình ảnh đơn hàng</h3>
+                <div className="photo-grid" style={{ marginTop: '12px' }}>
+                    {initialImages.map((url, idx) => (
+                        <img key={idx} src={resolveMediaUrl(url) || ""} alt="Img" className="photo-item" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />
+                    ))}
+                    {initialImages.length === 0 && <p style={{ color: '#64748b', fontSize: '14px' }}>Chưa có hình ảnh</p>}
+                </div>
+            </div>
+
+            {adjImages.length > 0 && (
+                <div className="ipv-card">
+                    <h3>Ảnh vật tư phát sinh</h3>
+                    <div className="photo-grid" style={{ marginTop: '12px' }}>
+                        {adjImages.map((url, idx) => (
+                            <img key={`adj-${idx}`} src={resolveMediaUrl(url) || ""} alt="AdjImg" className="photo-item" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #f59e0b' }} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {role === 'technician' && (
+                <div className="ipv-card">
+                    <h3>Tải lên ảnh nghiệm thu</h3>
                     <div style={{ marginTop: '12px' }}>
                         <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px' }}>
                             Vui lòng tải lên hình ảnh sau khi sửa xong để hoàn tất đơn hàng:
                         </p>
-                        <ImageUploader 
-                            folder="orders"
-                            urls={completionImages}
-                            onChange={setCompletionImages}
-                            maxImages={3}
-                        />
+                        <ImageUploader folder="orders" urls={completionImages} onChange={setCompletionImages} maxImages={3} />
                     </div>
-                ) : (
-                    <div className="photo-grid" style={{ marginTop: '12px' }}>
-                        {displayImages.map((url, idx) => (
-                            <img 
-                                key={idx} 
-                                src={resolveMediaUrl(url) || ""} 
-                                alt="Ev" 
-                                className="photo-item" 
-                                style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} 
-                            />
-                        ))}
-                        {displayImages.length === 0 && <p style={{ color: '#64748b', fontSize: '14px' }}>Chưa có hình ảnh</p>}
-                    </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Tổng chi phí */}
             <div className="ipv-total-card">

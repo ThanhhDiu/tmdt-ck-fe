@@ -14,10 +14,17 @@ interface ApiResponse<T> {
 
 interface PagedResponseApi<T> {
   items: T[];
-  page: number;
-  limit: number;
-  totalElements: number;
-  totalPages: number;
+  page?: number;
+  limit?: number;
+  totalElements?: number;
+  totalPages?: number;
+  total?: number;
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
 }
 
 interface ApiOrderPartySummary {
@@ -200,6 +207,9 @@ export interface OrderListFilters {
 
 interface OrderListResult {
   items: OrderTableRow[];
+  page: number;
+  limit: number;
+  totalPages: number;
   totalElements: number;
 }
 
@@ -481,10 +491,17 @@ export const getAdminOrders = async (filters: OrderListFilters = {}): Promise<Or
   query.set('limit', String(filters.limit || DEFAULT_LIMIT));
 
   const payload = await requestApi<PagedResponseApi<ApiOrderResponse>>(`/orders?${query.toString()}`);
+  const limit = payload.limit || payload.pagination?.limit || filters.limit || DEFAULT_LIMIT;
+  const page = payload.page || payload.pagination?.page || filters.page || 1;
+  const totalElements = payload.totalElements ?? payload.total ?? payload.pagination?.total ?? (payload.items || []).length;
+  const totalPages = payload.totalPages || payload.pagination?.totalPages || Math.max(1, Math.ceil(totalElements / limit));
 
   return {
     items: (payload.items || []).map(mapOrderToRow),
-    totalElements: payload.totalElements || 0,
+    page,
+    limit,
+    totalPages,
+    totalElements,
   };
 };
 

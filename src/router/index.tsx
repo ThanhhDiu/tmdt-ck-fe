@@ -37,6 +37,7 @@ import AdminVerificationDetail from '../pages/AdminVerificationDetail'
 import AdminVerificationUpdate from '../pages/AdminVerificationUpdate'
 import AdminComplaintsPage from '../pages/AdminComplaintsPage'
 import AdminComplaintResolvePage from '../pages/AdminComplaintResolvePage'
+import AdminOrderDetailPage from '../pages/AdminOrderDetailPage'
 export default function AppRouter() {
   return (
     <Routes>
@@ -157,6 +158,7 @@ export default function AppRouter() {
         </TechnicianLayout>
       } />
       <Route path="/admin/orders" element={<AdminOrdersPage />} />
+      <Route path="/admin/orders/:orderId" element={<AdminOrderDetailPage />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUserManagement />} />
       <Route path="/admin/users/:id" element={<AdminUserDetail />} />

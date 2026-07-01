@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
 import { OrderTable } from '../components/orderManagement/OrderTable';
@@ -94,6 +95,7 @@ const isWithinPriceFilter = (order: OrderTableRow, filter: string): boolean => {
 };
 
 const AdminOrdersPage: React.FC = () => {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState('Tất cả');
   const [timeFilter, setTimeFilter] = useState('Tất cả');
   const [paymentFilter, setPaymentFilter] = useState('Tất cả');
@@ -233,7 +235,9 @@ const AdminOrdersPage: React.FC = () => {
   const visibleOrders = paginatedData;
   const stats = useMemo(() => buildOrderStats(filteredData), [filteredData]);
 
-  const openOrderDetail = () => {};
+  const openOrderDetail = (order: OrderTableRow) => {
+    navigate(`/admin/orders/${order.id}`);
+  };
 
   const retryOrderList = async () => {
     setOrdersLoading(true);

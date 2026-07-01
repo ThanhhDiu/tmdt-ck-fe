@@ -10,6 +10,8 @@
   display: flex;
   flex-direction: column;
   padding: 0 28px 40px;
+  /* Offset the fixed admin sidebar, same as the other admin pages. */
+  margin-left: var(--admin-sidebar-width);
 }
 
 .awr-title-row {
@@ -45,9 +47,10 @@
   border: 1px solid #eef0f3;
   border-radius: 14px;
   padding: 8px 16px;
+  overflow-x: auto;
 }
 
-.awr-table { display: flex; flex-direction: column; }
+.awr-table { display: flex; flex-direction: column; min-width: 780px; }
 
 .awr-row {
   display: grid;
@@ -112,4 +115,21 @@
   text-align: center;
   color: #667085;
   font-size: 14px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .awr-main {
+    margin-left: var(--admin-sidebar-collapsed-width);
+    padding: 0 16px 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .awr-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .awr-title-row h1 { font-size: 20px; }
 }

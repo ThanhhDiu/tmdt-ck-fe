@@ -3,6 +3,7 @@
   border: 1px solid #eef0f3;
   border-radius: 12px;
   padding: 20px;
+  overflow-x: auto;
 }
 .uoh-card h3 { margin: 0 0 16px; font-size: 16px; color: #1d2939; }
 
@@ -14,7 +15,7 @@
 }
 .uoh-state.error { color: #b42318; }
 
-.uoh-table { display: flex; flex-direction: column; }
+.uoh-table { display: flex; flex-direction: column; min-width: 640px; }
 
 .uoh-row {
   display: grid;

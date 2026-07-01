@@ -20,7 +20,10 @@ const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
 
 export const UserOrderHistory: React.FC<UserOrderHistoryProps> = ({ userId, role }) => {
   const [orders, setOrders] = useState<OrderTableRow[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,6 +31,8 @@ export const UserOrderHistory: React.FC<UserOrderHistoryProps> = ({ userId, role
     const load = async () => {
       if (!userId) {
         setOrders([]);
+        setPage(1);
+        setTotalPages(1);
         setLoading(false);
         return;
       }
@@ -35,9 +40,11 @@ export const UserOrderHistory: React.FC<UserOrderHistoryProps> = ({ userId, role
       setError(null);
       try {
         const filter = role === 'technician' ? { technician: userId } : { customer: userId };
-        const result = await getAdminOrders({ ...filter, page: 1, limit: 100 });
+        const result = await getAdminOrders({ ...filter, page: 1, limit: 10 });
         if (!active) return;
         setOrders(result.items);
+        setPage(1);
+        setTotalPages(result.totalPages);
       } catch (err) {
         if (active) setError(err instanceof Error ? err.message : 'Không thể tải lịch sử đơn hàng');
       } finally {
@@ -50,6 +57,29 @@ export const UserOrderHistory: React.FC<UserOrderHistoryProps> = ({ userId, role
     };
   }, [userId, role]);
 
+  const loadMore = async () => {
+    if (!userId || loadingMore || page >= totalPages) {
+      return;
+    }
+
+    const nextPage = page + 1;
+
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const filter = role === 'technician' ? { technician: userId } : { customer: userId };
+      const result = await getAdminOrders({ ...filter, page: nextPage, limit: 10 });
+      setOrders((current) => [...current, ...result.items]);
+      setPage(nextPage);
+      setTotalPages(result.totalPages);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể tải thêm đơn hàng');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   return (
     <div className="uoh-card">
       <h3>Lịch sử đơn hàng</h3>
@@ -61,28 +91,35 @@ export const UserOrderHistory: React.FC<UserOrderHistoryProps> = ({ userId, role
       )}
 
       {!loading && !error && orders.length > 0 && (
-        <div className="uoh-table">
-          <div className="uoh-row uoh-head">
-            <span>Mã đơn</span>
-            <span>Dịch vụ</span>
-            <span>{role === 'technician' ? 'Khách hàng' : 'Thợ'}</span>
-            <span>Trạng thái</span>
-            <span>Chi phí</span>
-            <span>Ngày tạo</span>
+        <div>
+          <div className="uoh-table">
+            <div className="uoh-row uoh-head">
+              <span>Mã đơn</span>
+              <span>Dịch vụ</span>
+              <span>{role === 'technician' ? 'Khách hàng' : 'Thợ'}</span>
+              <span>Trạng thái</span>
+              <span>Chi phí</span>
+              <span>Ngày tạo</span>
+            </div>
+            {orders.map((o) => {
+              const st = STATUS_LABEL[o.status] ?? { label: o.status, cls: 'new' };
+              return (
+                <div className="uoh-row" key={o.id}>
+                  <span className="uoh-code">#{o.code}</span>
+                  <span>{o.service}</span>
+                  <span>{role === 'technician' ? o.customer : o.technician}</span>
+                  <span><b className={`uoh-status ${st.cls}`}>{st.label}</b></span>
+                  <span>{o.price}</span>
+                  <span>{o.createdAt}</span>
+                </div>
+              );
+            })}
           </div>
-          {orders.map((o) => {
-            const st = STATUS_LABEL[o.status] ?? { label: o.status, cls: 'new' };
-            return (
-              <div className="uoh-row" key={o.id}>
-                <span className="uoh-code">#{o.code}</span>
-                <span>{o.service}</span>
-                <span>{role === 'technician' ? o.customer : o.technician}</span>
-                <span><b className={`uoh-status ${st.cls}`}>{st.label}</b></span>
-                <span>{o.price}</span>
-                <span>{o.createdAt}</span>
-              </div>
-            );
-          })}
+          {page < totalPages && (
+            <button className="uoh-load-more" type="button" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? 'Đang tải thêm...' : 'Tải thêm'}
+            </button>
+          )}
         </div>
       )}
     </div>

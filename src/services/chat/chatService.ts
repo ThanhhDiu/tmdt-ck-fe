@@ -102,10 +102,10 @@ export const chatService = {
     return quote;
   },
 
-  acceptQuotation: async (quotationId: string): Promise<{ orderId: string }> => {
+  acceptQuotation: async (quotationId: string): Promise<{ orderId: string; orderCode?: string }> => {
     const response = await apiClient.patch(`/api/quotes/${quotationId}/accept`);
-    const data = unwrap<{ orderId: string }>(response.data);
-    return { orderId: data.orderId };
+    const data = unwrap<{ orderId?: string; orderCode?: string }>(response.data);
+    return { orderId: data.orderCode ?? data.orderId ?? '', orderCode: data.orderCode };
   },
 
   rejectQuotation: async (quotationId: string): Promise<void> => {

@@ -5,17 +5,9 @@ import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 type RepairRequestCardProps = {
   order: OrderResponse;
-  role?: string;
-  onAccept?: () => void;
-  onReject?: () => void;
 };
 
-export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ 
-  order, 
-  role = 'customer',
-  onAccept,
-  onReject
-}) => {
+export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ order }) => {
   const formatPrice = (value?: number) =>
     new Intl.NumberFormat('vi-VN').format(value ?? 0);
   const resolvedImages = (order.images ?? []).map((src) => resolveMediaUrl(src) ?? src);
@@ -30,7 +22,7 @@ export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({
         <span>Mã đơn: <strong>{order.id}</strong></span>
         {order.description && <span>{order.description}</span>}
         {order.address && <span>Địa chỉ: {order.address}</span>}
-        {order.estimatedPrice != null && (
+        {order.estimatedPrice != null && order.estimatedPrice > 0 && (
           <span>Ước tính: {formatPrice(order.estimatedPrice)} VNĐ</span>
         )}
       </div>
@@ -39,45 +31,6 @@ export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({
           {resolvedImages.slice(0, 3).map((src) => (
             <img key={src} src={src} alt="Ảnh yêu cầu" />
           ))}
-        </div>
-      )}
-      
-      {role === 'technician' && order.status?.toLowerCase() === 'new' && (
-        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-          <button
-            onClick={onAccept}
-            style={{
-              flex: 1,
-              padding: '8px 16px',
-              backgroundColor: '#aa3bff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '14px',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            Chấp nhận
-          </button>
-          <button
-            onClick={onReject}
-            style={{
-              flex: 1,
-              padding: '8px 16px',
-              backgroundColor: '#ef4444',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '14px',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            Từ chối
-          </button>
         </div>
       )}
     </div>

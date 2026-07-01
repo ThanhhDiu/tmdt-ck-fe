@@ -19,7 +19,7 @@ export type MessageNewWsPayload = {
   message: {
     id: string;
     conversationId?: string;
-    senderId: string;
+    senderId?: string | null;
     type: string;
     content?: string | null;
     imageUrl?: string | null;

@@ -2,6 +2,8 @@ export type ChatMessageType = 'text' | 'image' | 'quotation' | 'system';
 
 export type EmbeddedQuotation = {
   id: string;
+  orderCode?: string | null;
+  orderId?: string | number | null;
   serviceName: string;
   description?: string;
   price: number;
@@ -12,7 +14,7 @@ export type EmbeddedQuotation = {
 export type ChatMessage = {
   id: string;
   conversationId: string;
-  senderId: string;
+  senderId?: string | null;
   type: ChatMessageType;
   content?: string | null;
   imageUrl?: string | null;
@@ -50,6 +52,7 @@ export type CreateConversationPayload = {
 };
 
 export type CreateQuotationPayload = {
+  orderCode?: string;
   serviceName: string;
   description?: string;
   price: number;

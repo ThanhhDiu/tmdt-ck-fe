@@ -51,6 +51,8 @@ const isImagePreview = (message?: ConversationItem['lastMessage'] | null) => {
 
 const getConversationPreview = (message?: ConversationItem['lastMessage'] | null) => {
     if (!message) return '';
+    const repairRequest = parseRepairRequestContent(message.content ?? message.preview);
+    if (repairRequest) return 'Yêu cầu sửa chữa mới';
     if (isImagePreview(message)) return 'Đã nhận 1 ảnh';
     return message.preview ?? message.content ?? '';
 };
@@ -65,6 +67,45 @@ const toContact = (conversation: ConversationItem): Contact => ({
     avatar: conversation.partner?.avatar ?? 'https://placehold.co/48x48',
     isOnline: conversation.partner?.isOnline ?? false,
     unread: conversation.unreadCount > 0,
+});
+
+type RepairRequestMessagePayload = {
+    kind?: string;
+    orderCode?: string;
+    deviceName?: string;
+    serviceName?: string;
+    serviceCategory?: string;
+    description?: string;
+    address?: string;
+    estimatedPrice?: number;
+    expectedTime?: string;
+    images?: string[];
+};
+
+const parseRepairRequestContent = (content?: string | null): RepairRequestMessagePayload | null => {
+    if (!content) return null;
+    try {
+        const payload = JSON.parse(content) as RepairRequestMessagePayload;
+        return payload?.kind === 'repair_request' && payload.orderCode ? payload : null;
+    } catch {
+        return null;
+    }
+};
+
+const firstNonBlank = (...values: Array<string | null | undefined>) =>
+    values.find((value) => value?.trim())?.trim();
+
+const mapRepairRequestToOrder = (payload: RepairRequestMessagePayload): OrderResponse => ({
+    id: payload.orderCode ?? '',
+    status: 'NEW',
+    deviceName: firstNonBlank(payload.deviceName, payload.serviceName, payload.serviceCategory),
+    serviceName: firstNonBlank(payload.serviceName, payload.deviceName, payload.serviceCategory),
+    serviceCategory: payload.serviceCategory,
+    description: payload.description,
+    address: payload.address,
+    estimatedPrice: payload.estimatedPrice,
+    expectedTime: payload.expectedTime,
+    images: payload.images ?? [],
 });
 
 export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) => {
@@ -96,6 +137,21 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     const activeConversation = useMemo(
         () => conversations.find((c) => c.id === activeConversationId) ?? null,
         [conversations, activeConversationId]
+    );
+
+    const activeRepairRequest = useMemo(() => {
+        for (let index = messages.length - 1; index >= 0; index -= 1) {
+            const message = messages[index];
+            if (message.type !== 'system') continue;
+            const repairRequest = parseRepairRequestContent(message.content);
+            if (repairRequest) return repairRequest;
+        }
+        return null;
+    }, [messages]);
+
+    const quoteSourceOrder = useMemo(
+        () => activeRepairRequest ? mapRepairRequestToOrder(activeRepairRequest) : linkedOrder,
+        [activeRepairRequest, linkedOrder]
     );
 
     const filteredConversations = useMemo(() => {
@@ -148,7 +204,9 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                 prev.map((c) => {
                     if (c.id !== conversationId) return c;
                     const preview =
-                        incoming.type === 'quotation'
+                        parseRepairRequestContent(incoming.content)
+                            ? 'Yêu cầu sửa chữa mới'
+                            : incoming.type === 'quotation'
                             ? 'Báo giá mới'
                             : incoming.type === 'image'
                                 ? 'Ảnh mới'
@@ -384,7 +442,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     }, [messages.length, activeConversationId, linkedOrder?.id, linkedOrder?.priceAdjustment?.requestedAt]);
 
     const handleCreateQuote = async (quote: Quote) => {
-        if (!activeConversationId) return;
+        if (!activeConversationId || !quoteSourceOrder?.id) return;
         const scheduledAt =
             quote.scheduledAt ??
             (quote.date && quote.time
@@ -392,8 +450,14 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                 : new Date().toISOString());
 
         await chatService.createQuotation(activeConversationId, {
-            serviceName: quote.serviceName,
-            description: quote.description,
+            orderCode: quoteSourceOrder.id,
+            serviceName: firstNonBlank(
+                quote.serviceName,
+                quoteSourceOrder.serviceName,
+                quoteSourceOrder.deviceName,
+                quoteSourceOrder.serviceCategory
+            ) ?? 'Dịch vụ sửa chữa',
+            description: firstNonBlank(quote.description, quoteSourceOrder.description, quoteSourceOrder.subService) ?? '',
             price: quote.price,
             scheduledAt,
             notes: quote.notes,
@@ -402,13 +466,15 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     };
 
     const handleAcceptQuote = async (quotationId: string) => {
+        const originalOrderId = linkedOrder?.id;
         const result = await chatService.acceptQuotation(quotationId);
         if (activeConversationId) {
             await loadMessages(activeConversationId);
         }
-        await loadLinkedOrder(result.orderId);
+        const nextOrderId = originalOrderId ?? result.orderId;
+        await loadLinkedOrder(nextOrderId);
         const items = await refreshConversations();
-        const active = items.find((c) => c.orderId === result.orderId);
+        const active = items.find((c) => c.id === activeConversationId) ?? items.find((c) => c.orderId === nextOrderId);
         if (active) {
             setActiveConversationId(active.id);
         }
@@ -447,35 +513,6 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
         setIsPriceConfirmOpen(false);
     };
 
-    const handleAcceptOrder = async () => {
-        if (!linkedOrder?.id) return;
-        try {
-            const updated = await orderService.acceptOrder(linkedOrder.id);
-            setLinkedOrder(updated);
-            if (activeConversationId) {
-                await loadMessages(activeConversationId);
-            }
-            await refreshConversations();
-        } catch (err) {
-            alert(err instanceof Error ? err.message : "Không thể chấp nhận đơn hàng");
-        }
-    };
-
-    const handleRejectOrder = async () => {
-        if (!linkedOrder?.id) return;
-        const reason = prompt("Nhập lý do từ chối yêu cầu:") || "Thợ từ chối yêu cầu sửa chữa";
-        try {
-            const updated = await orderService.cancelOrder(linkedOrder.id, reason);
-            setLinkedOrder(updated);
-            if (activeConversationId) {
-                await loadMessages(activeConversationId);
-            }
-            await refreshConversations();
-        } catch (err) {
-            alert(err instanceof Error ? err.message : "Không thể từ chối đơn hàng");
-        }
-    };
-
     const onNavigate = (page: string, data?: unknown) => {
         const path = pageMap[page] || '/';
         navigate(path, { state: data });
@@ -484,11 +521,6 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     const orderStatus = linkedOrder?.status?.toLowerCase() ?? '';
     const showPriceAdjustAction =
         role === 'technician' && orderStatus === 'in_progress';
-    const showRepairCard = Boolean(
-        linkedOrder &&
-            (['new', 'assigned'].includes(orderStatus) ||
-                !messages.some((m) => m.type === 'quotation'))
-    );
 
     const pendingAdjustment =
         linkedOrder?.priceAdjustment?.status?.toLowerCase() === 'pending'
@@ -576,23 +608,13 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                             <p className={styles.emptyChat}>Chọn hoặc bắt đầu một cuộc trò chuyện</p>
                         )}
 
-                        {!isLoading && activeConversationId && linkedOrder && showRepairCard && (
-                            <div className={styles.messageRow}>
-                                <div className={styles.messageContent}>
-                                    <RepairRequestCard 
-                                        order={linkedOrder} 
-                                        role={role}
-                                        onAccept={handleAcceptOrder}
-                                        onReject={handleRejectOrder}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
                         {!isLoading &&
                             messages.map((message) => {
                                 const isMe = message.senderId === currentUserCode;
                                 const isQuotation = message.type === 'quotation' && message.quotation;
+                                const repairRequest = message.type === 'system'
+                                    ? parseRepairRequestContent(message.content)
+                                    : null;
                                 const imageUrl = resolveMessageImageUrl(message);
 
                                 return (
@@ -604,7 +626,9 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                                             <Avatar src={activeContact.avatar} size={32} isOnline={false} />
                                         )}
                                         <div className={styles.messageContent}>
-                                            {isQuotation ? (
+                                            {repairRequest ? (
+                                                <RepairRequestCard order={mapRepairRequestToOrder(repairRequest)} />
+                                            ) : isQuotation ? (
                                                 <QuotationCard
                                                     serviceName={message.quotation!.serviceName}
                                                     description={message.quotation!.description}
@@ -665,7 +689,8 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                                 onSendImage={handleSendImage}
                                 onTypingChange={setIsTyping}
                                 onCreateQuote={handleCreateQuote}
-                                showQuoteAction={role === 'technician'}
+                                linkedOrder={quoteSourceOrder}
+                                showQuoteAction={role === 'technician' && Boolean(quoteSourceOrder)}
                                 showPriceAdjustAction={showPriceAdjustAction}
                                 onOpenPriceAdjust={() => setIsAdjustmentOpen(true)}
                             />

@@ -13,8 +13,6 @@ import { AboutTab } from '../components/provider-profile/AboutTab';
 
 import { ScheduleTab } from '../components/provider-profile/ScheduleTab';
 
-import { ScheduleSidebar, VerificationSidebar, MapSidebar } from '../components/provider-profile/SidebarWidgets';
-
 import { normalizeTechnicianSchedule, technicianService } from '../services/technician/technicianService';
 import { orderService } from '../services/order/orderService';
 
@@ -244,18 +242,6 @@ export const ProviderProfile: React.FC = () => {
                 {activeTab === 'schedule' && <ScheduleTab schedule={schedule} bookedOrders={technicianOrders} />}
 
               </div>
-
-              <div className="pp-sidebar-right">
-
-                <ScheduleSidebar />
-
-                <VerificationSidebar />
-
-                <MapSidebar />
-
-              </div>
-
-
             </div>
 
           </>

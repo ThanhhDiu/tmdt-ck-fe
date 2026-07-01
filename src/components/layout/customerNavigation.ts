@@ -9,7 +9,7 @@ export const customerPageMap: Record<string, string> = {
   provider: '/provider',
   services: '/services',
   'find-provider': '/find-provider',
-  'rewards': '/rewards',
+  // 'rewards': '/rewards',
   'provider-profile': '/provider-profile',
   'provider-dashboard': '/provider-dashboard',
   'customer-settings': '/customer/account-settings',

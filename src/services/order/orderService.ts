@@ -46,7 +46,7 @@ const unwrap = <T,>(payload: unknown): T => {
     return payload as T;
 };
 
-const normalizePage = (payload: unknown, fallbackQuery: Required<OrderListQuery>): OrderPageResponse => {
+const normalizePage = (payload: unknown, fallbackQuery: { page: number; size: number }): OrderPageResponse => {
     const resolved = unwrap<ApiPageLike | OrderResponse[] | null>(payload);
 
     if (Array.isArray(resolved)) {

@@ -147,9 +147,9 @@ export default function AppRouter() {
       <Route path="/" element={<HomePage />} />
       <Route path="/provider" element={<Provider />} />
       <Route path="/services" element={<ServicesPage />} />
-      <Route path="/rewards" element={<VoucherRewardsPage />} />
+      {/* <Route path="/rewards" element={<VoucherRewardsPage />} /> */}
       <Route path="/provider-profile" element={<ProviderProfile />} />
-      <Route path="/technicant/chat" element={<Navigate to="/technician/chat" replace />} />
+      <Route path="/technician/chat" element={<Navigate to="/technician/chat" replace />} />
 
       {/* Technician routes */}
       <Route path="/technician/jobs" element={

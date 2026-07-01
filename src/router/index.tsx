@@ -10,6 +10,7 @@ import {
 import AdminSystemSettingsPage from '../pages/AdminSystemSettingsPage'
 import AdminUserDetail from '../pages/AdminUserDetail'
 import AdminFinancePage from '../pages/AdminFinancePage'
+import AdminWithdrawRequestsPage from '../pages/AdminWithdrawRequestsPage'
 import AdminCategoriesPage from '../pages/AdminCategoriesPage'
 import AdminUserManagement from '../pages/AdminUserManagement'
 import CustomerAccountSettingsPage from '../pages/CustomerAccountSettingsPage'
@@ -163,6 +164,7 @@ export default function AppRouter() {
       <Route path="/admin/users" element={<AdminUserManagement />} />
       <Route path="/admin/users/:id" element={<AdminUserDetail />} />
       <Route path="/admin/finance" element={<AdminFinancePage />} />
+      <Route path="/admin/withdraw-requests" element={<AdminWithdrawRequestsPage />} />
       <Route path="/admin/categories" element={<AdminCategoriesPage />} />
       <Route path="/admin/verification" element={<AdminVerificationRequests />} />
       <Route path="/admin/verification/:requestId" element={<AdminVerificationDetail />} />

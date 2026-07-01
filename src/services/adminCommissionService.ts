@@ -445,3 +445,69 @@ export const adjustTechnicianWallet = async (input: {
     newBalance: parseNumber(data.newBalance),
   }
 }
+
+interface WithdrawRequestsApi {
+  pendingCount?: number | null
+  items?: Array<{
+    id?: string | null
+    technician?: { id?: string | null; fullName?: string | null; avatar?: string | null } | null
+    amount?: number | string | null
+    bankName?: string | null
+    accountNumber?: string | null
+    requestedAt?: string | null
+    status?: string | null
+  }> | null
+}
+
+export interface AdminWithdrawRequestItem {
+  id: string
+  technicianId: string
+  technicianName: string
+  technicianAvatar: string
+  amount: number
+  amountLabel: string
+  bankName: string
+  accountNumber: string
+  requestedAtLabel: string
+  status: string
+}
+
+export interface AdminWithdrawRequestsResult {
+  pendingCount: number
+  items: AdminWithdrawRequestItem[]
+}
+
+/** Danh sách yêu cầu rút tiền của thợ (Task-42). */
+export const getAdminWithdrawRequests = async (): Promise<AdminWithdrawRequestsResult> => {
+  const payload = await requestApi<WithdrawRequestsApi>('/admin/withdraw-requests')
+
+  const items = (payload.items || []).map((item) => {
+    const amount = parseNumber(item.amount)
+    return {
+      id: item.id || '--',
+      technicianId: item.technician?.id || '--',
+      technicianName: item.technician?.fullName || '--',
+      technicianAvatar: item.technician?.avatar || '',
+      amount,
+      amountLabel: formatCurrency(amount),
+      bankName: item.bankName || '--',
+      accountNumber: item.accountNumber || '--',
+      requestedAtLabel: formatDateTime(item.requestedAt),
+      status: (item.status || 'pending').toLowerCase(),
+    }
+  })
+
+  return {
+    pendingCount: parseNumber(payload.pendingCount),
+    items,
+  }
+}
+
+/** Admin duyệt 1 yêu cầu rút tiền. */
+export const approveAdminWithdrawRequest = async (id: string): Promise<{ id: string; status: string }> => {
+  const data = await requestApi<{ id?: string | null; status?: string | null }>(
+    `/admin/withdraw-requests/${id}/approve`,
+    { method: 'POST' }
+  )
+  return { id: data.id || id, status: (data.status || '').toLowerCase() }
+}

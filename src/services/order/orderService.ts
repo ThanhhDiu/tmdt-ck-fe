@@ -13,13 +13,21 @@ type ApiPageLike = {
     items?: OrderResponse[];
     data?: OrderResponse[] | { content?: OrderResponse[] };
     page?: number;
+    limit?: number;
     size?: number;
+    total?: number;
     totalPages?: number;
     totalElements?: number;
     first?: boolean;
     last?: boolean;
     number?: number;
     numberOfElements?: number;
+    pagination?: {
+        page?: number;
+        limit?: number;
+        total?: number;
+        totalPages?: number;
+    };
     pageable?: {
         pageNumber?: number;
         pageSize?: number;
@@ -48,16 +56,16 @@ const normalizePage = (payload: unknown, fallbackQuery: Required<OrderListQuery>
             size: fallbackQuery.size,
             totalPages: 1,
             totalElements: resolved.length,
-            first: fallbackQuery.page <= 0,
+            first: fallbackQuery.page <= 1,
             last: true,
         };
     }
 
     const items = resolved?.content ?? resolved?.items ?? (Array.isArray(resolved?.data) ? resolved.data : []) ?? [];
-    const page = resolved?.page ?? resolved?.number ?? resolved?.pageable?.pageNumber ?? fallbackQuery.page;
-    const size = resolved?.size ?? resolved?.pageable?.pageSize ?? fallbackQuery.size;
-    const totalPages = resolved?.totalPages ?? 1;
-    const totalElements = resolved?.totalElements ?? resolved?.numberOfElements ?? items.length;
+    const page = resolved?.page ?? resolved?.pagination?.page ?? resolved?.number ?? resolved?.pageable?.pageNumber ?? fallbackQuery.page;
+    const size = resolved?.size ?? resolved?.limit ?? resolved?.pagination?.limit ?? resolved?.pageable?.pageSize ?? fallbackQuery.size;
+    const totalElements = resolved?.totalElements ?? resolved?.total ?? resolved?.pagination?.total ?? resolved?.numberOfElements ?? items.length;
+    const totalPages = resolved?.totalPages ?? resolved?.pagination?.totalPages ?? Math.max(1, Math.ceil(totalElements / Math.max(1, size)));
 
     return {
         items,
@@ -65,7 +73,7 @@ const normalizePage = (payload: unknown, fallbackQuery: Required<OrderListQuery>
         size,
         totalPages,
         totalElements,
-        first: resolved?.first ?? page <= 0,
+        first: resolved?.first ?? page <= 1,
         last: resolved?.last ?? totalPages <= 1,
     };
 };
@@ -74,13 +82,16 @@ const normalizeOrder = (payload: unknown): OrderResponse => unwrap<OrderResponse
 
 export const orderService = {
     listOrders: async (query: OrderListQuery = {}): Promise<OrderPageResponse> => {
-        const page = query.page ?? 0;
+        const page = query.page ?? 1;
         const size = query.size ?? 10;
 
         const response = await apiClient.get('/api/orders', {
             params: {
                 page,
                 size,
+                limit: size,
+                status: query.status,
+                keyword: query.keyword,
             },
         });
 
@@ -88,7 +99,7 @@ export const orderService = {
     },
 
     listTechnicianOrders: async (technicianId: string, query: OrderListQuery = {}): Promise<OrderResponse[]> => {
-        const page = query.page ?? 0;
+        const page = query.page ?? 1;
         const size = query.size ?? 100;
 
         const response = await apiClient.get('/api/orders', {

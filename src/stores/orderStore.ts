@@ -30,7 +30,7 @@ export interface OrderManagementState {
 
 export const initialOrderManagementState: OrderManagementState = {
     activeTab: 'new',
-    page: 0,
+    page: 1,
     pageSize: 10,
     search: '',
     orders: [],
@@ -75,7 +75,7 @@ export const orderManagementReducer = (
             return {
                 ...state,
                 activeTab: action.tab,
-                page: 0,
+                page: 1,
                 selectedOrderId: null,
                 selectedOrder: null,
                 detailError: null,
@@ -84,7 +84,7 @@ export const orderManagementReducer = (
         case 'SET_PAGE':
             return {
                 ...state,
-                page: Math.max(0, action.page),
+                page: Math.max(1, action.page),
                 selectedOrderId: null,
                 selectedOrder: null,
             };
@@ -93,14 +93,14 @@ export const orderManagementReducer = (
             return {
                 ...state,
                 pageSize: Math.max(1, action.pageSize),
-                page: 0,
+                page: 1,
             };
 
         case 'SET_SEARCH':
             return {
                 ...state,
                 search: action.search,
-                page: 0,
+                page: 1,
             };
 
         case 'LOAD_LIST_START':
@@ -207,7 +207,7 @@ export const orderManagementReducer = (
                 orderToCancelId: null,
                 cancelReason: '',
                 activeTab: 'cancelled',
-                page: 0,
+                page: 1,
                 selectedOrderId: cancelledOrder.id,
                 selectedOrder: cancelledOrder,
                 optimisticOrdersById: {

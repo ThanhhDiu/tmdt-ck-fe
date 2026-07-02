@@ -79,9 +79,10 @@ export default function TechnicianProfileSettingsPage() {
     };
   }, [previewUrl]);
 
-  // Lock body scroll when pending verification status is active
+  // Lock body scroll when verification overlay is active
   useEffect(() => {
-    if (verificationStatus?.toLowerCase() === 'pending') {
+    const statusLower = verificationStatus?.toLowerCase() || 'none';
+    if (verificationStatus && statusLower !== 'approved') {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -119,12 +120,13 @@ export default function TechnicianProfileSettingsPage() {
           const t = techRes;
           setVerificationStatus(t.verificationStatus || 'none');
           
-          if (t.verificationStatus?.toLowerCase() === 'pending') {
-            // If pending, do not call /api/auth/me, just exit
+          const statusLower = (t.verificationStatus || 'none').toLowerCase();
+          if (statusLower !== 'approved') {
+            // If not approved, do not call /api/auth/me, just exit
             return;
           }
 
-          // If NOT pending, call userService.getMe() to fetch other profile details
+          // If approved, call userService.getMe() to fetch other profile details
           userService.getMe()
             .then((res) => {
               const u = res.data;
@@ -292,11 +294,12 @@ export default function TechnicianProfileSettingsPage() {
     );
   };
 
-  const isPending = verificationStatus?.toLowerCase() === 'pending';
+  const statusLower = verificationStatus?.toLowerCase() || 'none';
+  const showOverlay = verificationStatus !== '' && statusLower !== 'approved';
 
   return (
     <div className="settings-page settings-page--technician" style={{ position: 'relative' }}>
-      {!isPending ? (
+      {!showOverlay ? (
         <>
           <SettingsFrame as="div" singleColumn className="settings-frame--technician-full">
         <SettingsMain>
@@ -520,7 +523,7 @@ export default function TechnicianProfileSettingsPage() {
       )}
 
       {/* Glassmorphic Overlay for Pending Status */}
-      {isPending && (
+      {showOverlay && (
         <>
           <style>{`
             .pending-overlay {
@@ -560,27 +563,70 @@ export default function TechnicianProfileSettingsPage() {
               alignItems: 'center',
               gap: '16px'
             }}>
-              <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                backgroundColor: '#fff7e8',
-                color: '#a16207',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-              </div>
+              {statusLower === 'pending' && (
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  backgroundColor: '#fff7e8',
+                  color: '#a16207',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+              )}
+              {statusLower === 'rejected' && (
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  backgroundColor: '#fee2e2',
+                  color: '#b91c1c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                </div>
+              )}
+              {(statusLower === 'none' || statusLower === '') && (
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  backgroundColor: '#e0f2fe',
+                  color: '#0369a1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+              )}
+
               <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#2f3a55', margin: 0 }}>
-                Hồ sơ đang chờ phê duyệt
+                {statusLower === 'pending' && "Hồ sơ đang chờ phê duyệt"}
+                {statusLower === 'rejected' && "Yêu cầu xác minh bị từ chối"}
+                {(statusLower === 'none' || statusLower === '') && "Yêu cầu xác minh danh tính"}
               </h3>
+
               <p style={{ color: '#7a7a7a', fontSize: '14px', margin: 0, lineHeight: '1.6' }}>
-                Yêu cầu xác minh danh tính của bạn đang được ban quản trị xét duyệt. Trong thời gian này, bạn không thể thay đổi thông tin hồ sơ hành nghề.
+                {statusLower === 'pending' && "Yêu cầu xác minh danh tính của bạn đang được ban quản trị xét duyệt. Trong thời gian này, bạn không thể thay đổi thông tin hồ sơ hành nghề."}
+                {statusLower === 'rejected' && "Hồ sơ xác minh của bạn đã bị từ chối xét duyệt. Vui lòng bấm Xác thực để cập nhật hồ sơ và gửi lại yêu cầu."}
+                {(statusLower === 'none' || statusLower === '') && "Bạn cần hoàn thành xác minh danh tính kỹ thuật viên trước khi bắt đầu hoạt động và thiết lập hồ sơ."}
               </p>
+
               <button 
                 onClick={() => navigate('/technician/verification')} 
                 style={{
@@ -598,7 +644,9 @@ export default function TechnicianProfileSettingsPage() {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#932ee2'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = '#aa3bff'}
               >
-                Verify
+                {statusLower === 'pending' && "Verify"}
+                {statusLower === 'rejected' && "Xác thực lại"}
+                {(statusLower === 'none' || statusLower === '') && "Xác thực ngay"}
               </button>
             </div>
           </div>

@@ -250,26 +250,6 @@ const AdminOrdersPage: React.FC = () => {
           </div>
         )}
 
-        <section className="orders-stats-row">
-          {statsLoading
-            ? Array.from({ length: 6 }).map((_, index) => (
-              <div key={`stat-skeleton-${index}`} className="stat-card" style={{ minHeight: 74, position: 'relative', overflow: 'hidden' }}>
-                <div className="stat-title" style={{ opacity: 0.5 }}>Đang tải...</div>
-                {statSkeleton}
-              </div>
-            ))
-            : (
-              <>
-                <div className="stat-card"><div className="stat-title">Tổng đơn hàng</div><div className="stat-value">{totalOrders}</div></div>
-                <div className="stat-card"><div className="stat-title">Đang xử lý</div><div className="stat-value">{processingOrders}</div></div>
-                <div className="stat-card"><div className="stat-title">Hoàn thành</div><div className="stat-value">{completedOrders}</div></div>
-                <div className="stat-card"><div className="stat-title">Đã hủy</div><div className="stat-value">{cancelledOrders}</div></div>
-                <div className="stat-card"><div className="stat-title">Tranh chấp</div><div className="stat-value">{disputesOrders}</div></div>
-                <div className="stat-card"><div className="stat-title">Chờ duyệt giá</div><div className="stat-value">{pendingPriceReviewOrders}</div></div>
-              </>
-            )}
-        </section>
-
         <section className="orders-controls">
           <div className="filters-row">
             <div className="filter-item">

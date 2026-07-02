@@ -5,9 +5,11 @@ import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 type RepairRequestCardProps = {
   order: OrderResponse;
+  /** When provided, shows a "Gửi báo giá" action (technician side). */
+  onQuote?: () => void;
 };
 
-export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ order }) => {
+export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ order, onQuote }) => {
   const formatPrice = (value?: number) =>
     new Intl.NumberFormat('vi-VN').format(value ?? 0);
   const resolvedImages = (order.images ?? []).map((src) => resolveMediaUrl(src) ?? src);
@@ -32,6 +34,11 @@ export const RepairRequestCard: React.FC<RepairRequestCardProps> = ({ order }) =
             <img key={src} src={src} alt="Ảnh yêu cầu" />
           ))}
         </div>
+      )}
+      {onQuote && (
+        <button type="button" className={styles.btnPrimary} onClick={onQuote}>
+          Gửi báo giá & xác nhận
+        </button>
       )}
     </div>
   );

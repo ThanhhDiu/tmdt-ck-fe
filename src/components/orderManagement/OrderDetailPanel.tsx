@@ -36,10 +36,13 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
     const normalizedStatus = order.status.toLowerCase();
     const canCancel = !['completed', 'cancelled'].includes(normalizedStatus);
     const awaitingPayment = normalizedStatus.includes('await') || normalizedStatus.includes('payment');
-    const isCash = (order.paymentMethod || '').toLowerCase() === 'cash';
+    const method = (order.paymentMethod || '').toLowerCase();
+    const isCash = method === 'cash';
+    const isVnpay = method === 'vnpay';
     const canPay = role === 'customer' && awaitingPayment && !isCash && Boolean(onPay);
     const customerCashNote = role === 'customer' && awaitingPayment && isCash;
-    const canConfirmCash = role === 'technician' && awaitingPayment && isCash && Boolean(onConfirmCash);
+    // Technician can confirm cash unless the customer explicitly chose VNPay.
+    const canConfirmCash = role === 'technician' && awaitingPayment && !isVnpay && Boolean(onConfirmCash);
     const hasImages = (order.images?.length ?? 0) > 0;
     const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 

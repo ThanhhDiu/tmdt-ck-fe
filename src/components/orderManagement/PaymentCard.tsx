@@ -25,6 +25,7 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
     const isCustomer = role === 'customer';
     const method = (paymentMethod || '').toLowerCase();
     const isCash = method === 'cash';
+    const isVnpay = method === 'vnpay';
 
     const renderActions = () => {
         if (isCustomer) {
@@ -43,15 +44,16 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
             );
         }
 
-        // Technician side: confirm cash received, else just wait.
-        if (isCash) {
-            return (
-                <button className="btn-primary pay-btn" onClick={() => onConfirmCash(data.id)}>
-                    <FaHandHoldingDollar /> Đã nhận tiền
-                </button>
-            );
+        // Technician side: confirm cash received unless the customer explicitly
+        // opted for online payment (VNPay) — that must settle through the gateway.
+        if (isVnpay) {
+            return <span className="pay-waiting-note">Đang chờ khách thanh toán online</span>;
         }
-        return <span className="pay-waiting-note">Đang chờ khách thanh toán</span>;
+        return (
+            <button className="btn-primary pay-btn" onClick={() => onConfirmCash(data.id)}>
+                <FaHandHoldingDollar /> Đã nhận tiền
+            </button>
+        );
     };
 
     return (

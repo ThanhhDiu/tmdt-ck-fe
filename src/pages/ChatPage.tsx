@@ -11,6 +11,7 @@ import { RepairRequestCard } from '../components/chat/RepairRequestCard';
 import { PriceAdjustmentCard } from '../components/chat/PriceAdjustmentCard';
 import { AdjustmentModal, type AdjustmentSubmitPayload } from '../components/modal/AdjustmentModal';
 import UpdatePriceModal from '../components/modal/UpdatePriceModal';
+import QuoteCreateModal from '../components/modal/QuoteCreateModal';
 import { chatService } from '../services/chat/chatService';
 import { mapWsMessageToChatMessage } from '../services/chat/chatRealtimeClient';
 import { orderService } from '../services/order/orderService';
@@ -128,6 +129,7 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
     const [loadError, setLoadError] = useState<string | null>(null);
     const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
     const [isPriceConfirmOpen, setIsPriceConfirmOpen] = useState(false);
+    const [isQuoteOpen, setIsQuoteOpen] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -462,6 +464,10 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
             scheduledAt,
             notes: quote.notes,
         });
+        setIsQuoteOpen(false);
+        if (activeConversationId) {
+            await loadMessages(activeConversationId);
+        }
         await refreshConversations();
     };
 
@@ -627,7 +633,14 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                                         )}
                                         <div className={styles.messageContent}>
                                             {repairRequest ? (
-                                                <RepairRequestCard order={mapRepairRequestToOrder(repairRequest)} />
+                                                <RepairRequestCard
+                                                    order={mapRepairRequestToOrder(repairRequest)}
+                                                    onQuote={
+                                                        role === 'technician'
+                                                            ? () => setIsQuoteOpen(true)
+                                                            : undefined
+                                                    }
+                                                />
                                             ) : isQuotation ? (
                                                 <QuotationCard
                                                     serviceName={message.quotation!.serviceName}
@@ -698,6 +711,15 @@ export const ChatPage: React.FC<{ role?: UserRole }> = ({ role = 'customer' }) =
                     )}
                 </main>
             </div>
+
+            {isQuoteOpen && quoteSourceOrder && (
+                <QuoteCreateModal
+                    open={isQuoteOpen}
+                    onClose={() => setIsQuoteOpen(false)}
+                    onSubmit={handleCreateQuote}
+                    linkedOrder={quoteSourceOrder}
+                />
+            )}
 
             {isAdjustmentOpen && linkedOrder && (
                 <AdjustmentModal

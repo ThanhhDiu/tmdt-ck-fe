@@ -216,17 +216,6 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                                 <div className="page-header order-page-header">
                                     <div>
                                         <h2>Quản lý đơn hàng</h2>
-                                        <p className="order-page-subtitle">
-                                            Dữ liệu được lấy từ API và phân nhóm theo trạng thái.
-                                        </p>
-                                    </div>
-                                    <div className="search-bar">
-                                        <input
-                                            type="text"
-                                            placeholder="Tìm kiếm mã đơn, khách hàng, thợ..."
-                                            value={state.search}
-                                            onChange={(event) => setSearch(event.target.value)}
-                                        />
                                     </div>
                                 </div>
 

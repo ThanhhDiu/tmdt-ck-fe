@@ -16,21 +16,21 @@ export const EarningsChart: React.FC<EarningsChartProps> = ({ weeklyData = [], m
   return (
     <div className="earnings-chart-card">
       <div className="earnings-chart-header">
-        <h3 className="earnings-chart-title">Earnings Overview</h3>
+        <h3 className="earnings-chart-title">Tổng quan doanh thu</h3>
         <div className="earnings-period-toggle">
           <button
             type="button"
             className={`period-btn ${period === '7' ? 'active' : ''}`}
             onClick={() => setPeriod('7')}
           >
-            7 Days
+            7 ngày
           </button>
           <button
             type="button"
             className={`period-btn ${period === '30' ? 'active' : ''}`}
             onClick={() => setPeriod('30')}
           >
-            30 Days
+            30 ngày
           </button>
         </div>
       </div>

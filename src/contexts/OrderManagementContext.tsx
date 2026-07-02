@@ -18,6 +18,7 @@ export interface OrderManagementContextValue {
     visibleOrders: OrderResponse[];
     refreshOrders: () => Promise<void>;
     selectOrder: (orderId: string) => Promise<void>;
+    applyOrderUpdate: (order: OrderResponse) => void;
     setActiveTab: (tab: OrderManagementState['activeTab']) => void;
     setPage: (page: number) => void;
     setSearch: (search: string) => void;
@@ -84,6 +85,10 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
         });
     };
 
+    const applyOrderUpdate = (order: OrderResponse) => {
+        dispatch({ type: 'UPSERT_ORDER', order });
+    };
+
     const selectOrder = async (orderId: string) => {
         dispatch({ type: 'LOAD_DETAIL_START', orderId });
 
@@ -143,15 +148,13 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
         orderRealtimeClient.activate();
         
         const off = orderRealtimeClient.onEvent(async (payload) => {
-            // 1. Khi có sự kiện thay đổi trạng thái đơn hàng, gọi lại API để lấy chi tiết đơn hàng mới nhất.
+            // Fetch the latest snapshot and reconcile it into the list + cache.
+            // Use UPSERT (not LOAD_DETAIL_SUCCESS) so a realtime event for some
+            // other order doesn't hijack the currently opened detail view.
             const result = await orderController.loadOrderById(payload.orderId);
-            
+
             if (result.success) {
-                // 2. Nếu đơn hàng đang được chọn, cập nhật chi tiết đơn hàng trong state.
-                dispatch({ 
-                    type: 'LOAD_DETAIL_SUCCESS', 
-                    order: result.data 
-                });
+                dispatch({ type: 'UPSERT_ORDER', order: result.data });
             }
         });
 
@@ -178,6 +181,7 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
             visibleOrders,
             refreshOrders,
             selectOrder,
+            applyOrderUpdate,
             setActiveTab: (tab) => dispatch({ type: 'SET_ACTIVE_TAB', tab }),
             setPage: (page) => dispatch({ type: 'SET_PAGE', page }),
             setSearch: (search) => dispatch({ type: 'SET_SEARCH', search }),

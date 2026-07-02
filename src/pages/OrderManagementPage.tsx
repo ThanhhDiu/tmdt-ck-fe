@@ -46,6 +46,7 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
         confirmCancel,
         clearSelectedOrder,
         refreshOrders,
+        applyOrderUpdate,
     } = useOrderManagement();
 
     const [payingOrder, setPayingOrder] = React.useState<{ id: string; amount: number } | null>(null);
@@ -60,7 +61,16 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
     };
 
     const handlePaid = async () => {
+        const paidId = payingOrder?.id;
         setPayingOrder(null);
+        if (paidId) {
+            // Refresh the just-paid order so the stale optimistic snapshot (e.g.
+            // payment method still unset) doesn't keep overriding the fresh data.
+            const refreshed = await orderController.loadOrderById(paidId);
+            if (refreshed.success) {
+                applyOrderUpdate(refreshed.data);
+            }
+        }
         await refreshOrders();
     };
 
@@ -70,6 +80,10 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
             window.alert(result.message);
             return;
         }
+        // Reconcile the returned (now completed) order into state immediately so
+        // the awaiting-payment card can't linger on a stale optimistic snapshot
+        // and be confirmed twice.
+        applyOrderUpdate(result.data);
         await refreshOrders();
     };
 

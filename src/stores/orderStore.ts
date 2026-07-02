@@ -59,6 +59,7 @@ export type OrderManagementAction =
     | { type: 'LOAD_DETAIL_START'; orderId: string }
     | { type: 'LOAD_DETAIL_SUCCESS'; order: OrderResponse }
     | { type: 'LOAD_DETAIL_ERROR'; message: string }
+    | { type: 'UPSERT_ORDER'; order: OrderResponse }
     | { type: 'OPEN_CANCEL_MODAL'; orderId: string }
     | { type: 'CLOSE_CANCEL_MODAL' }
     | { type: 'SET_CANCEL_REASON'; cancelReason: string }
@@ -154,6 +155,20 @@ export const orderManagementReducer = (
                 loadingDetail: false,
                 detailError: action.message,
             };
+
+        case 'UPSERT_ORDER': {
+            const updated = action.order;
+            const isSelected = state.selectedOrderId === updated.id;
+            return {
+                ...state,
+                orders: state.orders.map((item) => (item.id === updated.id ? updated : item)),
+                optimisticOrdersById: {
+                    ...state.optimisticOrdersById,
+                    [updated.id]: updated,
+                },
+                selectedOrder: isSelected ? updated : state.selectedOrder,
+            };
+        }
 
         case 'OPEN_CANCEL_MODAL':
             return {

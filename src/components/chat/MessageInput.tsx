@@ -5,6 +5,7 @@ import QuoteCreateModal from '../modal/QuoteCreateModal';
 import { ChatInputWrapper } from './ChatInputWrapper';
 import type { Quote } from '../../types/Quote';
 import type { UserRole } from '../../types/UserRole';
+import type { OrderResponse } from '../../types/order/order';
 import { uploadService } from '../../services/uploadService';
 
 interface MessageInputProps {
@@ -16,6 +17,7 @@ interface MessageInputProps {
     showQuoteAction?: boolean;
     showPriceAdjustAction?: boolean;
     onOpenPriceAdjust?: () => void;
+    linkedOrder?: OrderResponse | null;
 }
 
 export const MessageInput: React.FC<MessageInputProps> = ({
@@ -27,6 +29,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     showQuoteAction = false,
     showPriceAdjustAction = false,
     onOpenPriceAdjust,
+    linkedOrder,
 }) => {
     const [message, setMessage] = useState('');
     const [openQuote, setOpenQuote] = useState(false);
@@ -147,6 +150,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     open={openQuote}
                     onClose={() => setOpenQuote(false)}
                     onSubmit={onCreateQuote}
+                    linkedOrder={linkedOrder}
                 />
             )}
         </>

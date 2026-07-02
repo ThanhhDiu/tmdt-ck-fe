@@ -103,7 +103,7 @@ const QuoteForm = ({ quote, setQuote, onClose, onSubmit }: Props) => {
                         value={quote.price || ""}
                         onChange={(e) => handleChange("price", Number(e.target.value))}
                         required
-                        min="0"
+                        min="1"
                     />
                     <span className="price-unit">VND</span>
                 </div>

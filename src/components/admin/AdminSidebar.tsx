@@ -10,7 +10,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeItem = 'users'
   const nav = useNavigate();
 
   const menuItems = [
+
     { id: 'dashboard', label: 'Tổng quan', icon: (
+
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7"></rect>
         <rect x="14" y="3" width="7" height="7"></rect>
@@ -37,16 +39,20 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeItem = 'users'
         <line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line>
       </svg>
     )},
+
     { id: 'finance', label: 'Ví & Hoa hồng', icon: (
+
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line>
       </svg>
     )},
+
     { id: 'withdraw-requests', label: 'Yêu cầu rút tiền', icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2v14"></path><path d="m19 9-7 7-7-7"></path><rect x="3" y="19" width="18" height="3" rx="1"></rect>
       </svg>
     )},
+
     { id: 'categories', label: 'Danh mục dịch vụ', icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3"></circle>
@@ -83,8 +89,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeItem = 'users'
     <aside className="admin-sidebar">
       <div className="admin-sidebar-top">
         <div className="admin-sidebar-brand">
-          <h2 className="admin-sidebar-logo">GlowUp Admin</h2>
-          <span className="admin-sidebar-badge">Cổng quản trị</span>
+
+          <h2 className="admin-sidebar-logo">Quản trị GlowUp</h2>
+          <span className="admin-sidebar-badge">Cổng quản lý</span>
+
         </div>
         <nav className="admin-sidebar-nav">
           {menuItems.map(item => (
@@ -101,7 +109,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeItem = 'users'
       </div>
       <div className="admin-sidebar-bottom">
         <div className="admin-user-profile">
-          <img src="https://i.pravatar.cc/150?img=60" alt="Admin" className="admin-user-avatar" />
+          <img src="https://i.pravatar.cc/150?img=60" alt="Quản trị viên" className="admin-user-avatar" />
           <div className="admin-user-info">
             <span className="admin-user-name">Quản trị viên</span>
             <span className="admin-user-id">ID: AD-9902</span>

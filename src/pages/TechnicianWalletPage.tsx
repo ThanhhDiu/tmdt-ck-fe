@@ -55,7 +55,7 @@ const formatMoney = (amount: number, signed: boolean = false) => {
     return `${value}đ`
   }
 
-  return `${amount < 0 ? '-' : '+'}${value}đ`
+  return `${amount > 0 ? '-' : '+'}${value}đ`
 }
 
 const formatDateLabel = (value: string) => {
@@ -384,7 +384,7 @@ const TechnicianWalletPage: React.FC = () => {
                   {item.walletType === 'credit' ? 'Ví tín dụng' : 'Ví cá nhân'}
                 </b>
               </span>
-              <span className={item.amount > 0 ? 'amount-in' : 'amount-out'}>{formatMoney(item.amount, true)}</span>
+              <span className={item.amount < 0 ? 'amount-in' : 'amount-out'}>{formatMoney(item.amount, true)}</span>
               <span>
                 <b className={`wallet-status ${item.status}`}>
                   {item.status === 'success' ? 'Thành công' : 'Đang xử lý'}

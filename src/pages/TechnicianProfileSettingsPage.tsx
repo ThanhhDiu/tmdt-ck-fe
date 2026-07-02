@@ -413,12 +413,12 @@ export default function TechnicianProfileSettingsPage() {
             }
             compactTitle
           >
-            <SettingsSwitchRow
+            {/* <SettingsSwitchRow
               title="Sẵn sàng nhận đơn"
               description="Bật để hệ thống ưu tiên hiển thị bạn trong luồng đề xuất và điều phối đơn gần khu vực."
               checked={isAvailable}
               onToggle={handleToggleAvailable}
-            />
+            /> */}
 
             <div className="settings-grid settings-grid--two">
               <SettingsTextField

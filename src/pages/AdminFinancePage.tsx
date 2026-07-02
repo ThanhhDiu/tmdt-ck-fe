@@ -274,7 +274,7 @@ const AdminFinancePage: React.FC = () => {
           <div className="afp-tech-list">
             <div className="afp-tech-row afp-tech-head">
               <span>THỢ</span>
-              <span>SỐ DƯ VÍ HOA HỒNG</span>
+              <span>SỐ DƯ VÍ</span>
               <span>TRẠNG THÁI</span>
               <span>TỔNG PHÍ ĐÃ TRỪ</span>
               <span>GIAO DỊCH GẦN NHẤT</span>

@@ -30,8 +30,8 @@ const statsData = (stats?: DashboardStats | null, loading = false): StatCard[] =
       </svg>
     ),
     value: loading ? '...' : `${(stats?.totalOrders ?? 0).toLocaleString('vi-VN')}`,
-    label: 'Total Orders',
-    badge: '+2 new',
+    label: 'Tổng số đơn hàng',
+    badge: '+2 so với hôm qua',
     badgeColor: '#10b981',
   },
   {
@@ -43,8 +43,8 @@ const statsData = (stats?: DashboardStats | null, loading = false): StatCard[] =
       </svg>
     ),
     value: loading ? '...' : `${(stats?.completedOrders ?? 0).toLocaleString('vi-VN')}`,
-    label: 'Jobs Completed',
-    badge: 'Today',
+    label: 'Công việc đã hoàn thành',
+    badge: 'Hôm nay',
     badgeColor: '#6366f1',
   },
   {
@@ -56,8 +56,8 @@ const statsData = (stats?: DashboardStats | null, loading = false): StatCard[] =
       </svg>
     ),
     value: loading ? '...' : formatMoney(stats?.weeklyEarnings),
-    label: 'Weekly Earnings',
-    badge: 'This Week',
+    label: 'Doanh thu hằng tuần',
+    badge: 'Tuần này',
     highlight: true,
   },
 ];

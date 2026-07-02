@@ -71,7 +71,7 @@ const ProviderDashboard: React.FC = () => {
         <div className="pd-top-bar">
           <div className="pd-greeting">
             <span className="pd-greeting-text">CHÀO BUỔI SÁNG, {displayName.toUpperCase()}</span>
-            <h1 className="pd-page-title">Overview Dashboard</h1>
+            <h1 className="pd-page-title">Tổng quan</h1>
           </div>
         </div>
 

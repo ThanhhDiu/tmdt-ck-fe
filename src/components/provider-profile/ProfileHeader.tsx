@@ -82,7 +82,14 @@ export const ProfileHeader: React.FC<{
                     </div>
                 </div>
 
-                <div className="ph-action-section">
+                <div className="ph-action-section" style={{ display: 'flex', gap: '12px', width: '40%' }}>
+                    <button
+                        className="ph-primary-btn" 
+                        style={{ backgroundColor: 'var(--white)', color: 'var(--blueberry-skin)', border: '1px solid var(--blueberry-skin)', flex: 1 }} 
+                        onClick={() => setIsRequestModalOpen(true)}
+                    >
+                        Gửi yêu cầu
+                    </button>
                     <button
                         className="ph-primary-btn"
                         onClick={() => {

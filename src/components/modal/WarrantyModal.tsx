@@ -83,7 +83,7 @@ const WarrantyModal: React.FC<WarrantyModalProps> = ({ open, orderId, onClose, o
                                 HÌNH ẢNH MINH CHỨNG
                             </label>
                             <ImageUploader 
-                                folder="warranty" 
+                                folder="orders" 
                                 urls={images} 
                                 onChange={setImages} 
                                 maxImages={3}

@@ -302,7 +302,6 @@ export default function TechnicianProfileSettingsPage() {
         <SettingsMain>
           <SettingsTopline
             title="Hồ sơ & kỹ năng"
-            subtitle="Bản nâng cấp này bám theo layout technician hiện có, nhưng gom thông tin cá nhân, khu vực phục vụ và trạng thái nhận việc vào cùng một flow chỉnh sửa mượt hơn."
             badge={
               <span className="settings-badge">
                 <BadgeCheck size={18} />
@@ -311,7 +310,12 @@ export default function TechnicianProfileSettingsPage() {
             }
           />
 
-          <div style={{ position: 'relative' }}>
+          <div style={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+          }}>
             <section className="tech-settings-overview">
             <article className="tech-settings-hero">
               <div className="tech-settings-hero__identity">
@@ -398,7 +402,6 @@ export default function TechnicianProfileSettingsPage() {
 
           <SettingsCard
             title="Hồ sơ kỹ thuật viên"
-            subtitle="Cập nhật thông tin công việc và khả năng phục vụ để thuật toán điều phối đơn gợi ý chính xác hơn."
             eyebrow={
               <>
                 <Wrench size={18} />

@@ -7,6 +7,7 @@ import {
     getMergedVisibleOrders,
     initialOrderManagementState,
     orderManagementReducer,
+    type OrderTabId,
     type OrderManagementState,
 } from '../stores/orderStore';
 
@@ -37,12 +38,35 @@ interface OrderManagementProviderProps {
 export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = ({ role, children }) => {
     const [state, dispatch] = useReducer(orderManagementReducer, initialOrderManagementState);
 
+    const tabToApiStatus = (tab: OrderTabId): string | undefined => {
+        switch (tab) {
+            case 'new':
+                return 'new';
+            case 'scheduled':
+                return 'scheduled';
+            case 'in-progress':
+                return 'in-progress';
+            case 'awaiting-payment':
+                return 'awaiting-payment';
+            case 'completed':
+                return 'completed';
+            case 'cancelled':
+                return 'cancelled';
+            case 'warranty':
+                return 'scheduled';
+            default:
+                return undefined;
+        }
+    };
+
     const refreshOrders = async () => {
         dispatch({ type: 'LOAD_LIST_START' });
 
         const result = await orderController.loadOrders({
             page: state.page,
             size: state.pageSize,
+            status: tabToApiStatus(state.activeTab),
+            keyword: state.search.trim() || undefined,
         });
 
         if (!result.success) {
@@ -103,7 +127,7 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
     useEffect(() => {
         void refreshOrders();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state.page, state.pageSize]);
+    }, [state.page, state.pageSize, state.activeTab, state.search]);
 
     // --- Realtime: refresh on order status changes
     const refreshRef = useRef(refreshOrders);
@@ -117,10 +141,17 @@ export const OrderManagementProvider: React.FC<OrderManagementProviderProps> = (
 
     useEffect(() => {
         orderRealtimeClient.activate();
-        const off = orderRealtimeClient.onEvent((payload) => {
-            void refreshRef.current();
-            if (selectedIdRef.current && payload.orderId === selectedIdRef.current) {
-                void selectRef.current(payload.orderId);
+        
+        const off = orderRealtimeClient.onEvent(async (payload) => {
+            // 1. Khi có sự kiện thay đổi trạng thái đơn hàng, gọi lại API để lấy chi tiết đơn hàng mới nhất.
+            const result = await orderController.loadOrderById(payload.orderId);
+            
+            if (result.success) {
+                // 2. Nếu đơn hàng đang được chọn, cập nhật chi tiết đơn hàng trong state.
+                dispatch({ 
+                    type: 'LOAD_DETAIL_SUCCESS', 
+                    order: result.data 
+                });
             }
         });
 

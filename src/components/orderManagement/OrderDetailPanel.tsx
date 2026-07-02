@@ -43,6 +43,9 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
     const hasImages = (order.images?.length ?? 0) > 0;
     const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
+    // Lấy ảnh vật tư (nếu có)
+    const adjImages = order.priceAdjustment?.evidenceImages || [];
+
     return (
         <div className="order-detail-panel">
             <div className="detail-header">
@@ -93,15 +96,17 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                     <div className="detail-adjustment-box">
                         <strong>Điều chỉnh giá:</strong>
                         <div>Trạng thái: {order.priceAdjustment.status ?? 'Chưa cập nhật'}</div>
-                        <div>Từ: {formatMoney(order.priceAdjustment.beforePrice)} VND</div>
-                        <div>Đến: {formatMoney(order.priceAdjustment.afterPrice)} VND</div>
+                        {/* Lưu ý: Nếu báo lỗi beforePrice/afterPrice không tồn tại, bạn đổi thành originalPrice/newPrice nhé */}
+                        <div>Từ: {formatMoney((order.priceAdjustment as any).beforePrice ?? order.priceAdjustment.originalPrice)} VND</div>
+                        <div>Đến: {formatMoney((order.priceAdjustment as any).afterPrice ?? order.priceAdjustment.newPrice)} VND</div>
                     </div>
                 )}
             </div>
 
+            {/* --- KHỐI HÌNH ẢNH MỚI ĐÃ ĐỒNG BỘ --- */}
             <div className="detail-card mt-24">
                 <div className="detail-card-header">
-                    <span className="detail-label">Hình ảnh</span>
+                    <span className="detail-label">Hình ảnh đính kèm</span>
                     <span className="detail-count">{order.images?.length ?? 0} ảnh</span>
                 </div>
 
@@ -125,6 +130,33 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                 ) : (
                     <div className="detail-empty-state">
                         <FaImage /> Chưa có hình ảnh đính kèm.
+                    </div>
+                )}
+
+                {/* --- ẢNH VẬT TƯ NẰM RIÊNG BIỆT --- */}
+                {adjImages.length > 0 && (
+                    <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                        <div className="detail-card-header">
+                            <span className="detail-label" style={{ color: '#d97706' }}>Ảnh vật tư phát sinh</span>
+                            <span className="detail-count" style={{ background: '#fef3c7', color: '#d97706', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>{adjImages.length} ảnh</span>
+                        </div>
+                        <div className="images-block" style={{ marginTop: '12px' }}>
+                            <div className="image-grid">
+                                {adjImages.map((image, index) => {
+                                    const resolvedImage = resolveMediaUrl(image);
+                                    return (
+                                        <img
+                                            key={`adj-${index}`}
+                                            src={resolvedImage || ''}
+                                            alt={`Ảnh vật tư ${index + 1}`}
+                                            className="req-image"
+                                            style={{ border: '2px solid #f59e0b' }}
+                                            onClick={() => setFullScreenImage(resolvedImage)}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -157,11 +189,6 @@ export const OrderDetailPanel: React.FC<OrderDetailPanelProps> = ({ order, role,
                 {canConfirmCash && (
                     <button className="btn-large-primary" onClick={() => onConfirmCash?.(order.id)}>
                         Đã nhận tiền
-                    </button>
-                )}
-                {canCancel && (
-                    <button className="btn-large-primary danger-button" onClick={() => onCancel(order.id)}>
-                        Hủy đơn
                     </button>
                 )}
             </div>

@@ -100,6 +100,8 @@ export interface OrderPaymentResult {
 export interface OrderListQuery {
     page?: number;
     size?: number;
+    status?: string;
+    keyword?: string;
 }
 
 export interface OrderPageResponse {

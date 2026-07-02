@@ -10,6 +10,7 @@ import {
 import AdminSystemSettingsPage from '../pages/AdminSystemSettingsPage'
 import AdminUserDetail from '../pages/AdminUserDetail'
 import AdminFinancePage from '../pages/AdminFinancePage'
+import AdminWithdrawRequestsPage from '../pages/AdminWithdrawRequestsPage'
 import AdminCategoriesPage from '../pages/AdminCategoriesPage'
 import AdminUserManagement from '../pages/AdminUserManagement'
 import CustomerAccountSettingsPage from '../pages/CustomerAccountSettingsPage'
@@ -37,6 +38,7 @@ import AdminVerificationDetail from '../pages/AdminVerificationDetail'
 import AdminVerificationUpdate from '../pages/AdminVerificationUpdate'
 import AdminComplaintsPage from '../pages/AdminComplaintsPage'
 import AdminComplaintResolvePage from '../pages/AdminComplaintResolvePage'
+import AdminOrderDetailPage from '../pages/AdminOrderDetailPage'
 export default function AppRouter() {
   return (
     <Routes>
@@ -146,9 +148,9 @@ export default function AppRouter() {
       <Route path="/" element={<HomePage />} />
       <Route path="/provider" element={<Provider />} />
       <Route path="/services" element={<ServicesPage />} />
-      <Route path="/rewards" element={<VoucherRewardsPage />} />
+      {/* <Route path="/rewards" element={<VoucherRewardsPage />} /> */}
       <Route path="/provider-profile" element={<ProviderProfile />} />
-      <Route path="/technicant/chat" element={<Navigate to="/technician/chat" replace />} />
+      <Route path="/technician/chat" element={<Navigate to="/technician/chat" replace />} />
 
       {/* Technician routes */}
       <Route path="/technician/jobs" element={
@@ -157,10 +159,12 @@ export default function AppRouter() {
         </TechnicianLayout>
       } />
       <Route path="/admin/orders" element={<AdminOrdersPage />} />
+      <Route path="/admin/orders/:orderId" element={<AdminOrderDetailPage />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUserManagement />} />
       <Route path="/admin/users/:id" element={<AdminUserDetail />} />
       <Route path="/admin/finance" element={<AdminFinancePage />} />
+      <Route path="/admin/withdraw-requests" element={<AdminWithdrawRequestsPage />} />
       <Route path="/admin/categories" element={<AdminCategoriesPage />} />
       <Route path="/admin/verification" element={<AdminVerificationRequests />} />
       <Route path="/admin/verification/:requestId" element={<AdminVerificationDetail />} />

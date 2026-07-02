@@ -5,9 +5,12 @@
     margin-bottom: 24px;
 }
 
-.tab-btn {
+/* Scoped under .order-tabs so global .tab-btn rules from other pages
+   (e.g. AdminOrdersPage's teal pill) can't override the customer order tabs. */
+.order-tabs .tab-btn {
     background: none;
     border: none;
+    border-radius: 0;
     padding: 12px 0;
     font-size: var(--fs-base);
     color: var(--text-sub);
@@ -17,8 +20,8 @@
     font-family: var(--font-family);
 }
 
-.tab-btn.active {
-    background-color: transparent !important;
+.order-tabs .tab-btn.active {
+    background-color: transparent;
     color: var(--blueberry-skin);
     border-bottom-color: var(--blueberry-skin);
     font-weight: var(--fw-semibold);

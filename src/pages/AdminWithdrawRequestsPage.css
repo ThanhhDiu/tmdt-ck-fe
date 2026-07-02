@@ -1,0 +1,135 @@
+.awr-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f7f8fa;
+}
+
+.awr-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 28px 40px;
+  /* Offset the fixed admin sidebar, same as the other admin pages. */
+  margin-left: var(--admin-sidebar-width);
+}
+
+.awr-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 0 18px;
+}
+.awr-title-row h1 { margin: 0 0 4px; font-size: 24px; color: #1d2939; }
+.awr-title-row p { margin: 0; font-size: 14px; color: #667085; }
+
+.awr-pending-badge {
+  background: #fff7e8;
+  color: #b45309;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.awr-alert {
+  background: #fef3f2;
+  color: #b42318;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.awr-card {
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 14px;
+  padding: 8px 16px;
+  overflow-x: auto;
+}
+
+.awr-table { display: flex; flex-direction: column; min-width: 780px; }
+
+.awr-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.1fr 1.2fr 1.2fr 1fr 0.9fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 8px;
+  border-bottom: 1px solid #f2f4f7;
+  font-size: 13px;
+  color: #344054;
+}
+.awr-row.awr-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: #98a2b3;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.awr-row:last-child { border-bottom: none; }
+
+.awr-tech { display: flex; align-items: center; gap: 10px; }
+.awr-tech strong { display: block; color: #1d2939; }
+.awr-tech small { color: #98a2b3; }
+.awr-avatar {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 50%;
+  background: #1a3b6b; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+}
+
+.awr-amount { font-weight: 700; color: #b42318; }
+
+.awr-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.awr-status.pending { background: #fff7e8; color: #b45309; }
+.awr-status.done { background: #ecfdf3; color: #027a48; }
+.awr-status.failed { background: #fef3f2; color: #b42318; }
+
+.awr-approve-btn {
+  border: none;
+  background: #12b76a;
+  color: #fff;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.awr-approve-btn:hover { background: #0e9f5b; }
+.awr-approve-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.awr-done-text { color: #98a2b3; }
+
+.awr-empty {
+  padding: 28px;
+  text-align: center;
+  color: #667085;
+  font-size: 14px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .awr-main {
+    margin-left: var(--admin-sidebar-collapsed-width);
+    padding: 0 16px 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .awr-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .awr-title-row h1 { font-size: 20px; }
+}

@@ -61,7 +61,7 @@
   gap: 18px;
   background:
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 32%),
-    linear-gradient(135deg, #2f5b3c 0%, #68a877 100%);
+    linear-gradient(135deg, #2f5b3c 0%, var(--berry-bloom) 100%);
   color: var(--white);
   border-radius: 22px;
   padding: 28px;

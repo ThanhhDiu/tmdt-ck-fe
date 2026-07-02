@@ -251,17 +251,17 @@ const OrderManagementContent: React.FC<OrderPageProps> = ({ role }) => {
                                 <div className="order-pagination">
                                     <button
                                         className="btn-secondary"
-                                        disabled={state.page <= 0 || state.loadingList}
+                                        disabled={state.page <= 1 || state.loadingList}
                                         onClick={() => setPage(state.page - 1)}
                                     >
                                         Trang trước
                                     </button>
                                     <span>
-                                        Trang {state.page + 1} / {Math.max(state.totalPages, 1)}
+                                        Trang {state.page} / {Math.max(state.totalPages, 1)}
                                     </span>
                                     <button
                                         className="btn-secondary"
-                                        disabled={state.loadingList || (state.totalPages > 0 && state.page >= state.totalPages - 1)}
+                                        disabled={state.loadingList || (state.totalPages > 0 && state.page >= state.totalPages)}
                                         onClick={() => setPage(state.page + 1)}
                                     >
                                         Trang sau

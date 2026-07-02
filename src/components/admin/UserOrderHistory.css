@@ -3,6 +3,7 @@
   border: 1px solid #eef0f3;
   border-radius: 12px;
   padding: 20px;
+  overflow-x: auto;
 }
 .uoh-card h3 { margin: 0 0 16px; font-size: 16px; color: #1d2939; }
 
@@ -14,7 +15,7 @@
 }
 .uoh-state.error { color: #b42318; }
 
-.uoh-table { display: flex; flex-direction: column; }
+.uoh-table { display: flex; flex-direction: column; min-width: 640px; }
 
 .uoh-row {
   display: grid;
@@ -47,3 +48,20 @@
 .uoh-status.await { background: #fbf0df; color: #b9762a; }
 .uoh-status.done { background: #ecfdf3; color: #027a48; }
 .uoh-status.cancel { background: #fef3f2; color: #b42318; }
+
+.uoh-load-more {
+  margin-top: 12px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  color: #344054;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.uoh-load-more:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

@@ -14,10 +14,6 @@ export const HeroSection: React.FC = () => {
           <p className="hero-description">
             Chuyên nghiệp & Tin cậy. Mang đẳng cấp dịch vụ hàng đầu bước không gian sống của bạn với đội ngũ kỹ thuật viên giàu kinh nghiệm.
           </p>
-          <div className="hero-actions">
-            <button className="btn-primary">Đặt lịch ngay</button>
-            <button className="btn-secondary">Tìm hiểu thêm</button>
-          </div>
         </div>
 
         <div className="hero-stats">

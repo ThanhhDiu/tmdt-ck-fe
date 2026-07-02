@@ -1,5 +1,8 @@
 import apiClient from '../../api/config';
 import type {
+  BusySlotResponse,
+  ChartDataPoint,
+  DashboardStats,
   PagedTechnicians,
   TechnicianDetail,
   TechnicianListItem,
@@ -286,5 +289,20 @@ export const technicianService = {
   getTechnicianSchedule: async (technicianId: string) => {
     const detail = await technicianService.getTechnician(technicianId);
     return normalizeTechnicianSchedule(detail.schedule as TechnicianScheduleApiResponse | null | undefined);
+  },
+
+  getTechnicianBusySlots: async (technicianId: string): Promise<BusySlotResponse[]> => {
+    const response = await apiClient.get(`/api/technicians/${encodeURIComponent(technicianId)}/busy-slots`);
+    return unwrap<BusySlotResponse[]>(response.data);
+  },
+
+  getDashboardStats: async (): Promise<DashboardStats> => {
+    const response = await apiClient.get('/api/technicians/dashboard/stats');
+    return unwrap<DashboardStats>(response.data);
+  },
+
+  getEarningsChart: async (period: 'week' | 'month' = 'week'): Promise<ChartDataPoint[]> => {
+    const response = await apiClient.get(`/api/technicians/dashboard/chart?period=${period}`);
+    return unwrap<ChartDataPoint[]>(response.data);
   },
 };

@@ -94,3 +94,23 @@ export type PagedTechnicians = {
     totalPages: number;
   };
 };
+
+export interface BusySlotResponse {
+  orderCode: string;
+  scheduledAt: string;
+  expectedTime: string;
+  deviceName: string;
+  address: string;
+  status: string;
+}
+
+export interface DashboardStats{
+  totalOrders: number;
+  completedOrders: number;
+  weeklyEarnings: number;
+}
+
+export interface ChartDataPoint {
+  label: string;
+  value: number;
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import type { DashboardStats } from '../../types/technician';
 import './StatsCards.css';
 
 interface StatCard {
@@ -11,7 +12,14 @@ interface StatCard {
   highlight?: boolean;
 }
 
-const statsData: StatCard[] = [
+interface StatsCardsProps {
+  stats?: DashboardStats | null;
+  loading?: boolean;
+}
+
+const formatMoney = (value?: number | null) => `${(value ?? 0).toLocaleString('vi-VN')} đ`;
+
+const statsData = (stats?: DashboardStats | null, loading = false): StatCard[] => [
   {
     id: 'new-jobs',
     icon: (
@@ -21,8 +29,8 @@ const statsData: StatCard[] = [
         <line x1="12" y1="3" x2="12" y2="15"></line>
       </svg>
     ),
-    value: '04',
-    label: 'New Jobs Assigned',
+    value: loading ? '...' : `${(stats?.totalOrders ?? 0).toLocaleString('vi-VN')}`,
+    label: 'Total Orders',
     badge: '+2 new',
     badgeColor: '#10b981',
   },
@@ -34,7 +42,7 @@ const statsData: StatCard[] = [
         <polyline points="22 4 12 14.01 9 11.01"></polyline>
       </svg>
     ),
-    value: '12',
+    value: loading ? '...' : `${(stats?.completedOrders ?? 0).toLocaleString('vi-VN')}`,
     label: 'Jobs Completed',
     badge: 'Today',
     badgeColor: '#6366f1',
@@ -47,17 +55,19 @@ const statsData: StatCard[] = [
         <line x1="2" y1="10" x2="22" y2="10"></line>
       </svg>
     ),
-    value: '8.420.000 đ',
-    label: 'Total Earnings',
+    value: loading ? '...' : formatMoney(stats?.weeklyEarnings),
+    label: 'Weekly Earnings',
     badge: 'This Week',
     highlight: true,
   },
 ];
 
-export const StatsCards: React.FC = () => {
+export const StatsCards: React.FC<StatsCardsProps> = ({ stats, loading = false }) => {
+  const cards = statsData(stats, loading);
+
   return (
     <div className="stats-cards-row">
-      {statsData.map(stat => (
+      {cards.map(stat => (
         <div key={stat.id} className={`stat-card-item ${stat.highlight ? 'stat-card-highlight' : ''}`}>
           <div className="stat-card-top">
             <div className={`stat-card-icon ${stat.highlight ? 'icon-highlight' : ''}`}>

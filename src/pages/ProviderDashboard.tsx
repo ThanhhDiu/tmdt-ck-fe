@@ -1,34 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { StatsCards } from '../components/dashboard/StatsCards';
 import { EarningsChart } from '../components/dashboard/EarningsChart';
-import { AvailableTasks } from '../components/dashboard/AvailableTasks';
 import { TodaySchedule } from '../components/dashboard/TodaySchedule';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { technicianService } from '../services/technician/technicianService';
+import type { BusySlotResponse, ChartDataPoint, DashboardStats, TechnicianScheduleSlot } from '../types/technician';
 import './ProviderDashboard.css';
+import { ScheduleTab } from '../components/provider-profile/ScheduleTab';
 
 const ProviderDashboard: React.FC = () => {
   const { profile } = useUserProfile();
   const [isAvailable, setIsAvailable] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [fetching, setFetching] = useState<boolean>(true);
+  const [schedule, setSchedule] = useState<TechnicianScheduleSlot[]>([]);
+  const [bookedOrders, setBookedOrders] = useState<BusySlotResponse[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [weeklyEarnings, setWeeklyEarnings] = useState<ChartDataPoint[]>([]);
+  const [monthlyEarnings, setMonthlyEarnings] = useState<ChartDataPoint[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!profile.code) return;
-    const fetchAvailability = async () => {
+    if (!profile.code) {
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+    
+    const fetchDashboardData = async () => {
       try {
-        setFetching(true);
-        const data = await technicianService.getTechnician(profile.code);
-        setIsAvailable(data.isAvailable ?? true);
+        setLoading(true);
+
+        const [techData, busySlotsData, statsData, weekChartData, monthChartData] = await Promise.all([
+          technicianService.getTechnician(profile.code),
+          technicianService.getTechnicianBusySlots(profile.code),
+          technicianService.getDashboardStats(),
+          technicianService.getEarningsChart('week'),
+          technicianService.getEarningsChart('month'),
+        ]);
+
+        if (!active) return;
+
+        setIsAvailable(techData.isAvailable ?? true);
+        setSchedule((techData.schedule as TechnicianScheduleSlot[]) || []);
+        setBookedOrders(busySlotsData || []);
+        setDashboardStats(statsData);
+        setWeeklyEarnings(weekChartData || []);
+        setMonthlyEarnings(monthChartData || []);
       } catch (error) {
-        console.error('Lỗi khi lấy trạng thái hoạt động của thợ:', error);
+        console.error('Lỗi khi lấy dữ liệu Dashboard thợ:', error);
       } finally {
-        setFetching(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
-    fetchAvailability();
-  }, [profile.code]);
+    
+    void fetchDashboardData();
 
+    return () => {
+      active = false;
+    };
+  }, [profile.code]);
 
   const displayName = profile.fullName || 'Minh';
 
@@ -47,13 +79,25 @@ const ProviderDashboard: React.FC = () => {
         <div className="pd-content-grid">
           {/* Left Column */}
           <div className="pd-left-col">
-            <StatsCards />
-            <EarningsChart />
+            <StatsCards stats={dashboardStats} loading={loading} />
+            <EarningsChart
+              weeklyData={weeklyEarnings}
+              monthlyData={monthlyEarnings}
+              loading={loading}
+            />
+            
+            <ScheduleTab 
+                schedule={schedule} 
+                busySlots={bookedOrders} 
+            />
           </div>
 
           {/* Right Column */}
           <div className="pd-right-col">
-            <TodaySchedule />
+            <TodaySchedule 
+                schedule={schedule} 
+                busySlots={bookedOrders} 
+            />
           </div>
         </div>
 
@@ -70,4 +114,3 @@ const ProviderDashboard: React.FC = () => {
 };
 
 export default ProviderDashboard;
-
